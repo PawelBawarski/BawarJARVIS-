@@ -1,7 +1,14 @@
 module.exports = {
   appId: "dev.bawar.jarvis",
   productName: "J.A.R.V.I.S.",
-
+  publish: [
+    {
+      provider: "github",
+      owner: "PawelBawarski",
+      repo: "BawarJARVIS-",
+      releaseType: "release",
+    },
+  ],
   directories: {
     output: "release",
     buildResources: "build",

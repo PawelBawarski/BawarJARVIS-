@@ -1,6 +1,6 @@
 {
   "name": "jarvis-desktop",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "JARVIS - Personal AI Desktop Assistant",
   "main": "electron/main.cjs",
   "scripts": {

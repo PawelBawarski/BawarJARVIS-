@@ -1,11 +1,19 @@
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
 
-const { app, BrowserWindow, net, protocol, session } = require("electron");
-
+const {
+  app,
+  BrowserWindow,
+  protocol,
+  net,
+  session,
+  dialog,
+} = require("electron");
 const { createWindowOptions } = require("./window-options.cjs");
 
 const { resolveUiAsset } = require("./asset-path.cjs");
+const { autoUpdater } = require("electron-updater");
+const { createUpdateManager } = require("./updates.cjs");
 
 const DEV_URL = "http://127.0.0.1:4200/";
 
@@ -90,6 +98,7 @@ function createWindow() {
   } else {
     window.loadURL(DEV_URL);
   }
+  return window;
 }
 
 app
