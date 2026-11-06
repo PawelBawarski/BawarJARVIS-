@@ -1,17 +1,14 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const { EventEmitter } = require("node:events");
 
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const { EventEmitter } = require('node:events');
-
-const {
-  createUpdateManager
-} = require('../electron/updates.cjs');
+const { createUpdateManager } = require("../electron/updates.cjs");
 
 function createFakeUpdater() {
   const updater = new EventEmitter();
 
   updater.checkForUpdates = async () => ({
-    updateInfo: { version: '1.0.1' }
+    updateInfo: { version: "1.0.1" },
   });
 
   updater.downloadUpdate = async () => {
@@ -25,7 +22,7 @@ function createFakeUpdater() {
   return updater;
 }
 
-test('should check GitHub for updates', async () => {
+test("should check GitHub for updates", async () => {
   const updater = createFakeUpdater();
 
   let checks = 0;
@@ -38,7 +35,7 @@ test('should check GitHub for updates', async () => {
     updater,
     dialog: {},
     window: {},
-    locale: 'pl'
+    locale: "pl",
   });
 
   await manager.check();
@@ -48,71 +45,71 @@ test('should check GitHub for updates', async () => {
   assert.equal(updater.autoInstallOnAppQuit, false);
 });
 
-test('should download accepted update', async () => {
+test("should download accepted update", async () => {
   const updater = createFakeUpdater();
 
   createUpdateManager({
     updater,
     dialog: {
       showMessageBox: async () => ({
-        response: 0
-      })
+        response: 0,
+      }),
     },
     window: {},
-    locale: 'pl'
+    locale: "pl",
   });
 
-  updater.emit('update-available', {
-    version: '1.0.1'
+  updater.emit("update-available", {
+    version: "1.0.1",
   });
 
-  await new Promise(resolve => setImmediate(resolve));
+  await new Promise((resolve) => setImmediate(resolve));
 
   assert.equal(updater.downloadCalled, true);
 });
 
-test('should not download declined update', async () => {
+test("should not download declined update", async () => {
   const updater = createFakeUpdater();
 
   createUpdateManager({
     updater,
     dialog: {
       showMessageBox: async () => ({
-        response: 1
-      })
+        response: 1,
+      }),
     },
     window: {},
-    locale: 'en'
+    locale: "en",
   });
 
-  updater.emit('update-available', {
-    version: '1.0.1'
+  updater.emit("update-available", {
+    version: "1.0.1",
   });
 
-  await new Promise(resolve => setImmediate(resolve));
+  await new Promise((resolve) => setImmediate(resolve));
 
   assert.equal(updater.downloadCalled, undefined);
 });
 
-test('should install downloaded update after consent', async () => {
+test("should install downloaded update after consent", async () => {
   const updater = createFakeUpdater();
 
   createUpdateManager({
     updater,
     dialog: {
       showMessageBox: async () => ({
-        response: 0
-      })
+        response: 0,
+      }),
     },
     window: {},
-    locale: 'pl'
+    locale: "pl",
   });
 
-  updater.emit('update-downloaded', {
-    version: '1.0.1'
+  updater.emit("update-downloaded", {
+    version: "1.0.1",
   });
 
-  await new Promise(resolve => setImmediate(resolve));
+  await new Promise((resolve) => setImmediate(resolve));
 
   assert.equal(updater.installCalled, true);
 });
