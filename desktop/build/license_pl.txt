@@ -1,0 +1,27 @@
+﻿J.A.R.V.I.S. — WARUNKI KORZYSTANIA
+Wersja testowa 0.1
+
+1. PRZEZNACZENIE
+J.A.R.V.I.S. jest aplikacją rozwijaną w celach
+edukacyjnych i testowych.
+
+2. OPROGRAMOWANIE
+Aplikacja jest udostępniana w aktualnym stanie
+rozwoju. Może zawierać błędy oraz funkcje
+niedostępne lub nieukończone.
+
+3. ODPOWIEDZIALNOŚĆ
+Przed wykonaniem istotnych działań użytkownik
+powinien samodzielnie zweryfikować ich skutki.
+
+4. DANE UŻYTKOWNIKA
+Wersja testowa może przechowywać ustawienia
+i dane aplikacji lokalnie na komputerze.
+
+5. KOMPONENTY ZEWNĘTRZNE
+Oprogramowanie wykorzystuje biblioteki
+zewnętrzne objęte ich własnymi licencjami.
+
+6. AKCEPTACJA
+Kontynuując instalację, użytkownik potwierdza
+zapoznanie się z niniejszymi warunkami.

@@ -1,0 +1,31 @@
+
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="background">
+      <stop offset="0%" stop-color="#234e89"/>
+      <stop offset="100%" stop-color="#090e19"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="512" height="512"
+        rx="110" fill="url(#background)"/>
+
+  <circle cx="256" cy="256" r="174"
+          fill="none"
+          stroke="#70acff"
+          stroke-width="13"/>
+
+  <circle cx="256" cy="256" r="147"
+          fill="none"
+          stroke="#70acff"
+          stroke-opacity=".35"
+          stroke-width="3"/>
+
+  <text x="256" y="328"
+        text-anchor="middle"
+        font-family="Arial, sans-serif"
+        font-size="215"
+        font-weight="bold"
+        fill="#edf4ff">J</text>
+</svg>
