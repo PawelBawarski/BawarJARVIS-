@@ -1,0 +1,27 @@
+
+:host {
+  display: block;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  min-height: 100dvh;
+  background:
+    radial-gradient(
+      circle at 70% 0%,
+      rgba(40, 98, 194, 0.14),
+      transparent 45%
+    ),
+    var(--bg);
+}
+
+@media (max-width: 760px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  app-sidebar {
+    display: none;
+  }
+}

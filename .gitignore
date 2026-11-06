@@ -1,5 +1,10 @@
 node_modules/
 dist/
+release/
 .angular/
+out-tsc/
 *.log
 .DS_Store
+.env
+*.pfx
+*.p12
