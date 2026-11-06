@@ -1,0 +1,48 @@
+
+name: BE - Unit Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/**'
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Java Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Run unit tests
+        working-directory: backend
+        run: bash ./mvnw -B -ntp test
+
+      - name: Upload JUnit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jarvis-junit-reports
+          path: backend/target/surefire-reports/
+          if-no-files-found: ignore
+          retention-days: 7

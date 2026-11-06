@@ -1,0 +1,78 @@
+name: JARVIS Windows Installer
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    name: Build JARVIS Windows x64
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 26
+        uses: actions/setup-node@v4
+        with:
+          node-version: "26"
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            desktop/package-lock.json
+
+      - name: Install Angular dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run Angular tests
+        working-directory: frontend
+        run: npm test -- --watch=false
+
+      - name: Install Electron dependencies
+        working-directory: desktop
+        run: npm ci
+
+      - name: Run Electron tests
+        working-directory: desktop
+        run: npm test
+
+      - name: Verify version tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          VERSION_TAG: ${{ github.ref_name }}
+        run: |
+          $package = Get-Content desktop/package.json | ConvertFrom-Json
+          $expected = "v$($package.version)"
+
+          if ($env:VERSION_TAG -ne $expected) {
+            throw "Tag $env:VERSION_TAG does not match $expected"
+          }
+
+      - name: Build Windows installer
+        working-directory: desktop
+        env:
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        run: npm run installer:win
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: JARVIS-Windows-${{ github.ref_name }}
+          path: desktop/release/JARVIS-Setup-*.exe
+          if-no-files-found: error
+          retention-days: 14

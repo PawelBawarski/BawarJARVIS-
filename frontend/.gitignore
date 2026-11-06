@@ -42,3 +42,21 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Dependencies
+**/node_modules/
+
+# Angular builds
+**/dist/
+
+# Electron builds
+desktop/out/
+desktop/release/
+
+# Logs
+*.log
+
+# Local configuration
+.env
+.env.*
+!.env.example

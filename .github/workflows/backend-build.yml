@@ -1,0 +1,46 @@
+name: BE - Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/**"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Spring Boot
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Build backend
+        working-directory: backend
+        run: bash ./mvnw -B -ntp -Dmaven.test.skip=true package
+
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jarvis-backend
+          path: backend/target/*.jar
+          if-no-files-found: error
+          retention-days: 7
