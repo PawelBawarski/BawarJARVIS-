@@ -1,0 +1,23 @@
+{
+  "sidebar.menu": "MENU",
+  "sidebar.assistant": "Asystent AI",
+  "sidebar.history": "Historia rozmów",
+  "sidebar.emptyHistory": "Tutaj pojawią się Twoje rozmowy.",
+  "sidebar.settings": "Ustawienia",
+  "sidebar.personalAssistant": "OSOBISTY ASYSTENT AI",
+
+  "settings.theme": "Motyw",
+  "settings.language": "Język",
+  "settings.dark": "Ciemny",
+  "settings.light": "Jasny",
+
+  "chat.title": "Centrum dowodzenia",
+  "chat.demoMode": "Tryb demonstracyjny",
+  "chat.welcome": "Cześć! Jestem Jarvis. Jak mogę Ci pomóc?",
+  "chat.tagline": "Twój osobisty asystent AI",
+  "chat.placeholder": "Napisz wiadomość do Jarvisa...",
+  "chat.send": "Wyślij",
+  "chat.you": "TY",
+  "chat.demoReply": "Otrzymałem wiadomość. Mój model AI zostanie podłączony w kolejnym etapie.",
+  "chat.footer": "JARVIS v0.1 — lokalny interfejs demonstracyjny"
+}

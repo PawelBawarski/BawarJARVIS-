@@ -1,1 +1,52 @@
-<p>chat-view works!</p>
+<section class="chat">
+  <header class="chat-header">
+    <div>
+      <p class="eyebrow">JARVIS / ASSISTANT</p>
+      <h1>{{ 'chat.title' | translate }}</h1>
+    </div>
+
+    <span class="connection-status"> ● Tryb demonstracyjny </span>
+  </header>
+
+  <main class="chat-messages">
+    <div class="welcome">
+      <div class="ai-orb">J</div>
+      <h2>J.A.R.V.I.S.</h2>
+      <p>Twój osobisty asystent AI</p>
+    </div>
+
+    @for (message of messages(); track message.id) {
+      <div
+        class="message"
+        [class.message--user]="message.role === 'user'"
+        [class.message--assistant]="message.role === 'assistant'"
+      >
+        <span class="message__author">
+          {{ message.role === 'user' ? 'TY' : 'JARVIS' }}
+        </span>
+
+        <p>{{ message.content }}</p>
+      </div>
+    }
+  </main>
+
+  <footer class="chat-footer">
+    <div class="composer">
+      <input
+        #messageInput
+        type="text"
+        aria-label="Wiadomość"
+        placeholder="Napisz wiadomość do Jarvisa..."
+        [value]="draft()"
+        (input)="draft.set(messageInput.value)"
+        (keydown.enter)="sendMessage()"
+      />
+
+      <button type="button" [disabled]="!draft().trim()" (click)="sendMessage()">
+        {{ 'chat.send' | translate }}
+      </button>
+    </div>
+
+    <p class="footer-note">JARVIS v0.1 — lokalny interfejs demonstracyjny</p>
+  </footer>
+</section>

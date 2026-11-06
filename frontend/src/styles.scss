@@ -1,1 +1,55 @@
 /* You can add global styles to this file, and also import other style files */
+
+:root {
+  color-scheme: dark;
+
+  --bg: #090e19;
+  --panel: #101827;
+  --panel-soft: #172237;
+
+  --text: #edf4ff;
+  --muted: #899cb9;
+
+  --accent: #70acff;
+  --accent-soft: #18345a;
+
+  --border: rgba(155, 185, 225, 0.15);
+}
+
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #f4f7fc;
+  --panel: #ffffff;
+  --panel-soft: #eaf0f9;
+
+  --text: #1b2a42;
+  --muted: #60728e;
+
+  --accent: #2463ba;
+  --accent-soft: #e2ecff;
+
+  --border: rgba(46, 75, 115, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}

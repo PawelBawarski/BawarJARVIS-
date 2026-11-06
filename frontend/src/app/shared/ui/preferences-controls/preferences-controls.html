@@ -1,0 +1,32 @@
+<div class="preferences">
+  <div class="preferences__row">
+    <span>{{ language.t('theme') }}</span>
+
+    <button type="button" [attr.aria-label]="language.t('theme')" (click)="theme.toggleTheme()">
+      @if (theme.theme() === 'dark') {
+        ☾ {{ language.t('darkMode') }}
+      } @else {
+        ☀ {{ language.t('lightMode') }}
+      }
+    </button>
+  </div>
+
+  <div class="preferences__row">
+    <span>{{ language.t('language') }}</span>
+
+    <button
+      type="button"
+      [attr.aria-label]="language.t('language')"
+      [disabled]="language.loading()"
+      (click)="language.toggleLanguage()"
+    >
+      {{ language.language().toUpperCase() }}
+    </button>
+  </div>
+
+  @if (language.error()) {
+    <p class="preferences__error" role="alert">
+      {{ language.t('languageLoadError') }}
+    </p>
+  }
+</div>
