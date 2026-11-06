@@ -1,0 +1,30 @@
+{
+  "name": "jarvis-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "main": "electron/main.cjs",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve --host 127.0.0.1",
+    "desktop": "concurrently -k -n ANGULAR,ELECTRON -c blue,cyan \"npm:start\" \"npm:electron:wait\"",
+    "electron:wait": "wait-on http://127.0.0.1:4200 && electron .",
+    "build": "ng build --base-href ./"
+  },
+  "dependencies": {
+    "@angular/common": "^22.0.0",
+    "@angular/compiler": "^22.0.0",
+    "@angular/core": "^22.0.0",
+    "@angular/platform-browser": "^22.0.0",
+    "rxjs": "^7.8.2",
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "@angular/build": "^22.0.0",
+    "@angular/cli": "^22.0.0",
+    "@angular/compiler-cli": "^22.0.0",
+    "concurrently": "^9.2.1",
+    "electron": "^39.0.0",
+    "typescript": "~6.0.0",
+    "wait-on": "^9.0.1"
+  }
+}

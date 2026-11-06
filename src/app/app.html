@@ -1,0 +1,90 @@
+<div class="desktop-shell">
+  <aside class="sidebar">
+    <header class="brand">
+      <div class="brand-symbol"><span>J</span></div>
+      <div class="brand-copy"><strong>J.A.R.V.I.S.</strong><small>PERSONAL AI SYSTEM</small></div>
+    </header>
+
+    <button class="new-chat" type="button" (click)="newConversation()">
+      <span class="plus">＋</span> Nowa rozmowa <span class="shortcut">NEW</span>
+    </button>
+
+    <div class="section-label"><span>ROZMOWY</span><span>{{ conversations().length }}</span></div>
+    <nav class="conversation-list" aria-label="Lista rozmów">
+      @for (chat of conversations(); track chat.id) {
+        <div class="conversation-row" [class.selected]="chat.id === activeId()">
+          <button type="button" class="conversation-open" (click)="selectConversation(chat.id)" [attr.aria-current]="chat.id === activeId() ? 'page' : null">
+            <span class="chat-icon">◫</span><span class="truncate">{{ chat.title }}</span>
+          </button>
+          <button type="button" class="delete-chat" (click)="deleteConversation(chat.id)" aria-label="Usuń rozmowę" title="Usuń rozmowę">×</button>
+        </div>
+      }
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="system-widget">
+        <div class="widget-heading"><span class="live-dot"></span> STATUS SYSTEMU</div>
+        <div class="widget-title">Interfejs gotowy</div>
+        <p>Silnik LLM: niepodłączony</p>
+        <div class="progress-track"><div class="progress-fill"></div></div>
+        <small>ETAP 01 / DESKTOP UI</small>
+      </div>
+      <div class="account">
+        <div class="avatar">P</div>
+        <div><strong>Użytkownik lokalny</strong><small>Windows Desktop</small></div>
+        <span class="account-dot"></span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-panel">
+    <header class="topbar">
+      <div class="topbar-title"><div class="topbar-glyph">◈</div><div><strong>Asystent osobisty</strong><small>Twój prywatny workspace</small></div></div>
+      <div class="topbar-actions">
+        <span class="mode-pill"><span class="yellow-dot"></span> TRYB DEMO</span>
+        <button type="button" class="voice-toggle" [class.active]="voiceOn()" (click)="toggleVoice()" [attr.aria-pressed]="voiceOn()" title="Włącz lub wyłącz odczytywanie odpowiedzi">
+          {{ voiceOn() ? '◉ Głos włączony' : '♫ Włącz głos' }}
+        </button>
+      </div>
+    </header>
+
+    <section class="chat-section" aria-label="Czat z Jarvisem">
+      <div class="ambient-glow" aria-hidden="true"></div>
+      <div class="chat-content">
+        <div class="hero">
+          <div class="orb"><div class="orb-inner">J</div><div class="ring ring-one"></div><div class="ring ring-two"></div></div>
+          <span class="eyebrow">YOUR INTELLIGENT COMPANION</span>
+          <h1>Witaj w <em>J.A.R.V.I.S.</em></h1>
+          <p>Osobisty asystent AI — budowany przez Ciebie, krok po kroku.</p>
+        </div>
+
+        <div class="messages">
+          @for (message of activeConversation().messages; track message.id) {
+            <article class="message" [class.user]="message.role === 'user'">
+              <div class="message-avatar">{{ message.role === 'user' ? 'TY' : 'J' }}</div>
+              <div class="message-body">
+                <div class="message-meta"><strong>{{ message.role === 'user' ? 'Ty' : 'Jarvis' }}</strong><time>{{ message.createdAt | date: 'HH:mm' }}</time></div>
+                <div class="message-bubble">{{ message.text }}</div>
+                @if (message.role === 'assistant') {
+                  <button type="button" class="speak-action" (click)="speak(message.text)" aria-label="Odczytaj wiadomość">♫ Odczytaj głosem</button>
+                }
+              </div>
+            </article>
+          }
+        </div>
+      </div>
+    </section>
+
+    <footer class="composer-area">
+      <div class="composer">
+        <div class="input-row">
+          <span class="input-sparkle">✧</span>
+          <textarea aria-label="Twoja wiadomość" placeholder="Napisz wiadomość do Jarvisa..." rows="2" [value]="draft()" (input)="draft.set($any($event.target).value)" (keydown)="onKeydown($event)"></textarea>
+          <button class="send-button" type="button" (click)="sendMessage()" [disabled]="!draft().trim()" aria-label="Wyślij wiadomość">➤</button>
+        </div>
+        <div class="composer-footer"><span>↵ Enter, aby wysłać · Shift + Enter, aby przejść do nowej linii</span><span>LOCAL FIRST <span class="tiny-dot"></span> v0.1</span></div>
+      </div>
+      <p class="privacy-note">Wersja demonstracyjna · Rozmowy zapisują się lokalnie w pamięci aplikacji.</p>
+    </footer>
+  </main>
+</div>
