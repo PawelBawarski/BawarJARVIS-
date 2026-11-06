@@ -1,4 +1,43 @@
-<div class="shell">
-  <app-sidebar />
+
+<div
+  class="shell"
+  [class.shell--sidebar-open]="sidebarOpen()"
+  [class.shell--sidebar-closed]="!sidebarOpen()"
+>
+  <button
+    type="button"
+    class="menu-toggle"
+    aria-controls="jarvis-sidebar"
+    [attr.aria-expanded]="sidebarOpen()"
+    [attr.aria-label]="
+      (sidebarOpen()
+        ? 'sidebar.closeMenu'
+        : 'sidebar.openMenu') | translate
+    "
+    (click)="toggleSidebar()"
+  >
+    <span aria-hidden="true">
+      {{ sidebarOpen() ? '✕' : '☰' }}
+    </span>
+  </button>
+
+  @if (isMobile() && sidebarOpen()) {
+    <button
+      type="button"
+      class="sidebar-backdrop"
+      [attr.aria-label]="'sidebar.closeMenu' | translate"
+      (click)="closeSidebar()"
+    ></button>
+  }
+
+  <div
+    id="jarvis-sidebar"
+    class="sidebar-region"
+    [attr.inert]="sidebarOpen() ? null : ''"
+    [attr.aria-hidden]="!sidebarOpen()"
+  >
+    <app-sidebar />
+  </div>
+
   <app-chat-view />
 </div>

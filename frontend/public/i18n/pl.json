@@ -19,5 +19,8 @@
   "chat.send": "Wyślij",
   "chat.you": "TY",
   "chat.demoReply": "Otrzymałem wiadomość. Mój model AI zostanie podłączony w kolejnym etapie.",
-  "chat.footer": "JARVIS v0.1 — lokalny interfejs demonstracyjny"
+  "chat.footer": "JARVIS v0.1 — lokalny interfejs demonstracyjny",
+  "settings.languageLoadError": "Nie udało się zmienić języka.",
+  "sidebar.openMenu": "Otwórz menu",
+  "sidebar.closeMenu": "Zamknij menu"
 }

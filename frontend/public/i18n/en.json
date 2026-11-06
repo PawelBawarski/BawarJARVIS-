@@ -19,5 +19,8 @@
   "chat.send": "Send",
   "chat.you": "YOU",
   "chat.demoReply": "Message received. My AI model will be connected in the next stage.",
-  "chat.footer": "JARVIS v0.1 — local demo interface"
+  "chat.footer": "JARVIS v0.1 — local demo interface",
+  "settings.languageLoadError": "Could not change the language.",
+  "sidebar.openMenu": "Open menu",
+  "sidebar.closeMenu": "Close menu"
 }

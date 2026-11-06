@@ -1,32 +1,37 @@
-<div class="preferences">
+<section class="preferences">
   <div class="preferences__row">
-    <span>{{ language.t('theme') }}</span>
+    <span>{{ 'settings.theme' | translate }}</span>
 
-    <button type="button" [attr.aria-label]="language.t('theme')" (click)="theme.toggleTheme()">
+    <button type="button" class="theme-button" (click)="theme.toggleTheme()">
       @if (theme.theme() === 'dark') {
-        ☾ {{ language.t('darkMode') }}
+        ☾ {{ 'settings.dark' | translate }}
       } @else {
-        ☀ {{ language.t('lightMode') }}
+        ☀ {{ 'settings.light' | translate }}
       }
     </button>
   </div>
 
   <div class="preferences__row">
-    <span>{{ language.t('language') }}</span>
+    <span>{{ 'settings.language' | translate }}</span>
 
-    <button
-      type="button"
-      [attr.aria-label]="language.t('language')"
-      [disabled]="language.loading()"
-      (click)="language.toggleLanguage()"
-    >
-      {{ language.language().toUpperCase() }}
-    </button>
+    <div class="language-options" role="group" [attr.aria-label]="'settings.language' | translate">
+      @for (language of languages; track language) {
+        <button
+          type="button"
+          [attr.lang]="language"
+          [attr.aria-pressed]="translation.language() === language"
+          [disabled]="translation.loading()"
+          (click)="selectLanguage(language)"
+        >
+          {{ language.toUpperCase() }}
+        </button>
+      }
+    </div>
   </div>
 
-  @if (language.error()) {
+  @if (languageError()) {
     <p class="preferences__error" role="alert">
-      {{ language.t('languageLoadError') }}
+      {{ 'settings.languageLoadError' | translate }}
     </p>
   }
-</div>
+</section>

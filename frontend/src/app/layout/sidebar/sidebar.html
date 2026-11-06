@@ -4,27 +4,41 @@
 
     <div>
       <strong>J.A.R.V.I.S.</strong>
-      <small>PERSONAL AI ASSISTANT</small>
+      <small>
+        {{ 'sidebar.personalAssistant' | translate }}
+      </small>
     </div>
   </div>
 
-  <nav aria-label="Nawigacja">
-    <p class="section-title">MENU</p>
+  <nav [attr.aria-label]="'sidebar.menu' | translate">
+    <p class="section-title">
+      {{ 'sidebar.menu' | translate }}
+    </p>
 
-    <div class="nav-item nav-item--active"
-         aria-current="page">
+    <div class="nav-item nav-item--active" aria-current="page">
       <span>✦</span>
-      <span>Asystent AI</span>
+      <span>{{ 'sidebar.assistant' | translate }}</span>
     </div>
 
-    <p class="section-title">HISTORIA</p>
+    <p class="section-title">
+      {{ 'sidebar.history' | translate }}
+    </p>
+
     <p class="empty-history">
-      Tutaj pojawią się Twoje rozmowy.
+      {{ 'sidebar.emptyHistory' | translate }}
     </p>
   </nav>
 
-  <div class="sidebar-footer">
-    <span class="status-dot"></span>
-    JARVIS Desktop v0.1
+  <div class="sidebar-bottom">
+    <p class="section-title">
+      {{ 'sidebar.settings' | translate }}
+    </p>
+
+    <app-preferences-controls />
+
+    <div class="sidebar-footer">
+      <span class="status-dot"></span>
+      JARVIS Desktop v0.1
+    </div>
   </div>
 </aside>
