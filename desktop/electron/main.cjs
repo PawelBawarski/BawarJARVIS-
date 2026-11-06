@@ -116,8 +116,38 @@ app
       registerUiProtocol();
     }
 
-    createWindow();
+    const jarvisWindow = createWindow();
 
+    // Aktualizacje uruchamiamy tylko w zainstalowanej aplikacji.
+    if (app.isPackaged) {
+      const updateManager = createUpdateManager({
+        updater: autoUpdater,
+        dialog,
+        window: jarvisWindow,
+        locale: app.getLocale(),
+      });
+
+      // Pierwsze sprawdzenie po 15 sekundach.
+      const initialCheck = setTimeout(() => {
+        void updateManager.check();
+      }, 15_000);
+
+      // Kolejne sprawdzenie co 6 godzin.
+      const periodicCheck = setInterval(
+        () => {
+          void updateManager.check();
+        },
+        6 * 60 * 60 * 1000,
+      );
+
+      // Sprzątamy timery przy zamykaniu aplikacji.
+      app.once("before-quit", () => {
+        clearTimeout(initialCheck);
+        clearInterval(periodicCheck);
+      });
+    }
+
+    // Obsługa ponownego otwarcia okna.
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) {
         createWindow();
