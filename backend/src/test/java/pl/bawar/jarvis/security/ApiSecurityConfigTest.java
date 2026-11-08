@@ -28,10 +28,12 @@ class ApiSecurityConfigTest {
     }
 
     @Test
-    void shouldDenyUnknownApiEndpoint() throws Exception {
+    void shouldRequireAuthenticationForUnknownApiEndpoint()
+            throws Exception {
+
         mockMvc.perform(
                 get("/api/internal/example"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

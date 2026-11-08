@@ -1,20 +1,29 @@
-# J.A.R.V.I.S. — poprawka testów 9.5.3
+# JARVIS – LLM Lekcja 10.4
 
-Skopiuj ścieżki z zachowaniem struktury katalogów od root `BawarJARVIS-/`:
+## Najpierw napraw test Spring Security
 
-- `frontend/src/app/core/services/security-diagnostics.desktop.spec.ts` — podmień pusty plik. Zawiera 3 testy Vitest.
-- `frontend/e2e/security-diagnostics.e2e.spec.ts` — nowy plik Playwright. Zawiera 3 testy UI.
+Plik `backend/src/test/java/pl/bawar/jarvis/security/ApiSecurityConfigTest.java`:
 
-Git Bash:
+W teście `shouldDenyUnknownApiEndpoint` zamień oczekiwanie statusu dla żądania bez tokenu:
+`status().isForbidden()` -> `status().isUnauthorized()`.
+
+Nazwę testu możesz zmienić na `shouldRequireAuthenticationForUnknownApiEndpoint`.
+Nie zmieniaj konfiguracji zabezpieczeń tylko dla starego oczekiwania testu.
+
+## Skopiuj nowe pliki
+
+- `backend/src/main/java/pl/bawar/jarvis/brain/optimization/AdamWOptimizer.java`
+- `backend/src/test/java/pl/bawar/jarvis/brain/optimization/AdamWOptimizerTest.java`
+- `backend/src/test/java/pl/bawar/jarvis/brain/optimization/AdamWDenseTrainingTest.java`
+
+Umieść je w repozytorium `BawarJARVIS-` zachowując strukturę katalogów.
+
+## Uruchom
 
 ```bash
-cd ~/Desktop/Nauka/BawarJARVIS-/frontend
-ls -l src/app/core/services/security-diagnostics.desktop.spec.ts
-ls -l e2e/security-diagnostics.e2e.spec.ts
-npm test -- --watch=false
-npm run build
-npx playwright test --list
-npx playwright test e2e/security-diagnostics.e2e.spec.ts --headed
+cd ~/Desktop/Nauka/BawarJARVIS-/backend
+./mvnw.cmd -Dtest=AdamWOptimizerTest,AdamWDenseTrainingTest test
+./mvnw.cmd clean test
 ```
 
-Uwaga: testy Playwright symulują odpowiedzi backendu i mostu Electron — nie są testem prawdziwego IPC lub autoryzacji serwera.
+W `AdamWDenseTrainingTest` ćwiczymy jedną miniwarstwę na jednym przykładzie, nie cały transformer. Test korzysta z `DenseLayer.backward()` z poprzedniej lekcji. Osobny optimizer przypada na każdy wiersz macierzy wag i biasy, bo musi przechowywać momenty pomiędzy krokami. Biasy mają weight decay = 0.0.
