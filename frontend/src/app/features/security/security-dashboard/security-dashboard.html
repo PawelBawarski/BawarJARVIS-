@@ -1,0 +1,28 @@
+<section class="security-dashboard">
+  <header class="security-dashboard__header">
+    <h1>{{ 'security.title' | translate }}</h1>
+    <p>{{ 'security.description' | translate }}</p>
+  </header>
+
+  <div class="security-dashboard__grid">
+    @for (check of checks; track check.id) {
+      <article class="security-card">
+        <div class="security-card__top">
+          <h2>{{ check.titleKey | translate }}</h2>
+
+          <span class="security-card__status">
+            {{ 'security.unverified' | translate }}
+          </span>
+        </div>
+
+        <p>
+          {{ check.descriptionKey | translate }}
+        </p>
+      </article>
+    }
+  </div>
+
+  <p class="security-dashboard__note">
+    {{ 'security.disclaimer' | translate }}
+  </p>
+</section>

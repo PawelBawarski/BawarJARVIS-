@@ -21,6 +21,7 @@ const APP_URL = "jarvis://app/index.html";
 
 const useBuiltUi = app.isPackaged || process.argv.includes("--preview");
 
+const { withUiSecurityHeaders } = require("./security-policy.cjs");
 // Rejestrujemy protokół przed uruchomieniem Electrona.
 protocol.registerSchemesAsPrivileged([
   {
@@ -52,7 +53,9 @@ function registerUiProtocol() {
     }
 
     try {
-      return await net.fetch(pathToFileURL(assetPath).toString());
+      const response = await net.fetch(pathToFileURL(assetPath).toString());
+
+      return withUiSecurityHeaders(response);
     } catch (error) {
       console.error("Cannot load UI asset:", error);
 

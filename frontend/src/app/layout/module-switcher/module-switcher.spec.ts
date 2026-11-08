@@ -33,11 +33,11 @@ describe('ModuleSwitcher', () => {
 
     fixture.detectChanges();
 
-    const element: HTMLElement = fixture.nativeElement;
+    const select: HTMLSelectElement | null =
+      fixture.nativeElement.querySelector('#jarvis-module-select');
 
-    expect(element.querySelector('.module-switcher__current')?.textContent).toContain(
-      'workspace.chat',
-    );
+    expect(select).not.toBeNull();
+    expect(select?.value).toBe('chat');
   });
 
   it('should navigate to next module', () => {

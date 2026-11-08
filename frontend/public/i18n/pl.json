@@ -67,5 +67,21 @@
   "radio.country.pl": "Polska",
   "radio.country.gb": "Wielka Brytania",
   "radio.country.de": "Niemcy",
-  "radio.country.fr": "Francja"
+  "radio.country.fr": "Francja",
+  "workspace.security": "Bezpieczeństwo",
+  "security.title": "Centrum bezpieczeństwa",
+  "security.description": "Diagnostyka i kontrola zabezpieczeń Jarvisa",
+  "security.unverified": "Niezweryfikowano",
+  "security.backend": "Spring Boot API",
+  "security.backendDescription": "Sprawdzenie nasłuchiwania na 127.0.0.1 i zabezpieczenia lokalnych żądań.",
+  "security.electron": "Electron",
+  "security.electronDescription": "Sprawdzenie izolacji kontekstu, sandboxa i uprawnień IPC.",
+  "security.network": "Dostęp do internetu",
+  "security.networkDescription": "Sprawdzenie zasad połączeń wychodzących i kontroli adresów URL.",
+  "security.database": "Baza danych",
+  "security.databaseDescription": "Sprawdzenie ochrony PostgreSQL i dostępu do zapisanych rozmów.",
+  "security.disclaimer": "Statusy mają charakter diagnostyczny. Niezweryfikowany mechanizm nie oznacza, że został sprawdzony ani że jest bezpieczny.",
+  "chat.deleteTitle": "Usunąć rozmowę?",
+  "chat.deleteDescription": "Czy na pewno chcesz usunąć tę rozmowę wraz ze wszystkimi wiadomościami? Tej operacji nie można cofnąć.",
+  "common.cancel": "Anuluj"
 }

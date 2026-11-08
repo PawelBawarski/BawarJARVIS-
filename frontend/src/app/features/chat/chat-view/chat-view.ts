@@ -1,9 +1,9 @@
-import { DOCUMENT } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 
 import { ChatStore } from '../../../core/services/chat-store';
 import { TranslationService } from '../../../core/services/translation';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
+import { ConfirmDialogService } from '../../../shared/services/confirm-dialog';
 
 @Component({
   selector: 'app-chat-view',
@@ -15,7 +15,7 @@ export class ChatView {
   readonly store = inject(ChatStore);
   readonly draft = signal('');
 
-  private readonly document = inject(DOCUMENT);
+  private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly translation = inject(TranslationService);
 
   sendMessage(): void {
@@ -29,9 +29,13 @@ export class ChatView {
     this.draft.set('');
   }
 
-  deleteChat(): void {
-    const confirmed =
-      this.document.defaultView?.confirm(this.translation.translate('chat.confirmDelete')) ?? false;
+  async deleteChat(): Promise<void> {
+    const confirmed = await this.confirmDialog.open({
+      title: this.translation.translate('chat.deleteTitle'),
+      message: this.translation.translate('chat.deleteDescription'),
+      confirmText: this.translation.translate('chat.delete'),
+      cancelText: this.translation.translate('common.cancel'),
+    });
 
     if (!confirmed) {
       return;

@@ -1,5 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
+@use '@angular/cdk' as cdk;
 
+@include cdk.overlay();
 :root {
   color-scheme: dark;
 
@@ -15,7 +17,6 @@
 
   --border: rgba(155, 185, 225, 0.15);
 }
-
 
 :root[data-theme='light'] {
   color-scheme: light;

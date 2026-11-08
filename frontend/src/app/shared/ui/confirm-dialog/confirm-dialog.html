@@ -1,0 +1,21 @@
+<section class="confirm-dialog">
+  <div class="confirm-dialog__icon" aria-hidden="true">!</div>
+
+  <h2 class="confirm-dialog__title">
+    {{ data.title }}
+  </h2>
+
+  <p class="confirm-dialog__description">
+    {{ data.message }}
+  </p>
+
+  <div class="confirm-dialog__actions">
+    <button type="button" class="confirm-dialog__cancel" (click)="cancel()">
+      {{ data.cancelText }}
+    </button>
+
+    <button type="button" class="confirm-dialog__confirm" (click)="confirm()">
+      {{ data.confirmText }}
+    </button>
+  </div>
+</section>

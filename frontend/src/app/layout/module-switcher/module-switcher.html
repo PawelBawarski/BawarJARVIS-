@@ -1,27 +1,19 @@
-<nav class="module-switcher" [attr.aria-label]="'workspace.navigation' | translate">
+
+<nav
+  class="module-switcher"
+  [attr.aria-label]="'workspace.navigation' | translate"
+>
   <button
     type="button"
     class="module-switcher__arrow"
     [attr.aria-label]="'workspace.previous' | translate"
     (click)="navigation.previous()"
   >
-    <span aria-hidden="true">&#8249;</span>
+    <span aria-hidden="true">‹</span>
   </button>
 
-  <div class="module-switcher__current" aria-live="polite">
-    {{ navigation.activeModule().labelKey | translate }}
-  </div>
-
-  <button
-    type="button"
-    class="module-switcher__arrow"
-    [attr.aria-label]="'workspace.next' | translate"
-    (click)="navigation.next()"
-  >
-    <span aria-hidden="true">&#8250;</span>
-  </button>
-
-  <label class="module-switcher__label" for="jarvis-module-select">
+  <label class="module-switcher__label"
+         for="jarvis-module-select">
     {{ 'workspace.select' | translate }}
   </label>
 
@@ -38,4 +30,13 @@
       </option>
     }
   </select>
+
+  <button
+    type="button"
+    class="module-switcher__arrow"
+    [attr.aria-label]="'workspace.next' | translate"
+    (click)="navigation.next()"
+  >
+    <span aria-hidden="true">›</span>
+  </button>
 </nav>

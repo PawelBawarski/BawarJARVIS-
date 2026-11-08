@@ -22,6 +22,7 @@
   "private": true,
   "dependencies": {
     "debug": "^4.4.3",
+    "electron-updater": "^6.8.11",
     "env-paths": "^3.0.0",
     "graceful-fs": "^4.2.11",
     "ms": "^2.1.3",

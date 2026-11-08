@@ -20,18 +20,24 @@ describe('ModuleNavigationService', () => {
   it('should wrap from last module to first', () => {
     const navigation = new ModuleNavigationService();
 
-    navigation.select('lab');
+    const lastModule = navigation.modules.at(-1);
+
+    expect(lastModule).toBeDefined();
+
+    navigation.select(lastModule!.id);
     navigation.next();
 
-    expect(navigation.activeId()).toBe('chat');
+    expect(navigation.activeId()).toBe(navigation.modules[0].id);
   });
 
   it('should wrap backwards', () => {
     const navigation = new ModuleNavigationService();
 
+    const lastModule = navigation.modules.at(-1);
+
     navigation.previous();
 
-    expect(navigation.activeId()).toBe('lab');
+    expect(navigation.activeId()).toBe(lastModule?.id);
   });
 
   it('should ignore unknown modules', () => {
