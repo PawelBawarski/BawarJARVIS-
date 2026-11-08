@@ -1,8 +1,14 @@
-import { Component, computed, inject } from '@angular/core';
 
-import { TranslationService } from '../../../core/services/translation';
+import { Component, inject } from '@angular/core';
+
 import { NetworkStatusService } from '../../../core/services/network-status';
 import { TranslatePipe } from '../../pipes/translate.pipe';
+
+const RELEASES =
+  'https://github.com/PawelBawarski/BawarJARVIS-/releases';
+
+const PROJECT =
+  'https://github.com/PawelBawarski/BawarJARVIS-';
 
 @Component({
   selector: 'app-connectivity-toolbar',
@@ -11,25 +17,25 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
   styleUrl: './connectivity-toolbar.scss',
 })
 export class ConnectivityToolbar {
-  readonly translation = inject(TranslationService);
   readonly network = inject(NetworkStatusService);
 
-  readonly isOnline = computed(() => this.network.isOnline());
-  readonly networkLabel = computed(() =>
-    this.isOnline()
-      ? this.translation.translate('network.online')
-      : this.translation.translate('network.offline'),
-  );
+  async openInstaller(): Promise<void> {
+    if (this.network.isOffline()) return;
 
-  readonly radioDisabled = computed(() => !this.isOnline());
-
-  openInstaller(): void {
-    // tutaj zostawiasz swój obecny mechanizm
-    console.log('Open installer');
+    if (window.jarvisDesktop?.openReleasesPage) {
+      await window.jarvisDesktop.openReleasesPage();
+    } else {
+      window.open(RELEASES, '_blank', 'noopener,noreferrer');
+    }
   }
 
-  openBrowser(): void {
-    // tutaj zostawiasz swój obecny mechanizm
-    console.log('Open browser');
+  async openBrowser(): Promise<void> {
+    if (this.network.isOffline()) return;
+
+    if (window.jarvisDesktop?.openProjectPage) {
+      await window.jarvisDesktop.openProjectPage();
+    } else {
+      window.open(PROJECT, '_blank', 'noopener,noreferrer');
+    }
   }
 }
