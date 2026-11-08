@@ -22,5 +22,17 @@
   "chat.footer": "JARVIS v0.1 — local demo interface",
   "settings.languageLoadError": "Could not change the language.",
   "sidebar.openMenu": "Open menu",
-  "sidebar.closeMenu": "Close menu"
+  "sidebar.closeMenu": "Close menu",
+  "workspace.chat": "Chat",
+  "workspace.mining": "Mining",
+  "workspace.lab": "AI Lab",
+  "mining.title": "Mining",
+  "mining.description": "Cryptocurrency mining management module.",
+  "mining.status": "The mining engine is not connected yet.",
+  "lab.title": "AI Lab",
+  "lab.description": "Workspace for controlled Jarvis development.",
+  "lab.status": "The agent is stopped.",
+  "lab.play": "Play",
+  "lab.stop": "Stop",
+  "lab.approval": "Code changes will require your approval."
 }

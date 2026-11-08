@@ -53,4 +53,41 @@ public final class MatrixOps {
 
         return columns;
     }
+
+    public static double[] softmax(double[] values) {
+
+        if (values == null || values.length == 0) {
+            throw new IllegalArgumentException(
+                    "Values cannot be null or empty");
+        }
+
+        // Krok 1: Znajdź największą wartość.
+        double max = Double.NEGATIVE_INFINITY;
+
+        for (double value : values) {
+            if (!Double.isFinite(value)) {
+                throw new IllegalArgumentException(
+                        "Values must be finite");
+            }
+
+            max = Math.max(max, value);
+        }
+
+        // Krok 2: Oblicz funkcję wykładniczą.
+        double[] result = new double[values.length];
+
+        double sum = 0.0;
+
+        for (int i = 0; i < values.length; i++) {
+            result[i] = Math.exp(values[i] - max);
+            sum += result[i];
+        }
+
+        // Krok 3: Podziel każdą wartość przez sumę.
+        for (int i = 0; i < result.length; i++) {
+            result[i] /= sum;
+        }
+
+        return result;
+    }
 }

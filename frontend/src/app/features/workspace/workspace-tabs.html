@@ -1,0 +1,40 @@
+<nav class="workspace-tabs" aria-label="Jarvis modules">
+  <button
+    type="button"
+    [class.active]="activeTab() === 'chat'"
+    [attr.aria-current]="activeTab() === 'chat' ? 'page' : null"
+    (click)="selectTab('chat')"
+  >
+    {{ 'workspace.chat' | translate }}
+  </button>
+
+  <button
+    type="button"
+    [class.active]="activeTab() === 'mining'"
+    [attr.aria-current]="activeTab() === 'mining' ? 'page' : null"
+    (click)="selectTab('mining')"
+  >
+    {{ 'workspace.mining' | translate }}
+  </button>
+
+  <button
+    type="button"
+    [class.active]="activeTab() === 'lab'"
+    [attr.aria-current]="activeTab() === 'lab' ? 'page' : null"
+    (click)="selectTab('lab')"
+  >
+    {{ 'workspace.lab' | translate }}
+  </button>
+</nav>
+
+<section [hidden]="activeTab() !== 'chat'">
+  <app-chat-view />
+</section>
+
+<section [hidden]="activeTab() !== 'mining'">
+  <app-mining-view />
+</section>
+
+<section [hidden]="activeTab() !== 'lab'">
+  <app-ai-lab-view />
+</section>

@@ -1,0 +1,38 @@
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.workspace-tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  overflow-x: auto;
+}
+
+.workspace-tabs button {
+  border: 1px solid transparent;
+  border-radius: 0.65rem;
+  padding: 0.75rem 1rem;
+
+  color: inherit;
+  background: transparent;
+
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.workspace-tabs button.active {
+  border-color: currentColor;
+  font-weight: 600;
+}
+
+.workspace-tabs button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none !important;
+}

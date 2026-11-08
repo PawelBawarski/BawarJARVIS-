@@ -1,24 +1,18 @@
-
 import { DOCUMENT } from '@angular/common';
-import {
-  Component,
-  DestroyRef,
-  inject,
-  signal
-} from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 
 import { Sidebar } from '../sidebar/sidebar';
-import { ChatView } from '../../features/chat/chat-view/chat-view';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
+import { WorkspaceTabs } from '../../features/workspace/workspace-tabs';
 
 @Component({
   selector: 'app-app-shell',
-  imports: [Sidebar, ChatView, TranslatePipe],
+  imports: [Sidebar, TranslatePipe, WorkspaceTabs],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.scss',
   host: {
-    '(document:keydown.escape)': 'onEscape()'
-  }
+    '(document:keydown.escape)': 'onEscape()',
+  },
 })
 export class AppShell {
   private readonly document = inject(DOCUMENT);
@@ -28,9 +22,7 @@ export class AppShell {
   readonly sidebarOpen = signal(true);
 
   constructor() {
-    const mediaQuery = this.document.defaultView?.matchMedia?.(
-      '(max-width: 760px)'
-    );
+    const mediaQuery = this.document.defaultView?.matchMedia?.('(max-width: 760px)');
 
     if (!mediaQuery) {
       return;
@@ -52,7 +44,7 @@ export class AppShell {
   }
 
   toggleSidebar(): void {
-    this.sidebarOpen.update(open => !open);
+    this.sidebarOpen.update((open) => !open);
   }
 
   closeSidebar(): void {
