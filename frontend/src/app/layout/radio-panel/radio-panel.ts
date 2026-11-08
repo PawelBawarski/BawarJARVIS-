@@ -1,3 +1,4 @@
+import { NetworkStatusService } from '../../core/services/network-status';
 import { Component, ElementRef, inject, signal } from '@angular/core';
 
 import { RadioPlayerService } from '../../core/services/radio-player';
@@ -16,6 +17,7 @@ import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 })
 export class RadioPanel {
   readonly player = inject(RadioPlayerService);
+  readonly network = inject(NetworkStatusService);
   readonly isOpen = signal(false);
 
   private readonly hostElement = inject(ElementRef<HTMLElement>);

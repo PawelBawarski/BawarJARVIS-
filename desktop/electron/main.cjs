@@ -1,3 +1,5 @@
+const { checkInternet } = require('./connectivity.cjs');
+const { shell } = require('electron');
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
 
@@ -133,6 +135,22 @@ app
       return checkPrivateHealth(
         process.env.JARVIS_SESSION_TOKEN
       );
+    });
+
+    // Fixed, allowlisted connectivity and external-page actions.
+    ipcMain.handle('jarvis:check-internet', async (event) => {
+      if (!isTrustedSender(event, useBuiltUi)) throw new Error('Untrusted IPC sender');
+      return checkInternet(net);
+    });
+    ipcMain.handle('jarvis:open-releases', async (event) => {
+      if (!isTrustedSender(event, useBuiltUi)) throw new Error('Untrusted IPC sender');
+      await shell.openExternal('https://github.com/PawelBawarski/BawarJARVIS-/releases');
+      return true;
+    });
+    ipcMain.handle('jarvis:open-project', async (event) => {
+      if (!isTrustedSender(event, useBuiltUi)) throw new Error('Untrusted IPC sender');
+      await shell.openExternal('https://github.com/PawelBawarski/BawarJARVIS-');
+      return true;
     });
 
     const jarvisWindow = createWindow();

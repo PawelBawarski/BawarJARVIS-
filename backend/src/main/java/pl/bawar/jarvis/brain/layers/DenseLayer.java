@@ -148,4 +148,33 @@ public final class DenseLayer {
                 weightGradients,
                 biasGradients);
     }
+
+    // Explicit trainable-parameter API (LLM 10.11); no reflection.
+    public double[][] weightsCopy() {
+        double[][] copy = new double[weights.length][];
+        for (int i = 0; i < weights.length; i++) copy[i] = weights[i].clone();
+        return copy;
+    }
+
+    public double[] biasesCopy() { return biases.clone(); }
+
+    public void replaceParameters(double[][] newWeights, double[] newBiases) {
+        if (newWeights == null || newWeights.length != weights.length
+                || newBiases == null || newBiases.length != biases.length) {
+            throw new IllegalArgumentException("Dense parameter shape mismatch");
+        }
+        for (double[] row : newWeights) {
+            if (row == null || row.length != biases.length) {
+                throw new IllegalArgumentException("Dense matrix width mismatch");
+            }
+            for (double x : row) if (!Double.isFinite(x))
+                throw new IllegalArgumentException("Dense weights must be finite");
+        }
+        for (double x : newBiases) if (!Double.isFinite(x))
+            throw new IllegalArgumentException("Dense biases must be finite");
+        for (int i = 0; i < weights.length; i++)
+            System.arraycopy(newWeights[i], 0, weights[i], 0, biases.length);
+        System.arraycopy(newBiases, 0, biases, 0, biases.length);
+    }
+
 }

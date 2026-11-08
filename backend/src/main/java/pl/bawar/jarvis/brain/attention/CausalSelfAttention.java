@@ -190,4 +190,9 @@ public final class CausalSelfAttention {
     public int embeddingSize() {
         return embeddingSize;
     }
+
+    public DenseLayer queryProjection() { return queryProjection; }
+    public DenseLayer keyProjection() { return keyProjection; }
+    public DenseLayer valueProjection() { return valueProjection; }
+
 }

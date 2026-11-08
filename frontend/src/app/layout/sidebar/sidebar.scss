@@ -1,112 +1,61 @@
 :host {
   display: block;
-  min-width: 0;
+  height: 100%;
 }
 
 .sidebar {
-  height: 100dvh;
-  padding: 28px 18px;
   display: flex;
   flex-direction: column;
-  background: var(--panel);
+  height: 100%;
+
+  padding: 1rem 1rem 1rem; // było za dużo u góry
+  background: var(--sidebar-bg, #08172f);
   border-right: 1px solid var(--border);
+  box-sizing: border-box;
 }
 
-.brand {
+.sidebar__brand {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px;
-  margin-bottom: 48px;
+  gap: 0.9rem;
 
-  strong {
-    display: block;
-    letter-spacing: 3px;
-    font-size: 15px;
-  }
-
-  small {
-    display: block;
-    margin-top: 5px;
-    color: var(--muted);
-    font-size: 9px;
-    letter-spacing: 2px;
-  }
+  margin-bottom: 1.75rem; // mniejszy odstęp niż wcześniej
 }
 
-.brand__icon {
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  border-radius: 14px;
-  background: #183867;
-  color: #9fceff;
-  border: 1px solid #3767a3;
-  font-size: 24px;
-  font-weight: 700;
+.sidebar__menu {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.section-title {
-  margin: 26px 12px 12px;
-  color: var(--muted);
-  font-size: 10px;
-  letter-spacing: 2px;
+.sidebar__history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem; // oddalamy od "Asystent AI"
 }
 
-.nav-item {
-  padding: 14px;
+.sidebar__history-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  border-radius: 10px;
-  color: var(--muted);
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
-.nav-item--active {
-  color: var(--accent);
-  background: var(--accent-soft);
+.sidebar__history-title {
+  margin: 0;
 }
 
-.empty-history {
-  padding: 0 12px;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.6;
+.sidebar__history-add {
+  flex: 0 0 auto;
 }
 
-.sidebar-footer {
-  margin-top: auto;
-  padding: 16px 10px;
+.sidebar__spacer {
+  flex: 1 1 auto;
+}
+
+.sidebar__footer {
+  margin-top: 1rem;
+  padding-top: 1rem;
   border-top: 1px solid var(--border);
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.status-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  margin-right: 8px;
-  background: #38d69b;
-  border-radius: 50%;
-}
-
-.sidebar-bottom {
-  margin-top: auto;
-  padding-top: 16px;
-}
-
-.sidebar-footer {
-  margin-top: 0;
-}
-
-.sidebar {
-  overflow-y: auto;
-}
-
-@media (max-width: 760px) {
-  .sidebar {
-    padding-top: 80px;
-  }
 }

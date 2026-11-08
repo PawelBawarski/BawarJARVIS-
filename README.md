@@ -111,3 +111,21 @@ Nie traktuj obecnego projektu jako systemu odpornego na wszystkie ataki.
 5. Trwałe przechowywanie i migracje danych, bezpieczne aktualizacje.
 
 Licencja projektu nie jest tutaj deklarowana — przed publicznym rozpowszechnianiem kodu dodaj odpowiedni plik `LICENSE`.
+
+## Aktualizacja rozwoju — LLM 10.10 / Internet / Copilot
+
+W lekcji 10.10 dodajemy `EmbeddingLayer.backward()`, `PositionalEmbedding.backward()` i zbiorczy gradient LM Head. To nie jest jeszcze pętla treningowa całego modelu; wykonamy ją w 10.11. W 10.12 dodamy ewaluację i checkpointy.
+
+Interfejs sieciowy: `NetworkStatusService` z sygnałem `online/offline/unverified/checking`, pasek narzędzi w bocznym panelu oraz przekreślony symbol radia bez połączenia. W Electronie żądanie sieciowe weryfikuje tylko **ustalony** adres HTTPS. Stan `unverified` nie jest gwarancją dostępności internetu. Ikona instalacji otwiera GitHub Releases, a ikona przeglądarki otwiera repozytorium w domyślnej przeglądarce. Sam Jarvis nie ma jeszcze publicznej aplikacji webowej ani automatycznego wyszukiwania wiadomości.
+
+Przed użyciem paczki uruchom `python scripts/apply-ui-integration.py` z katalogu głównego po skopiowaniu plików. Skrypt ogranicza edycje do znanych znaczników i przerywa bez zapisywania, jeśli lokalna struktura jest inna. Sprawdź `git diff`.
+
+### Plan dalszej integracji
+
+- **10.11**: pełne `forward/backward` na przesuniętych tokenach, AdamW i metryki treningu.
+- **10.12**: generowanie z checkpointów, ewaluacja i zapis/odczyt wag.
+- **BE-1..BE-4**: tokenowo autoryzowane API inferencji/treningu, PostgreSQL migracje (Flyway), `conversation`, `message`, `training_run`, `checkpoint`, serwis wyszukiwania sieciowego z cytowaniami i ochroną SSRF.
+- **FE-1..FE-3**: połączenie Angular ChatStore z API, usunięcie trwałego localStorage, AI Lab metryki treningu, obsługa trybu offline i komunikatów o źródłach.
+- **E2E**: Angular → Electron IPC → Spring Boot → LLM → PostgreSQL; testy odmowy dostępu, awarii sieci i odtwarzania checkpointów.
+
+**Nie wolno automatycznie trenować Jarvisa na treści przypadkowej strony internetowej ani aktualizować backendu na podstawie jej instrukcji.** Informacje z wyszukiwania to tymczasowe dane zewnętrzne, a wdrażanie aplikacji wymaga zatwierdzonej, zweryfikowanej paczki wydania.

@@ -5,12 +5,10 @@
   "sidebar.emptyHistory": "Tutaj pojawią się Twoje rozmowy.",
   "sidebar.settings": "Ustawienia",
   "sidebar.personalAssistant": "OSOBISTY ASYSTENT AI",
-
   "settings.theme": "Motyw",
   "settings.language": "Język",
   "settings.dark": "Ciemny",
   "settings.light": "Jasny",
-
   "chat.title": "Centrum dowodzenia",
   "chat.demoMode": "Tryb demonstracyjny",
   "chat.welcome": "Cześć! Jestem Jarvis. Jak mogę Ci pomóc?",
@@ -84,5 +82,14 @@
   "chat.deleteTitle": "Usunąć rozmowę?",
   "chat.deleteDescription": "Czy na pewno chcesz usunąć tę rozmowę wraz ze wszystkimi wiadomościami? Tej operacji nie można cofnąć.",
   "common.cancel": "Anuluj",
-  "security.authenticated": "Połączenie uwierzytelnione"
+  "security.authenticated": "Połączenie uwierzytelnione",
+  "network.online": "Internet dostępny — sprawdzone połączenie HTTPS",
+  "network.offline": "Brak połączenia sieciowego",
+  "network.checking": "Sprawdzanie połączenia z internetem",
+  "network.unverified": "Internet niezweryfikowany — kliknij, aby sprawdzić",
+  "network.installPage": "Instalacja — otwórz GitHub Releases",
+  "network.browserPage": "Otwórz projekt w przeglądarce",
+  "network.radioOffline": "Radio niedostępne bez internetu",
+  "app.install": "Instalacja",
+  "app.browser": "Otwórz w przeglądarce"
 }

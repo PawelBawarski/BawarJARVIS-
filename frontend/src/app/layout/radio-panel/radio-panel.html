@@ -7,7 +7,8 @@
     [attr.aria-controls]="isOpen() ? 'jarvis-radio-panel' : null"
     (click)="toggle()"
   >
-    <span aria-hidden="true">📻</span>
+    <span aria-hidden="true" class="radio-control__icon"
+        [class.radio-control__icon--offline]="network.isOffline()">📻</span>
   </button>
 
   @if (isOpen()) {
@@ -87,7 +88,7 @@
         <div class="radio-panel__controls">
           <button
             type="button"
-            [disabled]="!player.canPlay() || player.isPlaying()"
+            [disabled]="network.isOffline() || !player.canPlay() || player.isPlaying()"
             (click)="player.play()"
           >
             <span aria-hidden="true">▶</span>

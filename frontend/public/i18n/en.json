@@ -5,12 +5,10 @@
   "sidebar.emptyHistory": "Your conversations will appear here.",
   "sidebar.settings": "Settings",
   "sidebar.personalAssistant": "PERSONAL AI ASSISTANT",
-
   "settings.theme": "Theme",
   "settings.language": "Language",
   "settings.dark": "Dark",
   "settings.light": "Light",
-
   "chat.title": "Command Center",
   "chat.demoMode": "Demo mode",
   "chat.welcome": "Hello! I'm Jarvis. How can I help you?",
@@ -84,5 +82,14 @@
   "chat.deleteTitle": "Delete conversation?",
   "chat.deleteDescription": "Are you sure you want to delete this conversation and all its messages? This action cannot be undone.",
   "common.cancel": "Cancel",
-  "security.authenticated": "Authenticated connection"
+  "security.authenticated": "Authenticated connection",
+  "network.online": "Internet available — HTTPS connection verified",
+  "network.offline": "Network disconnected",
+  "network.checking": "Checking internet connection",
+  "network.unverified": "Internet unverified — click to check",
+  "network.installPage": "Installation — open GitHub Releases",
+  "network.browserPage": "Open project in browser",
+  "network.radioOffline": "Radio unavailable without internet",
+  "app.install": "Install",
+  "app.browser": "Open in browser"
 }

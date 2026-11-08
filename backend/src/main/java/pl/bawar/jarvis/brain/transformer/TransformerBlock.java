@@ -1,19 +1,20 @@
-
 package pl.bawar.jarvis.brain.transformer;
 
 import pl.bawar.jarvis.brain.attention.MultiHeadAttention;
+import pl.bawar.jarvis.brain.attention.MultiHeadAttentionGradients;
+import pl.bawar.jarvis.brain.layers.FeedForwardBatchGradients;
 import pl.bawar.jarvis.brain.layers.FeedForwardNetwork;
 import pl.bawar.jarvis.brain.math.ResidualConnection;
+import pl.bawar.jarvis.brain.normalization.LayerNormBatchGradients;
+import pl.bawar.jarvis.brain.normalization.LayerNormGradients;
 import pl.bawar.jarvis.brain.normalization.LayerNormalization;
 
+/** Pre-norm decoder transformer block with two residual connections. */
 public final class TransformerBlock {
-
     private final LayerNormalization attentionNorm;
     private final MultiHeadAttention attention;
-
     private final LayerNormalization feedForwardNorm;
     private final FeedForwardNetwork feedForward;
-
     private final int embeddingSize;
 
     public TransformerBlock(
@@ -21,23 +22,16 @@ public final class TransformerBlock {
             MultiHeadAttention attention,
             LayerNormalization feedForwardNorm,
             FeedForwardNetwork feedForward) {
-        if (attentionNorm == null ||
-                attention == null ||
-                feedForwardNorm == null ||
-                feedForward == null) {
-            throw new IllegalArgumentException(
-                    "Transformer components cannot be null");
+        if (attentionNorm == null || attention == null
+                || feedForwardNorm == null || feedForward == null) {
+            throw new IllegalArgumentException("Transformer components cannot be null");
         }
-
         int size = attention.embeddingSize();
-
-        if (attentionNorm.embeddingSize() != size ||
-                feedForwardNorm.embeddingSize() != size ||
-                feedForward.embeddingSize() != size) {
-            throw new IllegalArgumentException(
-                    "Transformer dimensions must match");
+        if (attentionNorm.embeddingSize() != size
+                || feedForwardNorm.embeddingSize() != size
+                || feedForward.embeddingSize() != size) {
+            throw new IllegalArgumentException("Transformer dimensions must match");
         }
-
         this.attentionNorm = attentionNorm;
         this.attention = attention;
         this.feedForwardNorm = feedForwardNorm;
@@ -45,58 +39,111 @@ public final class TransformerBlock {
         this.embeddingSize = size;
     }
 
+    /** Original inference API, unchanged. */
     public double[][] forward(double[][] input) {
-
-        validateInput(input);
-
-        // 1. Normalizacja przed Attention.
+        validateTokens(input, "Transformer input");
         double[][] normalizedInput = attentionNorm.forward(input);
-
-        // 2. Multi-Head Causal Self-Attention.
         double[][] attentionOutput = attention.forward(normalizedInput);
+        double[][] afterAttention = ResidualConnection.add(input, attentionOutput);
+        double[][] normalizedAttention = feedForwardNorm.forward(afterAttention);
+        double[][] feedForwardOutput = feedForward.forward(normalizedAttention);
+        return ResidualConnection.add(afterAttention, feedForwardOutput);
+    }
 
-        // 3. Pierwsze połączenie rezydualne.
-        double[][] afterAttention = ResidualConnection.add(
-                input,
-                attentionOutput);
+    /**
+     * Backpropagation through the ENTIRE pre-norm block.
+     *
+     * x -> LN1 -> MHA -> (+ x) -> LN2 -> FFN -> (+ residual) -> y
+     *
+     * Each residual addition contributes one identity gradient, and its other
+     * branch propagates through the corresponding network. Shared parameter
+     * gradients of LayerNorm are summed over tokens, not averaged.
+     * No parameters are updated here.
+     */
+    public TransformerBlockGradients backward(double[][] input, double[][] outputGradients) {
+        validateTokens(input, "Transformer input");
+        validateTokens(outputGradients, "Output gradients");
+        if (input.length != outputGradients.length) {
+            throw new IllegalArgumentException("Input and gradient sequence lengths must match");
+        }
 
-        // 4. Normalizacja przed FFN.
+        // Recompute forward intermediates (educational version; no mutable cache).
+        double[][] normalizedInput = attentionNorm.forward(input);
+        double[][] attentionOutput = attention.forward(normalizedInput);
+        double[][] afterAttention = ResidualConnection.add(input, attentionOutput);
         double[][] normalizedAttention = feedForwardNorm.forward(afterAttention);
 
-        // 5. Feed-Forward Network.
-        double[][] feedForwardOutput = feedForward.forward(normalizedAttention);
+        // Second residual: output = afterAttention + FFN(LN2(afterAttention)).
+        // Gradient flows directly into afterAttention AND through FFN and LN2.
+        FeedForwardBatchGradients ffnGradients =
+                feedForward.backward(normalizedAttention, outputGradients);
+        LayerNormBatchGradients norm2Gradients =
+                backwardNorm(feedForwardNorm, afterAttention, ffnGradients.inputGradients());
+        double[][] dAfterAttention = add(outputGradients, norm2Gradients.inputGradients());
 
-        // 6. Drugie połączenie rezydualne.
-        return ResidualConnection.add(
-                afterAttention,
-                feedForwardOutput);
+        // First residual: afterAttention = input + MHA(LN1(input)).
+        MultiHeadAttentionGradients attentionGradients =
+                attention.backward(normalizedInput, dAfterAttention);
+        LayerNormBatchGradients norm1Gradients =
+                backwardNorm(attentionNorm, input, attentionGradients.inputGradient());
+        double[][] dInput = add(dAfterAttention, norm1Gradients.inputGradients());
+
+        return new TransformerBlockGradients(
+                dInput, norm1Gradients, attentionGradients, norm2Gradients, ffnGradients);
+    }
+
+    private static LayerNormBatchGradients backwardNorm(
+            LayerNormalization normalization, double[][] input, double[][] dOutput) {
+        int tokens = input.length;
+        int dimensions = normalization.embeddingSize();
+        double[][] dInputs = new double[tokens][dimensions];
+        double[] dGamma = new double[dimensions];
+        double[] dBeta = new double[dimensions];
+
+        for (int token = 0; token < tokens; token++) {
+            LayerNormGradients gradients = normalization.backward(input[token], dOutput[token]);
+            dInputs[token] = gradients.inputGradient();
+            for (int d = 0; d < dimensions; d++) {
+                dGamma[d] += gradients.gammaGradient()[d];
+                dBeta[d] += gradients.betaGradient()[d];
+            }
+        }
+        return new LayerNormBatchGradients(dInputs, dGamma, dBeta);
+    }
+
+    private static double[][] add(double[][] left, double[][] right) {
+        double[][] sum = new double[left.length][left[0].length];
+        for (int t = 0; t < left.length; t++) {
+            for (int d = 0; d < left[t].length; d++) {
+                sum[t][d] = left[t][d] + right[t][d];
+            }
+        }
+        return sum;
     }
 
     public int embeddingSize() {
         return embeddingSize;
     }
 
-    private void validateInput(double[][] input) {
-
-        if (input == null || input.length == 0) {
-            throw new IllegalArgumentException(
-                    "Transformer input cannot be null or empty");
+    private void validateTokens(double[][] values, String label) {
+        if (values == null || values.length == 0) {
+            throw new IllegalArgumentException(label + " cannot be null or empty");
         }
-
-        for (double[] token : input) {
-
-            if (token == null ||
-                    token.length != embeddingSize) {
-                throw new IllegalArgumentException(
-                        "Invalid token embedding dimensions");
+        for (double[] row : values) {
+            if (row == null || row.length != embeddingSize) {
+                throw new IllegalArgumentException(label + " has invalid token dimensions");
             }
-
-            for (double value : token) {
+            for (double value : row) {
                 if (!Double.isFinite(value)) {
-                    throw new IllegalArgumentException(
-                            "Input values must be finite");
+                    throw new IllegalArgumentException(label + " must contain finite numbers");
                 }
             }
         }
     }
+
+    public LayerNormalization attentionNorm() { return attentionNorm; }
+    public MultiHeadAttention attention() { return attention; }
+    public LayerNormalization feedForwardNorm() { return feedForwardNorm; }
+    public FeedForwardNetwork feedForward() { return feedForward; }
+
 }

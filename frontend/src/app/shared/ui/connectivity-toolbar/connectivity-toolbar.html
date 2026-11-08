@@ -1,0 +1,55 @@
+<div class="connectivity-toolbar">
+  <div
+    class="connectivity-toolbar__indicator"
+    [class.connectivity-toolbar__indicator--online]="isOnline()"
+    [class.connectivity-toolbar__indicator--offline]="!isOnline()"
+    [attr.aria-label]="networkLabel()"
+    [title]="networkLabel()"
+    role="status"
+  >
+    <span class="connectivity-toolbar__icon" aria-hidden="true">
+      @if (isOnline()) {
+        🌐
+      } @else {
+        📡
+      }
+    </span>
+  </div>
+
+  <button
+    type="button"
+    class="connectivity-toolbar__action"
+    [class.connectivity-toolbar__action--disabled]="radioDisabled()"
+    [disabled]="radioDisabled()"
+    [attr.aria-label]="'radio.title' | translate"
+    [title]="radioDisabled() ? ('network.radioOffline' | translate) : ('radio.title' | translate)"
+  >
+    <span aria-hidden="true">
+      @if (radioDisabled()) {
+        📻̶
+      } @else {
+        📻
+      }
+    </span>
+  </button>
+
+  <button
+    type="button"
+    class="connectivity-toolbar__action"
+    (click)="openInstaller()"
+    [attr.aria-label]="'app.install' | translate"
+    [title]="'app.install' | translate"
+  >
+    <span aria-hidden="true">⬇</span>
+  </button>
+
+  <button
+    type="button"
+    class="connectivity-toolbar__action"
+    (click)="openBrowser()"
+    [attr.aria-label]="'app.browser' | translate"
+    [title]="'app.browser' | translate"
+  >
+    <span aria-hidden="true">🌐</span>
+  </button>
+</div>

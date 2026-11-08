@@ -157,4 +157,8 @@ public final class MultiHeadAttention {
     public int headCount() {
         return headCount;
     }
+
+    public List<CausalSelfAttention> heads() { return heads; }
+    public DenseLayer outputProjection() { return outputProjection; }
+
 }

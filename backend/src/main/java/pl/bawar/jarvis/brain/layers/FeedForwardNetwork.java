@@ -133,4 +133,8 @@ public final class FeedForwardNetwork {
     public int hiddenSize() {
         return hiddenSize;
     }
+
+    public DenseLayer inputLayer() { return inputLayer; }
+    public DenseLayer outputLayer() { return outputLayer; }
+
 }

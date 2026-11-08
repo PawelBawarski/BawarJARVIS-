@@ -1,6 +1,9 @@
-const { contextBridge, ipcRenderer } = require("electron");
+const { contextBridge, ipcRenderer } = require('electron');
 
-// Narrow API: no raw ipcRenderer, no arbitrary URL, no authentication token.
-contextBridge.exposeInMainWorld("jarvisDesktop", {
-  checkPrivateHealth: () => ipcRenderer.invoke("jarvis:private-health"),
+// Only pre-approved methods; no raw IPC, no arbitrary URL, no session token.
+contextBridge.exposeInMainWorld('jarvisDesktop', {
+  checkPrivateHealth: () => ipcRenderer.invoke('jarvis:private-health'),
+  checkInternet: () => ipcRenderer.invoke('jarvis:check-internet'),
+  openReleasesPage: () => ipcRenderer.invoke('jarvis:open-releases'),
+  openProjectPage: () => ipcRenderer.invoke('jarvis:open-project'),
 });

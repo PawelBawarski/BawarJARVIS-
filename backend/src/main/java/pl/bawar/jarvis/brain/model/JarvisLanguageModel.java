@@ -156,4 +156,14 @@ public final class JarvisLanguageModel {
     public int contextLength() {
         return positionalEmbeddings.maxSequenceLength();
     }
+
+    // Components are shared with the trainer; parameters update in place.
+    // Do not concurrently call inference and training on the same model instance.
+    public CharTokenizer tokenizer() { return tokenizer; }
+    public EmbeddingLayer tokenEmbeddings() { return tokenEmbeddings; }
+    public PositionalEmbedding positionalEmbeddings() { return positionalEmbeddings; }
+    public List<TransformerBlock> blocks() { return blocks; }
+    public LayerNormalization finalNorm() { return finalNorm; }
+    public DenseLayer languageModelHead() { return languageModelHead; }
+
 }
