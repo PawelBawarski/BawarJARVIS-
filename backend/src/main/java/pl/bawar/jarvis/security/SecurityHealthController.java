@@ -1,4 +1,3 @@
-
 package pl.bawar.jarvis.security;
 
 import org.springframework.web.bind.annotation.GetMapping;

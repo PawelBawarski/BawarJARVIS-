@@ -83,5 +83,6 @@
   "security.disclaimer": "Statusy mają charakter diagnostyczny. Niezweryfikowany mechanizm nie oznacza, że został sprawdzony ani że jest bezpieczny.",
   "chat.deleteTitle": "Usunąć rozmowę?",
   "chat.deleteDescription": "Czy na pewno chcesz usunąć tę rozmowę wraz ze wszystkimi wiadomościami? Tej operacji nie można cofnąć.",
-  "common.cancel": "Anuluj"
+  "common.cancel": "Anuluj",
+  "security.authenticated": "Połączenie uwierzytelnione"
 }

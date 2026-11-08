@@ -1,39 +1,50 @@
-
 package pl.bawar.jarvis.security;
 
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import org.springframework.http.HttpMethod;
-
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class ApiSecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(
-            HttpSecurity http) throws Exception {
+            HttpSecurity http,
+            @Value("${JARVIS_SESSION_TOKEN:}") String sessionToken
+    ) throws Exception {
+
+        http.sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        );
 
         http.authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.GET, "/api/security/health").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/security/private-health")
+                    .hasAuthority("ROLE_JARVIS")
+                .anyRequest().denyAll()
+        );
 
-                // Pozwalamy tylko odczytać stan API.
-                .requestMatchers(
-                        HttpMethod.GET,
-                        "/api/security/health")
-                .permitAll()
+        http.exceptionHandling(errors -> errors.authenticationEntryPoint(
+                (_request, response, _exception) ->
+                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
+        ));
 
-                // Wszystkie pozostałe żądania blokujemy.
-                .anyRequest().denyAll());
-
-        // Nie udostępniamy formularza logowania
-        // ani HTTP Basic jako tymczasowego obejścia.
         http.formLogin(AbstractHttpConfigurer::disable);
         http.httpBasic(AbstractHttpConfigurer::disable);
+        // Keep CSRF protection enabled; do not open arbitrary POST endpoints yet.
 
-        // Zachowujemy domyślną ochronę CSRF.
+        http.addFilterBefore(
+                new LocalSessionFilter(sessionToken),
+                UsernamePasswordAuthenticationFilter.class
+        );
+
         return http.build();
     }
 }

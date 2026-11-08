@@ -1,3 +1,4 @@
+const path = require("node:path");
 function createWindowOptions() {
   return {
     title: "J.A.R.V.I.S.",
@@ -15,6 +16,7 @@ function createWindowOptions() {
       contextIsolation: true,
       sandbox: true,
       webviewTag: false,
+      preload: path.join(__dirname, "preload.cjs"),
     },
   };
 }

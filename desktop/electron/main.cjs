@@ -8,6 +8,7 @@ const {
   net,
   session,
   dialog,
+  ipcMain,
 } = require("electron");
 const { createWindowOptions } = require("./window-options.cjs");
 
@@ -33,6 +34,10 @@ protocol.registerSchemesAsPrivileged([
     },
   },
 ]);
+
+const { checkPrivateHealth } = require("./backend-bridge.cjs");
+
+const { isTrustedSender } = require("./ipc-sender.cjs");
 
 function getUiDirectory() {
   if (app.isPackaged) {
@@ -118,6 +123,17 @@ app
     if (useBuiltUi) {
       registerUiProtocol();
     }
+
+    // Rejestrujemy IPC tylko raz, przed stworzeniem okna.
+    ipcMain.handle("jarvis:private-health", async (event) => {
+      if (!isTrustedSender(event, useBuiltUi)) {
+        throw new Error("Untrusted IPC sender");
+      }
+
+      return checkPrivateHealth(
+        process.env.JARVIS_SESSION_TOKEN
+      );
+    });
 
     const jarvisWindow = createWindow();
 

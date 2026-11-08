@@ -10,8 +10,36 @@
         <div class="security-card__top">
           <h2>{{ check.titleKey | translate }}</h2>
 
-          <span class="security-card__status">
-            {{ 'security.unverified' | translate }}
+          <span
+            class="security-card__status"
+            [class.security-card__status--reachable]="
+              check.id === 'backend' && diagnostics.backendStatus() === 'reachable'
+            "
+            [class.security-card__status--authenticated]="
+              check.id === 'backend' && diagnostics.backendStatus() === 'authenticated'
+            "
+          >
+            @if (check.id === 'backend') {
+              @switch (diagnostics.backendStatus()) {
+                @case ('checking') {
+                  {{ 'security.checking' | translate }}
+                }
+
+                @case ('reachable') {
+                  {{ 'security.reachable' | translate }}
+                }
+
+                @case ('authenticated') {
+                  {{ 'security.authenticated' | translate }}
+                }
+
+                @case ('unavailable') {
+                  {{ 'security.unavailable' | translate }}
+                }
+              }
+            } @else {
+              {{ 'security.unverified' | translate }}
+            }
           </span>
         </div>
 
