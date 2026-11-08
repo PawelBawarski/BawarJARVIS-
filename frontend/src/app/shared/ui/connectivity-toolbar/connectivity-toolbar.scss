@@ -1,34 +1,35 @@
+:host {
+  display: block;
+}
+
 .connectivity-toolbar {
-  &__indicator,
-  &__action {
-    position: relative;
-    display: inline-grid;
-    place-items: center;
-  }
+  display: flex;
+  align-items: center;
+}
 
-  &__indicator {
-    cursor: default;
-    user-select: none;
+.connectivity-toolbar__indicator {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--panel-soft);
+  color: var(--muted);
+  cursor: default;
+  user-select: none;
 
-    &--online {
-      color: #34d399;
-    }
+  &--online { color: #34d399; border-color: rgba(52, 211, 153, 0.35); }
+  &--offline { color: #fb7185; border-color: rgba(251, 113, 133, 0.35); }
 
-    &--offline {
-      color: #f87171;
-    }
-  }
+  svg { display: block; width: 23px; height: 23px; }
+}
 
-  &__mark {
-    position: absolute;
-    top: 1px;
-    right: 4px;
-    font-size: 11px;
-  }
-
-  svg {
-    display: block;
-    width: 21px;
-    height: 21px;
-  }
+.connectivity-toolbar__mark {
+  position: absolute;
+  top: 1px;
+  right: 5px;
+  font-size: 10px;
+  font-weight: 700;
 }

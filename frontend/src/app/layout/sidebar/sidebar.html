@@ -1,21 +1,26 @@
 <aside class="sidebar">
-  <div class="sidebar__brand">
-    <!-- logo -->
+  <div class="brand">
+    <div class="brand__icon" aria-hidden="true">J</div>
+    <div class="brand__text">
+      <strong>J.A.R.V.I.S.</strong>
+      <small>{{ 'sidebar.personalAssistant' | translate }}</small>
+    </div>
   </div>
 
-  <div class="sidebar__menu">
-    <button type="button" class="sidebar__primary-action">
-      {{ 'workspace.chat' | translate }}
-    </button>
-  </div>
-
-  <section class="sidebar__history">
+  <nav class="sidebar__navigation" [attr.aria-label]="'sidebar.menu' | translate">
+    <p class="section-title">{{ 'sidebar.menu' | translate }}</p>
+    <div class="nav-item nav-item--active" aria-current="page">
+      <span aria-hidden="true">✦</span>
+      <span>{{ 'sidebar.assistant' | translate }}</span>
+    </div>
     <app-chat-history />
-  </section>
+  </nav>
 
-  <div class="sidebar__spacer"></div>
-
-  <footer class="sidebar__footer">
-    <app-connectivity-toolbar></app-connectivity-toolbar>
-  </footer>
+  <div class="sidebar-bottom">
+    <app-connectivity-toolbar />
+    <div class="sidebar-footer">
+      <span class="status-dot" aria-hidden="true"></span>
+      JARVIS Desktop v0.1
+    </div>
+  </div>
 </aside>

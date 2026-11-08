@@ -19,6 +19,10 @@ const PROJECT =
 export class ConnectivityToolbar {
   readonly network = inject(NetworkStatusService);
 
+  constructor() {
+    void this.network.refresh();
+  }
+
   async openInstaller(): Promise<void> {
     if (this.network.isOffline()) return;
 

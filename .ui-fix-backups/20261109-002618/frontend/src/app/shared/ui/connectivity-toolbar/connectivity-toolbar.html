@@ -1,0 +1,100 @@
+<div class="connectivity-toolbar">
+  <!-- Nieklikalny wskaźnik internetu -->
+  <span
+    class="connectivity-toolbar__indicator"
+    data-testid="network-state"
+    role="status"
+    [class.connectivity-toolbar__indicator--online]="network.status() === 'online'"
+    [class.connectivity-toolbar__indicator--offline]="network.isOffline()"
+    [attr.aria-label]="
+      (network.status() === 'online'
+        ? 'network.online'
+        : network.status() === 'offline'
+          ? 'network.offline'
+          : network.status() === 'checking'
+            ? 'network.checking'
+            : 'network.unverified'
+      ) | translate
+    "
+    [attr.title]="
+      (network.status() === 'online'
+        ? 'network.online'
+        : network.status() === 'offline'
+          ? 'network.offline'
+          : network.status() === 'checking'
+            ? 'network.checking'
+            : 'network.unverified'
+      ) | translate
+    "
+  >
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      @if (network.isOffline()) {
+        <path d="M2 2l20 20" />
+        <path d="M2 9c5-4 12-4 17 0" />
+        <path d="M5 13c3-2 7-2 10 0" />
+      } @else {
+        <path d="M2 9c6-6 14-6 20 0" />
+        <path d="M5 13c4-4 10-4 14 0" />
+        <path d="M9 17c2-2 4-2 6 0" />
+      }
+    </svg>
+
+    @if (network.status() === 'unverified' || network.status() === 'checking') {
+      <span class="connectivity-toolbar__mark" aria-hidden="true"> ? </span>
+    }
+  </span>
+
+  <!-- Instalacja -->
+  <button
+    type="button"
+    class="connectivity-toolbar__action"
+    data-testid="install-link"
+    [disabled]="network.isOffline()"
+    [attr.aria-label]="'network.installPage' | translate"
+    (click)="openInstaller()"
+  >
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M12 3v12m-4-4 4 4 4-4" />
+      <path d="M4 17v3h16v-3" />
+    </svg>
+  </button>
+
+  <!-- Przeglądarka -->
+  <button
+    type="button"
+    class="connectivity-toolbar__action"
+    data-testid="browser-link"
+    [disabled]="network.isOffline()"
+    [attr.aria-label]="'network.browserPage' | translate"
+    (click)="openBrowser()"
+  >
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c-5 5-5 13 0 18M12 3c5 5 5 13 0 18" />
+    </svg>
+  </button>
+</div>
