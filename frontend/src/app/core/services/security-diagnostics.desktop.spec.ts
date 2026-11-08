@@ -1,51 +1,50 @@
-import { Injectable, signal } from '@angular/core';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { SecurityDiagnosticsService } from './security-diagnostics';
 
-export type BackendStatus = 'checking' | 'reachable' | 'authenticated' | 'unavailable';
+type DesktopWindow = Window & {
+  jarvisDesktop?: {
+    checkPrivateHealth(): Promise<unknown>;
+  };
+};
 
-@Injectable({
-  providedIn: 'root',
-})
-export class SecurityDiagnosticsService {
-  readonly backendStatus = signal<BackendStatus>('checking');
+const desktopWindow = window as DesktopWindow;
 
-  async checkBackend(): Promise<void> {
-    this.backendStatus.set('checking');
+describe('SecurityDiagnosticsService - Electron bridge', () => {
+  afterEach(() => {
+    delete desktopWindow.jarvisDesktop;
+    vi.restoreAllMocks();
+  });
 
-    // Electron — żądanie przez kontrolowany most IPC.
-    if (typeof window !== 'undefined' && window.jarvisDesktop) {
-      try {
-        const result = await window.jarvisDesktop.checkPrivateHealth();
+  it('reports authenticated when the bridge confirms the session', async () => {
+    const checkPrivateHealth = vi.fn().mockResolvedValue({ status: 'authenticated' });
+    desktopWindow.jarvisDesktop = { checkPrivateHealth };
 
-        this.backendStatus.set(result.status === 'authenticated' ? 'authenticated' : 'unavailable');
-      } catch {
-        this.backendStatus.set('unavailable');
-      }
+    const service = new SecurityDiagnosticsService();
+    await service.checkBackend();
 
-      return;
-    }
+    expect(checkPrivateHealth).toHaveBeenCalledOnce();
+    expect(service.backendStatus()).toBe('authenticated');
+  });
 
-    // Zwykła przeglądarka developerska — tylko publiczny health.
-    try {
-      const response = await fetch('/api/security/health', {
-        method: 'GET',
-        cache: 'no-store',
-        credentials: 'same-origin',
-        signal: AbortSignal.timeout(3000),
-      });
+  it('reports unavailable when the bridge rejects the request', async () => {
+    desktopWindow.jarvisDesktop = {
+      checkPrivateHealth: vi.fn().mockRejectedValue(new Error('Backend unavailable')),
+    };
 
-      if (!response.ok) {
-        this.backendStatus.set('unavailable');
-        return;
-      }
+    const service = new SecurityDiagnosticsService();
+    await service.checkBackend();
 
-      const body: unknown = await response.json();
+    expect(service.backendStatus()).toBe('unavailable');
+  });
 
-      const reachable =
-        typeof body === 'object' && body !== null && 'status' in body && body.status === 'UP';
+  it('does not mistake a public UP status for authenticated access', async () => {
+    desktopWindow.jarvisDesktop = {
+      checkPrivateHealth: vi.fn().mockResolvedValue({ status: 'UP' }),
+    };
 
-      this.backendStatus.set(reachable ? 'reachable' : 'unavailable');
-    } catch {
-      this.backendStatus.set('unavailable');
-    }
-  }
-}
+    const service = new SecurityDiagnosticsService();
+    await service.checkBackend();
+
+    expect(service.backendStatus()).toBe('unavailable');
+  });
+});
