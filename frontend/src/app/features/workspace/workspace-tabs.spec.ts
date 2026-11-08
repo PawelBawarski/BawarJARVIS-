@@ -1,36 +1,30 @@
 import { describe, expect, it } from 'vitest';
 
-import { WorkspaceTabs } from './workspace-tabs';
+import { ModuleNavigationService } from '../../core/services/module-navigation.service';
 
-describe('WorkspaceTabs', () => {
-  it('should start with Chat tab', () => {
-    const workspace = new WorkspaceTabs();
+describe('Workspace module state', () => {
+  it('should select Mining', () => {
+    const navigation = new ModuleNavigationService();
 
-    expect(workspace.activeTab()).toBe('chat');
+    navigation.select('mining');
+
+    expect(navigation.activeId()).toBe('mining');
   });
 
-  it('should switch to Mining', () => {
-    const workspace = new WorkspaceTabs();
+  it('should select AI Lab', () => {
+    const navigation = new ModuleNavigationService();
 
-    workspace.selectTab('mining');
+    navigation.select('lab');
 
-    expect(workspace.activeTab()).toBe('mining');
-  });
-
-  it('should switch to AI Lab', () => {
-    const workspace = new WorkspaceTabs();
-
-    workspace.selectTab('lab');
-
-    expect(workspace.activeTab()).toBe('lab');
+    expect(navigation.activeId()).toBe('lab');
   });
 
   it('should return to Chat', () => {
-    const workspace = new WorkspaceTabs();
+    const navigation = new ModuleNavigationService();
 
-    workspace.selectTab('mining');
-    workspace.selectTab('chat');
+    navigation.select('lab');
+    navigation.select('chat');
 
-    expect(workspace.activeTab()).toBe('chat');
+    expect(navigation.activeId()).toBe('chat');
   });
 });

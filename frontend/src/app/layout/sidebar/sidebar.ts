@@ -1,13 +1,11 @@
-
 import { Component } from '@angular/core';
 
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
-import { PreferencesControls } from '../../shared/ui/preferences-controls/preferences-controls';
-
+import { ChatHistory } from '../../features/chat/chat-history/chat-history';
 @Component({
   selector: 'app-sidebar',
-  imports: [TranslatePipe, PreferencesControls],
+  imports: [TranslatePipe, ChatHistory],
   templateUrl: './sidebar.html',
-  styleUrl: './sidebar.scss'
+  styleUrl: './sidebar.scss',
 })
 export class Sidebar {}

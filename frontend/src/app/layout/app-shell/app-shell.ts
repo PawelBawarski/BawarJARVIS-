@@ -4,10 +4,12 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { Sidebar } from '../sidebar/sidebar';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { WorkspaceTabs } from '../../features/workspace/workspace-tabs';
-
+import { ModuleSwitcher } from '../module-switcher/module-switcher';
+import { SettingsDialog } from '../settings-dialog/settings-dialog';
+import { RadioPanel } from '../radio-panel/radio-panel';
 @Component({
   selector: 'app-app-shell',
-  imports: [Sidebar, TranslatePipe, WorkspaceTabs],
+  imports: [Sidebar, WorkspaceTabs, ModuleSwitcher, SettingsDialog, RadioPanel, TranslatePipe],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.scss',
   host: {

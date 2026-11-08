@@ -1,0 +1,34 @@
+<dialog
+  #dialogElement
+  class="settings-dialog"
+  aria-labelledby="jarvis-settings-title"
+  (click)="onDialogClick($event)"
+>
+  <div class="settings-dialog__content">
+    <header class="settings-dialog__header">
+      <div>
+        <h2 id="jarvis-settings-title">
+          {{ 'settings.title' | translate }}
+        </h2>
+
+        <p>
+          {{ 'settings.description' | translate }}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="settings-dialog__close"
+        [attr.aria-label]="'settings.close' | translate"
+        (click)="close()"
+        autofocus
+      >
+        <span aria-hidden="true">✕</span>
+      </button>
+    </header>
+
+    <div class="settings-dialog__body">
+      <app-preferences-controls />
+    </div>
+  </div>
+</dialog>

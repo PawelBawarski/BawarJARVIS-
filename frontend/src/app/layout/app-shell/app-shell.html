@@ -1,25 +1,17 @@
-
+<app-settings-dialog #settingsDialog />
 <div
   class="shell"
   [class.shell--sidebar-open]="sidebarOpen()"
   [class.shell--sidebar-closed]="!sidebarOpen()"
 >
-  <button
-    type="button"
-    class="menu-toggle"
-    aria-controls="jarvis-sidebar"
-    [attr.aria-expanded]="sidebarOpen()"
-    [attr.aria-label]="
-      (sidebarOpen()
-        ? 'sidebar.closeMenu'
-        : 'sidebar.openMenu') | translate
-    "
-    (click)="toggleSidebar()"
+  <div
+    id="jarvis-sidebar"
+    class="sidebar-region"
+    [attr.inert]="sidebarOpen() ? null : ''"
+    [attr.aria-hidden]="!sidebarOpen()"
   >
-    <span aria-hidden="true">
-      {{ sidebarOpen() ? '✕' : '☰' }}
-    </span>
-  </button>
+    <app-sidebar />
+  </div>
 
   @if (isMobile() && sidebarOpen()) {
     <button
@@ -30,14 +22,39 @@
     ></button>
   }
 
-  <div
-    id="jarvis-sidebar"
-    class="sidebar-region"
-    [attr.inert]="sidebarOpen() ? null : ''"
-    [attr.aria-hidden]="!sidebarOpen()"
-  >
-    <app-sidebar />
-  </div>
+  <div class="shell__main">
+    <header class="shell__toolbar">
+      <button
+        type="button"
+        class="menu-toggle"
+        aria-controls="jarvis-sidebar"
+        [attr.aria-expanded]="sidebarOpen()"
+        [attr.aria-label]="(sidebarOpen() ? 'sidebar.closeMenu' : 'sidebar.openMenu') | translate"
+        (click)="toggleSidebar()"
+      >
+        <span aria-hidden="true">
+          {{ sidebarOpen() ? '✕' : '☰' }}
+        </span>
+      </button>
 
-  <app-workspace-tabs />
+      <app-module-switcher />
+
+      <div class="shell__toolbar-actions">
+        <app-radio-panel />
+
+        <button
+          type="button"
+          class="toolbar-action"
+          [attr.aria-label]="'settings.open' | translate"
+          (click)="settingsDialog.open()"
+        >
+          <span aria-hidden="true">⚙</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="shell__content">
+      <app-workspace-tabs />
+    </main>
+  </div>
 </div>

@@ -1,23 +1,17 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 
+import { ChatView } from '../chat/chat-view/chat-view';
 import { MiningView } from '../mining/mining-view';
 import { AiLabView } from '../ai-lab/ai-lab-view';
 
-import { TranslatePipe } from '../../shared/pipes/translate.pipe';
-import { ChatView } from '../chat/chat-view/chat-view';
-
-export type WorkspaceTab = 'chat' | 'mining' | 'lab';
+import { ModuleNavigationService } from '../../core/services/module-navigation.service';
 
 @Component({
   selector: 'app-workspace-tabs',
-  imports: [ChatView, MiningView, AiLabView, TranslatePipe],
+  imports: [ChatView, MiningView, AiLabView],
   templateUrl: './workspace-tabs.html',
   styleUrl: './workspace-tabs.scss',
 })
 export class WorkspaceTabs {
-  readonly activeTab = signal<WorkspaceTab>('chat');
-
-  selectTab(tab: WorkspaceTab): void {
-    this.activeTab.set(tab);
-  }
+  readonly navigation = inject(ModuleNavigationService);
 }

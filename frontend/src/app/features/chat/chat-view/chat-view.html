@@ -2,27 +2,54 @@
   <header class="chat-header">
     <div>
       <p class="eyebrow">JARVIS / ASSISTANT</p>
+
       <h1>{{ 'chat.title' | translate }}</h1>
+
+      <p class="chat-current-title">
+        {{ store.activeChat().title || ('chat.new' | translate) }}
+      </p>
     </div>
 
-    <span class="connection-status"> ● Tryb demonstracyjny </span>
+    <div class="chat-header__actions">
+      <button
+        type="button"
+        class="chat-action"
+        [title]="'chat.new' | translate"
+        [attr.aria-label]="'chat.new' | translate"
+        (click)="newChat()"
+      >
+        <span aria-hidden="true">+</span>
+      </button>
+
+      <button
+        type="button"
+        class="chat-action"
+        [title]="'chat.delete' | translate"
+        [attr.aria-label]="'chat.delete' | translate"
+        (click)="deleteChat()"
+      >
+        <span aria-hidden="true">🗑</span>
+      </button>
+    </div>
   </header>
 
   <main class="chat-messages">
-    <div class="welcome">
-      <div class="ai-orb">J</div>
-      <h2>J.A.R.V.I.S.</h2>
-      <p>Twój osobisty asystent AI</p>
-    </div>
+    @if (store.messages().length === 0) {
+      <div class="welcome">
+        <div class="ai-orb">J</div>
+        <h2>J.A.R.V.I.S.</h2>
+        <p>{{ 'chat.tagline' | translate }}</p>
+      </div>
+    }
 
-    @for (message of messages(); track message.id) {
+    @for (message of store.messages(); track message.id) {
       <div
         class="message"
         [class.message--user]="message.role === 'user'"
         [class.message--assistant]="message.role === 'assistant'"
       >
         <span class="message__author">
-          {{ message.role === 'user' ? 'TY' : 'JARVIS' }}
+          {{ message.role === 'user' ? ('chat.you' | translate) : 'JARVIS' }}
         </span>
 
         <p>{{ message.content }}</p>
@@ -35,8 +62,9 @@
       <input
         #messageInput
         type="text"
-        aria-label="Wiadomość"
-        placeholder="Napisz wiadomość do Jarvisa..."
+        maxlength="4000"
+        [attr.aria-label]="'chat.placeholder' | translate"
+        [placeholder]="'chat.placeholder' | translate"
         [value]="draft()"
         (input)="draft.set(messageInput.value)"
         (keydown.enter)="sendMessage()"
@@ -47,6 +75,14 @@
       </button>
     </div>
 
-    <p class="footer-note">JARVIS v0.1 — lokalny interfejs demonstracyjny</p>
+    <p class="chat-status" role="status">
+      {{ 'chat.aiNotConnected' | translate }}
+    </p>
+
+    @if (store.saveError()) {
+      <p class="chat-status chat-status--error" role="alert">
+        {{ 'chat.saveError' | translate }}
+      </p>
+    }
   </footer>
 </section>

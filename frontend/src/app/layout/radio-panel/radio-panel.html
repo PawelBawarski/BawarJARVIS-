@@ -1,0 +1,137 @@
+<div class="radio-control">
+  <button
+    type="button"
+    class="radio-control__trigger"
+    [attr.aria-label]="'radio.open' | translate"
+    [attr.aria-expanded]="isOpen()"
+    [attr.aria-controls]="isOpen() ? 'jarvis-radio-panel' : null"
+    (click)="toggle()"
+  >
+    <span aria-hidden="true">📻</span>
+  </button>
+
+  @if (isOpen()) {
+    <section id="jarvis-radio-panel" class="radio-panel" aria-labelledby="jarvis-radio-title">
+      <header class="radio-panel__header">
+        <div>
+          <h2 id="jarvis-radio-title">
+            {{ 'radio.title' | translate }}
+          </h2>
+
+          <p>{{ 'radio.description' | translate }}</p>
+        </div>
+
+        <button
+          type="button"
+          class="radio-panel__close"
+          [attr.aria-label]="'radio.close' | translate"
+          (click)="close()"
+        >
+          <span aria-hidden="true">✕</span>
+        </button>
+      </header>
+
+      <div class="radio-panel__field">
+        <label for="radio-country">
+          {{ 'radio.country' | translate }}
+        </label>
+
+        <select
+          #countrySelect
+          id="radio-country"
+          [value]="player.countryCode()"
+          (change)="onCountryChange(countrySelect.value)"
+        >
+          @for (country of player.countries; track country.code) {
+            <option [value]="country.code">
+              {{ country.labelKey | translate }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <div class="radio-panel__field">
+        <label for="radio-station">
+          {{ 'radio.station' | translate }}
+        </label>
+
+        <select
+          #stationSelect
+          id="radio-station"
+          [value]="player.stationId()"
+          (change)="onStationChange(stationSelect.value)"
+        >
+          @for (station of player.stations(); track station.id) {
+            <option [value]="station.id">
+              {{ station.name }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <div class="radio-panel__player">
+        <div class="radio-panel__station">
+          <span class="radio-panel__station-icon" aria-hidden="true"> ♫ </span>
+
+          <div>
+            <strong>
+              {{ player.selectedStation()?.name }}
+            </strong>
+
+            <p>
+              {{ 'radio.internetRadio' | translate }}
+            </p>
+          </div>
+        </div>
+
+        <div class="radio-panel__controls">
+          <button
+            type="button"
+            [disabled]="!player.canPlay() || player.isPlaying()"
+            (click)="player.play()"
+          >
+            <span aria-hidden="true">▶</span>
+            {{ 'radio.play' | translate }}
+          </button>
+
+          <button type="button" [disabled]="!player.isPlaying()" (click)="player.stop()">
+            <span aria-hidden="true">■</span>
+            {{ 'radio.stop' | translate }}
+          </button>
+        </div>
+
+        <p class="radio-panel__status" role="status">
+          @if (player.errorKey(); as errorKey) {
+            {{ errorKey | translate }}
+          } @else if (player.isPlaying()) {
+            {{ 'radio.playing' | translate }}
+          } @else {
+            {{ 'radio.backendPending' | translate }}
+          }
+        </p>
+      </div>
+
+      <div class="radio-panel__field">
+        <label for="radio-volume">
+          {{ 'radio.volume' | translate }}
+          — {{ player.volumePercent() }}%
+        </label>
+
+        <input
+          #volumeInput
+          id="radio-volume"
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          [value]="player.volumePercent()"
+          (input)="onVolumeChange(volumeInput.value)"
+        />
+      </div>
+
+      <p class="radio-panel__hint">
+        {{ 'radio.catalogPreview' | translate }}
+      </p>
+    </section>
+  }
+</div>

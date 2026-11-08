@@ -1,0 +1,33 @@
+<section class="chat-history">
+  <div class="chat-history__header">
+    <h2>
+      {{ 'sidebar.history' | translate }}
+    </h2>
+
+    <button
+      type="button"
+      class="chat-history__new"
+      [attr.aria-label]="'chat.new' | translate"
+      [title]="'chat.new' | translate"
+      (click)="createChat()"
+    >
+      <span aria-hidden="true">+</span>
+    </button>
+  </div>
+
+  <div class="chat-history__list">
+    @for (chat of store.conversations(); track chat.id) {
+      <button
+        type="button"
+        class="chat-history__item"
+        [class.chat-history__item--active]="chat.id === store.activeId()"
+        [attr.aria-current]="chat.id === store.activeId() ? 'true' : null"
+        (click)="selectChat(chat.id)"
+      >
+        <span class="chat-history__item-title">
+          {{ chat.title || ('chat.new' | translate) }}
+        </span>
+      </button>
+    }
+  </div>
+</section>

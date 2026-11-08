@@ -1,47 +1,43 @@
-import { Component, signal } from '@angular/core';
-import { ChatMessage } from '../models/chat-message';
+import { DOCUMENT } from '@angular/common';
+import { Component, inject, signal } from '@angular/core';
+
+import { ChatStore } from '../../../core/services/chat-store';
+import { TranslationService } from '../../../core/services/translation';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 
 @Component({
   selector: 'app-chat-view',
+  imports: [TranslatePipe],
   templateUrl: './chat-view.html',
   styleUrl: './chat-view.scss',
-  imports: [TranslatePipe],
 })
 export class ChatView {
+  readonly store = inject(ChatStore);
   readonly draft = signal('');
 
-  readonly messages = signal<ChatMessage[]>([
-    {
-      id: 1,
-      role: 'assistant',
-      content: 'Cześć! Jestem Jarvis. Jak mogę Ci pomóc?',
-    },
-  ]);
-
-  private nextId = 2;
+  private readonly document = inject(DOCUMENT);
+  private readonly translation = inject(TranslationService);
 
   sendMessage(): void {
-    const content = this.draft().trim();
+    if (this.store.addUserMessage(this.draft())) {
+      this.draft.set('');
+    }
+  }
 
-    if (!content) {
+  newChat(): void {
+    this.store.newChat();
+    this.draft.set('');
+  }
+
+  deleteChat(): void {
+    const confirmed =
+      this.document.defaultView?.confirm(this.translation.translate('chat.confirmDelete')) ?? false;
+
+    if (!confirmed) {
       return;
     }
 
-    const userMessage: ChatMessage = {
-      id: this.nextId++,
-      role: 'user',
-      content,
-    };
-
-    const assistantMessage: ChatMessage = {
-      id: this.nextId++,
-      role: 'assistant',
-      content: 'Otrzymałem wiadomość. Mój model AI zostanie podłączony w kolejnym etapie.',
-    };
-
-    this.messages.update((current) => [...current, userMessage, assistantMessage]);
-
+    this.store.deleteActiveChat();
     this.draft.set('');
   }
 }
