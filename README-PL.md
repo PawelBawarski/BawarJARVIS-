@@ -1,29 +1,50 @@
-# JARVIS – LLM Lekcja 10.4
+# J.A.R.V.I.S. — LLM 10.8/10.12: Multi-Head Attention Backward
 
-## Najpierw napraw test Spring Security
+## Wymagania
+- Java 21, Spring Boot 4.1.2, JUnit 5 (w Twoim projekcie)
+- Lekcja 10.3: `DenseLayer.backward()` i `DenseGradients`
+- Lekcja 10.7: `CausalSelfAttention.backward()`, `CausalAttentionGradients` i `AttentionProjectionGradients`
 
-Plik `backend/src/test/java/pl/bawar/jarvis/security/ApiSecurityConfigTest.java`:
+## Instalacja — wszystkie ścieżki od katalogu `BawarJARVIS-/`
 
-W teście `shouldDenyUnknownApiEndpoint` zamień oczekiwanie statusu dla żądania bez tokenu:
-`status().isForbidden()` -> `status().isUnauthorized()`.
+1. `backend/src/main/java/pl/bawar/jarvis/brain/attention/MultiHeadAttention.java` — **podmień po porównaniu** z Twoją lokalną wersją. Zostawiono konstruktor, `forward()`, `headCount()` i `embeddingSize()`. Dodano `backward()`.
+2. `backend/src/main/java/pl/bawar/jarvis/brain/attention/MultiHeadAttentionGradients.java` — **nowy** rekord ze wszystkimi gradientami całego bloku.
+3. `backend/src/main/java/pl/bawar/jarvis/brain/attention/MultiHeadOutputProjectionGradients.java` — **nowy** rekord na gradienty wspólnej projekcji wyjściowej, z osią tokenów w `inputGradient`.
+4. `backend/src/test/java/pl/bawar/jarvis/brain/attention/MultiHeadAttentionBackwardTest.java` — **nowy** plik, 8 testów JUnit.
 
-Nazwę testu możesz zmienić na `shouldRequireAuthenticationForUnknownApiEndpoint`.
-Nie zmieniaj konfiguracji zabezpieczeń tylko dla starego oczekiwania testu.
+Nie usuwaj starych testów `MultiHeadAttentionTest.java`. Jeśli masz niezacommitowane zmiany, zrób kopię lub porównaj diff.
 
-## Skopiuj nowe pliki
+## Co zwraca backward?
 
-- `backend/src/main/java/pl/bawar/jarvis/brain/optimization/AdamWOptimizer.java`
-- `backend/src/test/java/pl/bawar/jarvis/brain/optimization/AdamWOptimizerTest.java`
-- `backend/src/test/java/pl/bawar/jarvis/brain/optimization/AdamWDenseTrainingTest.java`
+`MultiHeadAttentionGradients backward(double[][] input, double[][] dOutput)`:
 
-Umieść je w repozytorium `BawarJARVIS-` zachowując strukturę katalogów.
+- `inputGradient()` — gradient wejścia `[tokens][embeddingSize]`, suma wkładu z każdej głowicy.
+- `outputProjectionGradients()` — `MultiHeadOutputProjectionGradients`, czyli `inputGradient` o wymiarach `[tokens][heads*embeddingSize]`, zsumowane po tokenach `weightGradients` `[heads*embeddingSize][embeddingSize]` oraz `biasGradients` `[embeddingSize]`.
+- `headGradients()` — lista `CausalAttentionGradients`, po jednym elemencie dla każdej głowicy, zawierająca gradienty Q/K/V.
 
-## Uruchom
+**Uwaga o architekturze:** obecna, edukacyjna implementacja Jarvisa ma każdą głowicę o pełnym `embeddingSize`, więc po konkatenacji wymiar wynosi `headCount * embeddingSize`. To nie jest jeszcze zoptymalizowana klasyczna wersja z `headDim = embeddingSize / headCount`; zachowaliśmy istniejące API i kształty macierzy.
+
+## Testy — Git Bash w Windows
 
 ```bash
 cd ~/Desktop/Nauka/BawarJARVIS-/backend
-./mvnw.cmd -Dtest=AdamWOptimizerTest,AdamWDenseTrainingTest test
+
+./mvnw.cmd -Dtest=MultiHeadAttentionBackwardTest test
+./mvnw.cmd -Dtest=MultiHeadAttentionTest,MultiHeadAttentionBackwardTest test
 ./mvnw.cmd clean test
 ```
 
-W `AdamWDenseTrainingTest` ćwiczymy jedną miniwarstwę na jednym przykładzie, nie cały transformer. Test korzysta z `DenseLayer.backward()` z poprzedniej lekcji. Osobny optimizer przypada na każdy wiersz macierzy wag i biasy, bo musi przechowywać momenty pomiędzy krokami. Biasy mają weight decay = 0.0.
+Nowe testy sprawdzają:
+- wcześniejsze zachowanie `forward()` (2 głowice),
+- wymiar, zbieranie gradientów projekcji wyjściowej i niemodyfikowalność listy głowic,
+- różnice skończone dla **każdego wejścia**, wag i biasów output projection oraz Q/K/V obydwu głowic,
+- brak gradientu od pierwszego tokenu do przyszłych tokenów,
+- walidację argumentów i niezmienianie danych wejściowych.
+
+## Lokalna weryfikacja plików
+
+W izolowanym środowisku Java 21 nowa klasa i 8 testów zostały skompilowane i uruchomione ze złączonymi klasami lekcji 10.7 i zgodnymi implementacjami `DenseLayer`/`MatrixOps`. Użyto lekkiego harnessu imitującego asercje JUnit 5, **nie uruchomiono Maven ani rzeczywistego JUnit 5**. Wszystkie 8 scenariuszy przeszły. Ostateczne sprawdzenie: `./mvnw.cmd clean test` u Ciebie.
+
+## Co dalej?
+
+LLM 10.9 — Backpropagation przez cały Transformer Block (LayerNorm, Attention, Residual, FFN). Po LLM 10.12: integracja Spring Boot / Angular / PostgreSQL.
