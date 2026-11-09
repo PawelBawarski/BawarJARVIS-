@@ -1,0 +1,20 @@
+services:
+  jarvis-postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${JARVIS_DB_NAME:-jarvis_db}
+      POSTGRES_USER: ${JARVIS_DB_USER:-jarvis}
+      POSTGRES_PASSWORD: ${JARVIS_DB_PASSWORD:?Ustaw JARVIS_DB_PASSWORD w .env.jarvis}
+    ports:
+      - "127.0.0.1:${JARVIS_DB_PORT:-5433}:5432"
+    volumes:
+      - jarvis-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${JARVIS_DB_USER:-jarvis} -d ${JARVIS_DB_NAME:-jarvis_db}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  jarvis-postgres-data:

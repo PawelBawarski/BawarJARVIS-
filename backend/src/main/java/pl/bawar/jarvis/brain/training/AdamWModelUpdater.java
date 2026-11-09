@@ -176,4 +176,36 @@ final class AdamWModelUpdater {
         if (!Double.isFinite(norm)) throw new ArithmeticException("Non-finite gradient norm");
         return norm;
     }
+
+    double learningRate() { return learningRate; }
+    double weightDecay() { return weightDecay; }
+
+    Map<String, pl.bawar.jarvis.brain.optimization.AdamWState> snapshotStates() {
+        Map<String, pl.bawar.jarvis.brain.optimization.AdamWState> states = new HashMap<>();
+        for (var item : optimizers.entrySet()) {
+            states.put(item.getKey(), item.getValue().snapshot());
+        }
+        return Map.copyOf(states);
+    }
+
+    void restoreStates(Map<String, pl.bawar.jarvis.brain.optimization.AdamWState> states) {
+        if (states == null) throw new IllegalArgumentException("Missing optimizer states");
+        Map<String, AdamWOptimizer> prepared = new HashMap<>();
+        for (var entry : states.entrySet()) {
+            String key = entry.getKey();
+            var state = entry.getValue();
+            if (key == null || state == null) throw new IllegalArgumentException("Invalid optimizer entry");
+            boolean decayed = key.startsWith("tokens.") || key.startsWith("positions.")
+                    || key.contains(".w.");
+            AdamWOptimizer optimizer = new AdamWOptimizer(state.size(), learningRate,
+                    decayed ? weightDecay : 0.0);
+            optimizer.restore(state);
+            if (prepared.putIfAbsent(key, optimizer) != null) {
+                throw new IllegalArgumentException("Repeated optimizer key");
+            }
+        }
+        optimizers.clear();
+        optimizers.putAll(prepared);
+    }
+
 }

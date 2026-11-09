@@ -8,3 +8,5 @@ out-tsc/
 .env
 *.pfx
 *.p12
+backend/.env.jarvis
+*.be112.bak

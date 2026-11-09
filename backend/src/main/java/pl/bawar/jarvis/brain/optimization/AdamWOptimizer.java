@@ -73,4 +73,20 @@ public final class AdamWOptimizer {
     public long stepCount() {
         return stepCount;
     }
+
+    /** State used to resume AdamW without losing momentum and step counter. */
+    public AdamWState snapshot() {
+        return new AdamWState(stepCount, firstMoment, secondMoment);
+    }
+
+    public void restore(AdamWState state) {
+        if (state == null || state.size() != firstMoment.length) {
+            throw new IllegalArgumentException("Incompatible AdamW state");
+        }
+        double[] first = state.first(), second = state.second();
+        System.arraycopy(first, 0, firstMoment, 0, first.length);
+        System.arraycopy(second, 0, secondMoment, 0, second.length);
+        stepCount = state.steps();
+    }
+
 }

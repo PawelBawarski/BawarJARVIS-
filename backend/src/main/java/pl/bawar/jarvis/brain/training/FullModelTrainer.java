@@ -158,4 +158,10 @@ public final class FullModelTrainer {
 
     private record ForwardPass(List<double[][]> blockInputs,
                                double[][] blockOutput, double[][] normalized) { }
+
+    // Package-private checkpoint access. Only call while training is stopped.
+    JarvisLanguageModel model() { return model; }
+    AdamWModelUpdater updater() { return updater; }
+    double maxGradientNorm() { return maxGradientNorm; }
+
 }
