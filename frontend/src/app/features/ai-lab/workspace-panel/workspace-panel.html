@@ -1,0 +1,55 @@
+<section class="jarvis-workspace" data-testid="ai-lab-workspace">
+  <header class="jarvis-workspace__header">
+    <div>
+      <h2>{{ 'aiLab.workspace.title' | translate }}</h2>
+      <p>{{ 'aiLab.workspace.description' | translate }}</p>
+    </div>
+    <span class="jarvis-workspace__badge">{{ 'aiLab.workspace.readOnly' | translate }}</span>
+  </header>
+
+  @if (error()) {
+    <p class="jarvis-workspace__error" role="alert" data-testid="workspace-error">{{ error() }}</p>
+  }
+
+  <div class="jarvis-workspace__actions">
+    <button type="button" data-testid="workspace-choose" [disabled]="busy() || !connected" (click)="choose()">
+      {{ 'aiLab.workspace.choose' | translate }}
+    </button>
+    <button type="button" data-testid="workspace-clear" [disabled]="busy() || !workspace()?.selected" (click)="clear()">
+      {{ 'aiLab.workspace.clear' | translate }}
+    </button>
+    <button type="button" [disabled]="busy() || !connected" (click)="refresh()">
+      {{ 'aiLab.workspace.refresh' | translate }}
+    </button>
+  </div>
+
+  <div class="jarvis-workspace__path" data-testid="workspace-path">
+    {{ workspace()?.selected || ('aiLab.workspace.none' | translate) }}
+  </div>
+  <p class="jarvis-workspace__hint">{{ 'aiLab.workspace.permission' | translate }}</p>
+
+  @if (workspace()?.selected && listing()) {
+    <div class="jarvis-workspace__browser">
+      <div class="jarvis-workspace__nav">
+        <button type="button" (click)="back()" [disabled]="busy() || !listing()?.relativePath" data-testid="workspace-back">..</button>
+        <span>{{ listing()?.relativePath || '/' }}</span>
+      </div>
+      <div class="jarvis-workspace__entries" data-testid="workspace-entries">
+        @for (entry of listing()?.entries || []; track entry.relativePath) {
+          <button type="button" [disabled]="busy()" (click)="open(entry)">
+            <span aria-hidden="true">{{ entry.kind === 'directory' ? '▣' : '▤' }}</span>
+            {{ entry.name }}{{ entry.kind === 'directory' ? '/' : '' }}
+          </button>
+        } @empty {
+          <p>{{ 'aiLab.workspace.empty' | translate }}</p>
+        }
+      </div>
+    </div>
+  }
+  @if (preview(); as file) {
+    <div class="jarvis-workspace__preview" data-testid="workspace-preview">
+      <h3>{{ file.relativePath }} ({{ file.size }} B)</h3>
+      <pre><code>{{ file.content }}</code></pre>
+    </div>
+  }
+</section>

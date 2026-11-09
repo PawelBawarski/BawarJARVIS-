@@ -1,0 +1,32 @@
+:host { display: block; min-width: 0; }
+.jarvis-workspace {
+  max-width: 850px;
+  min-width: 0;
+  margin: 1.75rem auto 2.5rem;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  color: #dbe5f5;
+  background: #172238;
+  border: 1px solid #2b3c55;
+  border-radius: 15px;
+  &__header { display:flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+  h2 { margin: 0; font-size: 1.15rem; }
+  h3 { font-size: .95rem; }
+  p { color: #bdcadc; font-size: .87rem; }
+  &__badge { padding: .4rem .6rem; border: 1px solid #3a6e9a; border-radius: 9px; color: #9fd9ff; font-size: .78rem; }
+  &__actions { display:flex; gap:.6rem; flex-wrap:wrap; margin: 1rem 0; }
+  button { border: 1px solid #304766; background:#21385b; color:#e6edf7; border-radius:9px; padding:.6rem .8rem; cursor:pointer; }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  button:focus-visible { outline:2px solid #77b5ff; outline-offset: 2px; }
+  &__path { word-break:break-word; border:1px solid #304766; border-radius:8px; background:#0c1525; padding:.8rem; font-family: ui-monospace, monospace; font-size: .8rem; }
+  &__hint { margin-top:.6rem; }
+  &__error { color:#fda4af !important; }
+  &__browser { min-width:0; border:1px solid #314462; border-radius:10px; overflow:hidden; }
+  &__nav { display:flex; align-items:center; gap:1rem; background:#101b2d; padding:.6rem; overflow-wrap:anywhere; }
+  &__entries { display:flex; flex-direction:column; padding:.35rem; max-height:250px; overflow-y:auto; }
+  &__entries button { text-align:left; background:transparent; border:0; width:100%; }
+  &__entries button:hover:not(:disabled) { background:#233d5e; }
+  &__preview { min-width:0; margin-top:1rem; }
+  pre { max-height:340px; overflow:auto; padding:1rem; white-space:pre; background:#0c1525; border:1px solid #314462; border-radius:8px; font-size: .78rem; }
+}
+@media(max-width:650px) { .jarvis-workspace { padding: 1rem; margin: 1rem .4rem; } }

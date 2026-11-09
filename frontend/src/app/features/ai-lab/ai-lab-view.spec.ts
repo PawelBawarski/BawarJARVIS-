@@ -47,7 +47,7 @@ describe('AiLabView', () => {
     fixture.detectChanges();
 
     const buttons = fixture.nativeElement.querySelectorAll(
-      'button',
+      '.ai-lab-view__actions button',
     ) as NodeListOf<HTMLButtonElement>;
 
     expect(buttons.length).toBe(2);

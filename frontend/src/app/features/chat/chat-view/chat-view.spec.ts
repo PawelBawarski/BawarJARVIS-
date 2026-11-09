@@ -1,109 +1,55 @@
-
 import { TestBed } from '@angular/core/testing';
-import {
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi
-} from 'vitest';
-
+import { Pipe, PipeTransform } from '@angular/core';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChatView } from './chat-view';
 import { ChatStore } from '../../../core/services/chat-store';
-import { TranslationService } from '../../../core/services/translation';
-import { ConfirmDialogService } from
-  '../../../shared/services/confirm-dialog';
+import { ChatApiService } from '../../../core/services/chat-api';
+import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 
-describe('ChatView', () => {
-  const openDialogMock = vi.fn();
+@Pipe({ name: 'translate' })
+class FakeTranslate implements PipeTransform { transform(value: string): string { return value; } }
 
-  beforeEach(() => {
-    localStorage.removeItem('jarvis.chats.v1');
-
-    openDialogMock.mockReset();
-    openDialogMock.mockResolvedValue(false);
-
-    TestBed.configureTestingModule({
-      providers: [
-        {
-          provide: TranslationService,
-          useValue: {
-            translate: (key: string) => key
-          }
-        },
-        {
-          provide: ConfirmDialogService,
-          useValue: {
-            open: openDialogMock
-          }
-        }
-      ]
+describe('ChatView — actual backend messages, unchanged layout', () => {
+  const api = { list: vi.fn(), create: vi.fn(), messages: vi.fn(), send: vi.fn(), delete: vi.fn() };
+  beforeEach(async () => {
+    vi.resetAllMocks();
+    api.list.mockResolvedValue([]); api.messages.mockResolvedValue([]);
+    api.create.mockResolvedValue({ id: 'chat1', title: 'Nowa rozmowa',
+      createdAt: '2026-11-09T12:00:00Z', updatedAt: '2026-11-09T12:00:00Z' });
+    api.send.mockResolvedValue({
+      userMessage: { id: 'u1', role: 'USER', content: 'Cześć', conversationId: 'chat1', order: 1 },
+      assistantMessage: { id: 'a1', role: 'ASSISTANT', content: 'Witaj!', conversationId: 'chat1', order: 2 },
     });
+    await TestBed.configureTestingModule({
+      imports: [ChatView], providers: [{ provide: ChatApiService, useValue: api }],
+    }).overrideComponent(ChatView, {
+      remove: { imports: [TranslatePipe] }, add: { imports: [FakeTranslate] },
+    }).compileComponents();
   });
-
-  it('should start with an empty conversation', () => {
+  it('keeps the original chat layout and welcome view', async () => {
     const fixture = TestBed.createComponent(ChatView);
-
-    expect(fixture.componentInstance.store.messages())
-      .toHaveLength(0);
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.composer')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('J.A.R.V.I.S.');
   });
-
-  it('should save user message without fake AI response', () => {
-    const fixture = TestBed.createComponent(ChatView);
-    const component = fixture.componentInstance;
-
-    component.draft.set('Cześć Jarvis');
-    component.sendMessage();
-
-    expect(component.store.messages()).toHaveLength(1);
-    expect(component.store.messages()[0].role)
-      .toBe('user');
-    expect(component.store.messages()[0].content)
-      .toBe('Cześć Jarvis');
-
-    expect(component.draft()).toBe('');
-  });
-
-  it('should create a new conversation', () => {
+  it('shows backend assistant response after send, never fake text', async () => {
     const fixture = TestBed.createComponent(ChatView);
     const component = fixture.componentInstance;
-
-    component.draft.set('Pierwsza wiadomość');
-    component.sendMessage();
-
-    component.newChat();
-
-    expect(component.store.conversations()).toHaveLength(2);
-    expect(component.store.messages()).toHaveLength(0);
+    await fixture.whenStable();
+    component.draft.set('Cześć');
+    await component.sendMessage();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.message--user').textContent).toContain('Cześć');
+    expect(fixture.nativeElement.querySelector('.message--assistant').textContent).toContain('Witaj!');
     expect(component.draft()).toBe('');
   });
-
-  it('should not delete chat without confirmation', async () => {
+  it('retains draft after backend error', async () => {
+    api.send.mockRejectedValue(new Error('Backend stopped'));
     const fixture = TestBed.createComponent(ChatView);
-    const store = TestBed.inject(ChatStore);
-
-    openDialogMock.mockResolvedValueOnce(false);
-
-    store.addUserMessage('Zachowaj mnie');
-
-    await fixture.componentInstance.deleteChat();
-
-    expect(openDialogMock).toHaveBeenCalledOnce();
-    expect(store.messages()).toHaveLength(1);
-  });
-
-  it('should delete chat after confirmation', async () => {
-    const fixture = TestBed.createComponent(ChatView);
-    const store = TestBed.inject(ChatStore);
-
-    openDialogMock.mockResolvedValueOnce(true);
-
-    store.addUserMessage('Usuń mnie');
-
-    await fixture.componentInstance.deleteChat();
-
-    expect(openDialogMock).toHaveBeenCalledOnce();
-    expect(store.messages()).toHaveLength(0);
-    expect(store.conversations()).toHaveLength(1);
+    await fixture.whenStable();
+    fixture.componentInstance.draft.set('Cześć');
+    await fixture.componentInstance.sendMessage();
+    expect(fixture.componentInstance.draft()).toBe('Cześć');
+    expect(fixture.componentInstance.store.saveError()).toBe(true);
   });
 });

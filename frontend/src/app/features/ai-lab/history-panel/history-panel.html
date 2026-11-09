@@ -1,0 +1,98 @@
+<section class="jarvis-history" data-testid="ai-lab-history">
+  <div class="jarvis-history__heading">
+    <div>
+      <h2>{{ 'aiLab.history.title' | translate }}</h2>
+      <p>{{ 'aiLab.history.subtitle' | translate }}</p>
+    </div>
+    <button type="button" (click)="refresh()" [disabled]="busy()" data-testid="ai-lab-history-refresh">
+      {{ 'aiLab.training.refresh' | translate }}
+    </button>
+  </div>
+  @if (error()) { <p role="alert" class="jarvis-history__error">{{ error() }}</p> }
+  @if (info()) { <p role="status" class="jarvis-history__info">{{ info() }}</p> }
+
+  <h3>{{ 'aiLab.history.runs' | translate }}</h3>
+  @if (runs().length === 0) { <p class="jarvis-history__muted">{{ 'aiLab.history.noRuns' | translate }}</p> }
+  @else {
+    <div class="jarvis-history__table-wrap">
+      <table data-testid="ai-lab-history-runs">
+        <thead><tr>
+          <th>{{ 'aiLab.history.date' | translate }}</th>
+          <th>{{ 'aiLab.history.status' | translate }}</th>
+          <th>{{ 'aiLab.history.epochs' | translate }}</th>
+          <th>Loss</th>
+          <th></th>
+        </tr></thead>
+        <tbody>
+          @for (run of runs(); track run.id) {
+            <tr>
+              <td>{{ run.startedAt | slice:0:19 }}</td>
+              <td>{{ run.status }}</td>
+              <td>{{ run.completedEpochs }} / {{ run.totalEpochs }}</td>
+              <td>{{ run.finalLoss === null ? '—' : run.finalLoss.toFixed(5) }}</td>
+              <td><button type="button" (click)="selectRun(run.id)" [disabled]="busy()" [attr.aria-pressed]="selectedRun() === run.id">{{ 'aiLab.history.show' | translate }}</button></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  @if (epochs().length) {
+    <div class="jarvis-history__epoch-list" data-testid="ai-lab-epoch-metrics">
+      @for (epoch of epochs(); track epoch.epoch) {
+        <span [title]="'Loss: ' + epoch.loss.toFixed(6)">#{{ epoch.epoch }}: {{ epoch.loss.toFixed(4) }}</span>
+      }
+    </div>
+  }
+
+  <h3>{{ 'aiLab.history.checkpoints' | translate }}</h3>
+  @if (checkpoints().length === 0) { <p class="jarvis-history__muted">{{ 'aiLab.history.noCheckpoints' | translate }}</p> }
+  @else {
+    <div class="jarvis-history__table-wrap">
+      <table data-testid="ai-lab-history-checkpoints">
+        <thead><tr><th>{{ 'aiLab.history.date' | translate }}</th><th>{{ 'aiLab.history.size' | translate }}</th><th>SHA-256</th><th>Perplexity</th></tr></thead>
+        <tbody>
+          @for (item of checkpoints(); track item.id) {
+            <tr><td>{{ item.createdAt | slice:0:19 }}</td><td>{{ item.fileBytes }} B</td><td [title]="item.sha256">{{ item.sha256 | slice:0:12 }}…</td><td>{{ item.evaluationPerplexity === null ? '—' : item.evaluationPerplexity.toFixed(5) }}</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="jarvis-history__compare" data-testid="ai-lab-checkpoint-compare">
+      <label>{{ 'aiLab.history.first' | translate }}
+        <select [value]="first()" (change)="onFirst($event)" data-testid="ai-lab-compare-first">
+          @for (item of checkpoints(); track item.id) { <option [value]="item.id">{{ item.createdAt | slice:0:19 }} · {{ item.sha256 | slice:0:8 }}</option> }
+        </select>
+      </label>
+      <label>{{ 'aiLab.history.second' | translate }}
+        <select [value]="second()" (change)="onSecond($event)" data-testid="ai-lab-compare-second">
+          @for (item of checkpoints(); track item.id) { <option [value]="item.id">{{ item.createdAt | slice:0:19 }} · {{ item.sha256 | slice:0:8 }}</option> }
+        </select>
+      </label>
+    </div>
+    @if (first() && second() && first() !== second()) {
+      <p>{{ 'aiLab.history.sameWeights' | translate }}: {{ checkpoint(first())?.sha256 === checkpoint(second())?.sha256 ? ('aiLab.training.yes' | translate) : ('aiLab.training.no' | translate) }}</p>
+      @if (canCompareEvaluations()) {
+        <p data-testid="ai-lab-comparable-ppl">Perplexity: {{ checkpoint(first())!.evaluationPerplexity!.toFixed(5) }} / {{ checkpoint(second())!.evaluationPerplexity!.toFixed(5) }}</p>
+      } @else {
+        <p class="jarvis-history__muted" data-testid="ai-lab-noncomparable">{{ 'aiLab.history.notComparable' | translate }}</p>
+      }
+    }
+  }
+
+  <h3>{{ 'aiLab.history.evaluation' | translate }}</h3>
+  <label class="jarvis-history__dataset">
+    <span>{{ 'aiLab.history.validationData' | translate }}</span>
+    <textarea rows="3" [value]="evalText()" (input)="onEvalText($event)" [disabled]="busy()" data-testid="ai-lab-evaluation-corpus"></textarea>
+  </label>
+  <button type="button" data-testid="ai-lab-evaluate" (click)="evaluate()" [disabled]="busy()">{{ 'aiLab.history.evaluate' | translate }}</button>
+  <p class="jarvis-history__muted">{{ 'aiLab.history.noRawData' | translate }}</p>
+  @if (evaluations().length) {
+    <div class="jarvis-history__table-wrap"><table data-testid="ai-lab-evaluations">
+      <thead><tr><th>{{ 'aiLab.history.date' | translate }}</th><th>Cross-Entropy</th><th>Perplexity</th><th>{{ 'aiLab.history.examples' | translate }}</th></tr></thead>
+      <tbody>@for (record of evaluations(); track record.id) {
+        <tr><td>{{ record.createdAt | slice:0:19 }}</td><td>{{ record.meanCrossEntropy.toFixed(5) }}</td><td>{{ record.perplexity.toFixed(5) }}</td><td>{{ record.exampleCount }}</td></tr>
+      }</tbody>
+    </table></div>
+  }
+</section>

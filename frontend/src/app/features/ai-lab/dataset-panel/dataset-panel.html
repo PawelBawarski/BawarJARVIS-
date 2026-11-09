@@ -1,0 +1,76 @@
+<section class="jarvis-dataset" data-testid="ai-lab-datasets">
+  <header>
+    <div>
+      <h2>{{ 'aiLab.dataset.title' | translate }}</h2>
+      <p class="jarvis-dataset__muted">{{ 'aiLab.dataset.description' | translate }}</p>
+    </div>
+    <button type="button" (click)="refresh()" [disabled]="busy()" data-testid="dataset-refresh">
+      {{ 'aiLab.training.refresh' | translate }}
+    </button>
+  </header>
+
+  @if (error()) { <p role="alert" class="jarvis-dataset__error">{{ error() }}</p> }
+  @if (message()) { <p role="status" class="jarvis-dataset__success">{{ message() }}</p> }
+
+  <div class="jarvis-dataset__grid">
+    <label>{{ 'aiLab.dataset.name' | translate }}
+      <input type="text" [value]="name()" maxlength="80" (input)="onName($event)" [disabled]="busy()" data-testid="dataset-name" />
+    </label>
+    <label>{{ 'aiLab.dataset.saved' | translate }}
+      <select [value]="selectedDataset()" (change)="onDataset($event)" [disabled]="busy()" data-testid="dataset-select">
+        <option value="">{{ 'aiLab.dataset.select' | translate }}</option>
+        @for (dataset of datasets(); track dataset.id) {
+          <option [value]="dataset.id">{{ dataset.name }} · v{{ dataset.latestVersion }}</option>
+        }
+      </select>
+    </label>
+  </div>
+  @if (versions().length) {
+    <label class="jarvis-dataset__version">{{ 'aiLab.dataset.version' | translate }}
+      <select [value]="selectedVersion()" (change)="onVersion($event)" [disabled]="busy()" data-testid="dataset-version">
+        @for (v of versions(); track v.id) {
+          <option [value]="v.id">v{{ v.versionNumber }} · {{ v.trainingCount }} / {{ v.validationCount }}</option>
+        }
+      </select>
+    </label>
+  }
+
+  <label class="jarvis-dataset__text">{{ 'aiLab.dataset.examples' | translate }}
+    <textarea rows="6" [value]="draft()" (input)="onDraft($event)" [disabled]="busy()" data-testid="dataset-examples"></textarea>
+  </label>
+  <p class="jarvis-dataset__muted">{{ 'aiLab.dataset.rules' | translate }}</p>
+  @if (loaded()) {
+    <p class="jarvis-dataset__muted" data-testid="dataset-split">
+      {{ 'aiLab.dataset.training' | translate }}: {{ loaded()!.trainingExamples.length }} ·
+      {{ 'aiLab.dataset.validation' | translate }}: {{ loaded()!.validationExamples.length }} ·
+      SHA-256: {{ loaded()!.validationSha256.slice(0, 12) }}…
+    </p>
+  }
+  <div class="jarvis-dataset__actions">
+    <button type="button" (click)="create()" [disabled]="busy()" data-testid="dataset-create">
+      {{ 'aiLab.dataset.create' | translate }}
+    </button>
+    <button type="button" (click)="revise()" [disabled]="busy() || !selectedDataset()" data-testid="dataset-revise">
+      {{ 'aiLab.dataset.revise' | translate }}
+    </button>
+  </div>
+  @if (job()) {
+    <p class="jarvis-dataset__muted" data-testid="dataset-training-progress">
+      {{ job()!.status }} · {{ job()!.epoch }} / {{ job()!.totalEpochs }}
+      @if (job()!.losses.length) { · Loss: {{ job()!.losses.at(-1)?.toFixed(5) }} }
+    </p>
+  }
+  @if (loaded()) {
+    <div class="jarvis-dataset__run">
+      <label>{{ 'aiLab.training.epochs' | translate }}
+        <input type="number" min="1" max="100" [value]="epochs()" (input)="onEpochs($event)" [disabled]="busy()" data-testid="dataset-epochs" />
+      </label>
+      <button type="button" (click)="train()" [disabled]="busy()" data-testid="dataset-train">
+        {{ 'aiLab.dataset.train' | translate }}
+      </button>
+      <button type="button" (click)="evaluate()" [disabled]="busy()" data-testid="dataset-evaluate">
+        {{ 'aiLab.dataset.evaluate' | translate }}
+      </button>
+    </div>
+  }
+</section>

@@ -1,0 +1,52 @@
+<section class="jarvis-training" data-testid="ai-lab-training">
+  <header class="jarvis-training__header">
+    <div>
+      <h2>{{ 'aiLab.training.title' | translate }}</h2>
+      <p>{{ 'aiLab.training.subtitle' | translate }}</p>
+    </div>
+    <button type="button" class="jarvis-training__secondary" (click)="refresh()">
+      {{ 'aiLab.training.refresh' | translate }}
+    </button>
+  </header>
+  @if (error()) {
+    <p class="jarvis-training__error" role="alert" data-testid="ai-lab-error">{{ error() }}</p>
+  }
+  <div class="jarvis-training__stats">
+    <div><span>{{ 'aiLab.training.status' | translate }}</span><strong data-testid="ai-lab-status">{{ state()?.status || 'IDLE' }}</strong></div>
+    <div><span>{{ 'aiLab.training.epochs' | translate }}</span><strong>{{ state()?.epoch || 0 }} / {{ state()?.totalEpochs || 0 }}</strong></div>
+    <div><span>{{ 'aiLab.training.loss' | translate }}</span><strong data-testid="ai-lab-loss">{{ state()?.losses?.length ? state()?.losses?.at(-1)?.toFixed(6) : '—' }}</strong></div>
+    <div><span>{{ 'aiLab.training.checkpoint' | translate }}</span><strong>{{ model()?.checkpointAvailable ? ('aiLab.training.yes' | translate) : ('aiLab.training.no' | translate) }}</strong></div>
+  </div>
+  <div class="jarvis-training__progress" role="progressbar" [attr.aria-valuenow]="progressPercent()" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="'aiLab.training.progress' | translate">
+    <div [style.width.%]="progressPercent()"></div>
+  </div>
+  <div class="jarvis-training__grid">
+    <label>
+      <span>{{ 'aiLab.training.corpus' | translate }}</span>
+      <textarea rows="5" data-testid="ai-lab-corpus" [value]="text()" [disabled]="isRunning()" (input)="onText($event)"></textarea>
+      <small>{{ 'aiLab.training.corpusHelp' | translate }}</small>
+    </label>
+    <label class="jarvis-training__epochs">
+      <span>{{ 'aiLab.training.epochs' | translate }}</span>
+      <input type="number" min="1" max="100" [value]="epochs()" [disabled]="isRunning()" (input)="onEpochs($event)" data-testid="ai-lab-epochs" />
+    </label>
+  </div>
+  <div class="jarvis-training__actions">
+    <button type="button" data-testid="ai-lab-start" [disabled]="isRunning()" (click)="start()">{{ 'aiLab.training.start' | translate }}</button>
+    <button type="button" data-testid="ai-lab-save" [disabled]="isRunning()" (click)="save()">{{ 'aiLab.training.save' | translate }}</button>
+    <button type="button" data-testid="ai-lab-load" [disabled]="isRunning() || !model()?.checkpointAvailable" (click)="load()">{{ 'aiLab.training.load' | translate }}</button>
+  </div>
+  @if (state()?.losses?.length) {
+    <div class="jarvis-training__losses">
+      <h3>{{ 'aiLab.training.history' | translate }}</h3>
+      <div class="jarvis-training__bars" role="img" [attr.aria-label]="'aiLab.training.history' | translate">
+        @for (loss of state()!.losses; track $index) {
+          <div [style.height.%]="100 / (1 + loss)" [title]="loss.toFixed(6)"></div>
+        }
+      </div>
+      <p><small>{{ 'aiLab.training.chartNote' | translate }}</small></p>
+    </div>
+  }
+</section>
+<app-ai-lab-dataset />
+<app-ai-lab-history />

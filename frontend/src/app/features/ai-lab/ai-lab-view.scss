@@ -55,3 +55,26 @@
     opacity: 0.75;
   }
 }
+
+/* JARVIS AI LAB SCROLL FIX */
+/* The workspace deliberately hides overflow. Only AI Lab scrolls here,
+   so the chat/sidebar layout stays unchanged. */
+:host {
+  display: block;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #526680 transparent;
+}
+
+/* Leave some room after the last AI Lab panel. */
+:host > :last-child {
+  margin-bottom: 1.5rem;
+}
+

@@ -1,0 +1,30 @@
+:host { display: block; min-width: 0; }
+.jarvis-dataset {
+  max-width: 850px; margin: 1rem auto; padding: clamp(1rem, 2vw, 1.5rem);
+  border: 1px solid var(--border, #283650); border-radius: 16px;
+  background: var(--panel-soft, #101c32); color: inherit;
+  header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+  h2 { margin: 0 0 .35rem; font-size: 1.15rem; }
+  p { margin: .4rem 0 .8rem; }
+  &__muted { opacity: .72; font-size: .82rem; }
+  &__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  &__text, &__version { margin-top: .9rem; }
+  label { display: flex; flex-direction: column; gap: .4rem; font-size: .84rem; min-width: 0; }
+  input, textarea, select {
+    box-sizing: border-box; min-width: 0; width: 100%; font: inherit; color: inherit;
+    border: 1px solid var(--border, #3b4a62); border-radius: 9px;
+    background: var(--panel, #101a2c); padding: .62rem;
+  }
+  select { padding-right: 2rem; }
+  &__actions, &__run { display: flex; flex-wrap: wrap; align-items: end; gap: .65rem; margin-top: .9rem; }
+  &__run label { width: 115px; }
+  button {
+    padding: .63rem .9rem; border: 1px solid #365c88; border-radius: 9px;
+    background: #1d3d6a; color: #eaf1ff; cursor: pointer;
+    &:hover:not(:disabled) { background: #28528d; }
+    &:disabled { opacity: .5; cursor: not-allowed; }
+  }
+  &__error { color: #ffadad; overflow-wrap: anywhere; }
+  &__success { color: #89dab7; overflow-wrap: anywhere; }
+}
+@media (max-width: 600px) { .jarvis-dataset__grid { grid-template-columns: 1fr; } }

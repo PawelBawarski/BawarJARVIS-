@@ -1,0 +1,3 @@
+# J.A.R.V.I.S. — AI Lab 12.1
+
+Buduj wyłącznie na `JarvisModelService` i `LabTrainingService`, a nie na nowych instancjach Transformera. Bez automatycznego trenowania ani nadpisywania checkpointów bez kliknięcia użytkownika. Token sesji i HTTP wyłącznie w Electron main, `window.jarvisDesktop.aiLabApi` przesyła tylko 6 jawnych operacji. Nie modyfikuj wyglądu sidebara, radia, górnej nawigacji ani czatu. Dla każdej funkcji dostarczaj JUnit, Vitest i Playwright. Przed wdrożeniem produkcyjnym wymagana autoryzacja, limity pamięci i kolejka z możliwością anulowania. Po trenowaniu dane w pamięci nie zastępują migracji PostgreSQL.

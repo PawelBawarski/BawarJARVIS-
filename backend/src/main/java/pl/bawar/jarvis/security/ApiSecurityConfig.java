@@ -28,6 +28,8 @@ public class ApiSecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/security/health").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/security/private-health")
                     .hasAuthority("ROLE_JARVIS")
+                .requestMatchers("/api/chats", "/api/chats/**").hasAuthority("ROLE_JARVIS")
+                .requestMatchers("/api/ai-lab", "/api/ai-lab/**").hasAuthority("ROLE_JARVIS")
                 .anyRequest().denyAll()
         );
 
@@ -36,6 +38,7 @@ public class ApiSecurityConfig {
                         response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
         ));
 
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/chats", "/api/chats/**", "/api/ai-lab", "/api/ai-lab/**"));
         http.formLogin(AbstractHttpConfigurer::disable);
         http.httpBasic(AbstractHttpConfigurer::disable);
         // Keep CSRF protection enabled; do not open arbitrary POST endpoints yet.

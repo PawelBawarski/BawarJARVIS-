@@ -9,7 +9,9 @@
     "preview": "electron . --preview",
     "build:ui": "npm --prefix ../frontend run build -- --base-href ./",
     "installer:win": "npm run build:ui && electron-builder --config electron-builder.config.cjs --win nsis --x64 --publish never",
-    "pack:win": "npm run build:ui && electron-builder --config electron-builder.config.cjs --win --dir --x64 --publish never"
+    "pack:win": "npm run build:ui && electron-builder --config electron-builder.config.cjs --win --dir --x64 --publish never",
+    "installer:full": "node scripts/build-full.cjs",
+    "pack:full": "node scripts/build-full.cjs --dir"
   },
   "keywords": [],
   "author": "",

@@ -1,3 +1,7 @@
+const { registerWorkspaceIpc } = require('./workspace-access.cjs');
+const { registerLabIpc } = require('./lab-ipc.cjs');
+const { startPackagedBackend, stopPackagedBackend } = require('./backend-runtime.cjs');
+const { registerChatIpc } = require('./chat-ipc.cjs');
 const { checkInternet } = require('./connectivity.cjs');
 const { shell } = require('electron');
 const path = require("node:path");
@@ -113,7 +117,7 @@ function createWindow() {
 
 app
   .whenReady()
-  .then(() => {
+  .then(async () => {
     // Na razie nie udzielamy uprawnień systemowych.
     // Obsługę mikrofonu dodamy w lekcji o głosie.
     session.defaultSession.setPermissionRequestHandler(
@@ -153,6 +157,20 @@ app
       return true;
     });
 
+    // Chat: fixed HTTP endpoints, validated sender, token only in Electron main.
+    registerChatIpc(ipcMain, (event) => isTrustedSender(event, useBuiltUi));
+    registerLabIpc(ipcMain, (event) => isTrustedSender(event, useBuiltUi));
+    registerWorkspaceIpc(ipcMain, (event) => isTrustedSender(event, useBuiltUi), { dialog, userDataDir: app.getPath('userData') });
+    // Desktop 11.5: the packaged Electron app owns its local Java process.
+    if (app.isPackaged) {
+      try {
+        await startPackagedBackend({ resourcesPath: process.resourcesPath });
+      } catch (error) {
+        dialog.showErrorBox('J.A.R.V.I.S. — backend', String(error?.message || error));
+        app.quit();
+        return;
+      }
+    }
     const jarvisWindow = createWindow();
 
     // Aktualizacje uruchamiamy tylko w zainstalowanej aplikacji.
@@ -201,3 +219,5 @@ app.on("window-all-closed", () => {
     app.quit();
   }
 });
+
+app.on('before-quit', () => stopPackagedBackend());

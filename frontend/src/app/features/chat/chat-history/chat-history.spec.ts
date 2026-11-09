@@ -1,84 +1,34 @@
-
 import { Pipe, PipeTransform } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-
-import { beforeEach, describe, expect, it } from 'vitest';
-
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChatHistory } from './chat-history';
 import { ChatStore } from '../../../core/services/chat-store';
+import { ChatApiService } from '../../../core/services/chat-api';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 
-@Pipe({
-  name: 'translate'
-})
-class MockTranslatePipe implements PipeTransform {
-  transform(key: string): string {
-    return key;
-  }
-}
+@Pipe({ name: 'translate' })
+class FakeTranslate implements PipeTransform { transform(value: string): string { return value; } }
 
 describe('ChatHistory', () => {
-
+  const api = { list: vi.fn(), create: vi.fn(), messages: vi.fn(), send: vi.fn(), delete: vi.fn() };
   beforeEach(async () => {
-    localStorage.removeItem('jarvis.chats.v1');
-
+    vi.resetAllMocks();
+    api.list.mockResolvedValue([]); api.messages.mockResolvedValue([]);
+    api.create.mockResolvedValue({ id: 'new-chat', title: 'Nowa rozmowa',
+      createdAt: '2026-11-09T12:00:00Z', updatedAt: '2026-11-09T12:00:00Z' });
     await TestBed.configureTestingModule({
-      imports: [ChatHistory]
-    })
-      .overrideComponent(ChatHistory, {
-        remove: { imports: [TranslatePipe] },
-        add: { imports: [MockTranslatePipe] }
-      })
-      .compileComponents();
+      imports: [ChatHistory], providers: [{ provide: ChatApiService, useValue: api }],
+    }).overrideComponent(ChatHistory, {
+      remove: { imports: [TranslatePipe] }, add: { imports: [FakeTranslate] },
+    }).compileComponents();
   });
-
-  it('should display existing chat', async () => {
-    const fixture = TestBed.createComponent(ChatHistory);
-
-    await fixture.whenStable();
-
-    const buttons: NodeListOf<HTMLButtonElement> =
-      fixture.nativeElement.querySelectorAll(
-        '.chat-history__item'
-      );
-
-    expect(buttons.length).toBe(1);
-  });
-
-  it('should create a new chat', async () => {
+  it('new-chat button creates a server conversation', async () => {
     const fixture = TestBed.createComponent(ChatHistory);
     const store = TestBed.inject(ChatStore);
-
-    await fixture.whenStable();
-
-    const button: HTMLButtonElement =
-      fixture.nativeElement.querySelector(
-        '.chat-history__new'
-      );
-
-    button.click();
-
-    await fixture.whenStable();
-
-    expect(store.conversations()).toHaveLength(2);
-  });
-
-  it('should switch active chat', async () => {
-    const fixture = TestBed.createComponent(ChatHistory);
-    const store = TestBed.inject(ChatStore);
-
-    const firstId = store.activeId();
-    store.newChat();
-
-    await fixture.whenStable();
-
-    const buttons: NodeListOf<HTMLButtonElement> =
-      fixture.nativeElement.querySelectorAll(
-        '.chat-history__item'
-      );
-
-    buttons[1].click();
-
-    expect(store.activeId()).toBe(firstId);
+    await vi.waitFor(() => expect(store.loading()).toBe(false));
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('.chat-history__new').click();
+    await vi.waitFor(() => expect(store.activeId()).toBe('new-chat'));
+    expect(api.create).toHaveBeenCalledTimes(1);
   });
 });

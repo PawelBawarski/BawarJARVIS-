@@ -2,38 +2,21 @@
   <header class="chat-header">
     <div>
       <p class="eyebrow">JARVIS / ASSISTANT</p>
-
       <h1>{{ 'chat.title' | translate }}</h1>
-
       <p class="chat-current-title">
         {{ store.activeChat().title || ('chat.new' | translate) }}
       </p>
     </div>
-
     <div class="chat-header__actions">
-      <button
-        type="button"
-        class="chat-action"
-        [title]="'chat.new' | translate"
-        [attr.aria-label]="'chat.new' | translate"
-        (click)="newChat()"
-      >
-        <span aria-hidden="true">+</span>
-      </button>
-
-      <button
-        type="button"
-        class="chat-action"
-        [title]="'chat.delete' | translate"
-        [attr.aria-label]="'chat.delete' | translate"
-        (click)="deleteChat()"
-      >
-        <span aria-hidden="true">🗑</span>
-      </button>
+      <button type="button" class="chat-action" [disabled]="store.busy() || store.sending() || store.loading()"
+        [title]="'chat.new' | translate" [attr.aria-label]="'chat.new' | translate"
+        (click)="newChat()"><span aria-hidden="true">+</span></button>
+      <button type="button" class="chat-action" [disabled]="!store.activeId() || store.busy() || store.sending() || store.loading()"
+        [title]="'chat.delete' | translate" [attr.aria-label]="'chat.delete' | translate"
+        (click)="deleteChat()"><span aria-hidden="true">🗑</span></button>
     </div>
   </header>
-
-  <main class="chat-messages">
+  <main class="chat-messages" data-testid="chat-messages">
     @if (store.messages().length === 0) {
       <div class="welcome">
         <div class="ai-orb">J</div>
@@ -41,47 +24,36 @@
         <p>{{ 'chat.tagline' | translate }}</p>
       </div>
     }
-
     @for (message of store.messages(); track message.id) {
-      <div
-        class="message"
-        [class.message--user]="message.role === 'user'"
-        [class.message--assistant]="message.role === 'assistant'"
-      >
-        <span class="message__author">
-          {{ message.role === 'user' ? ('chat.you' | translate) : 'JARVIS' }}
-        </span>
-
+      <div class="message" [class.message--user]="message.role === 'user'"
+        [class.message--assistant]="message.role === 'assistant'">
+        <span class="message__author">{{ message.role === 'user' ? ('chat.you' | translate) : 'JARVIS' }}</span>
         <p>{{ message.content }}</p>
       </div>
     }
   </main>
-
   <footer class="chat-footer">
     <div class="composer">
-      <input
-        #messageInput
-        type="text"
-        maxlength="4000"
-        [attr.aria-label]="'chat.placeholder' | translate"
-        [placeholder]="'chat.placeholder' | translate"
-        [value]="draft()"
-        (input)="draft.set(messageInput.value)"
-        (keydown.enter)="sendMessage()"
-      />
-
-      <button type="button" [disabled]="!draft().trim()" (click)="sendMessage()">
-        {{ 'chat.send' | translate }}
-      </button>
+      <input #messageInput type="text" maxlength="4000"
+        data-testid="chat-input" [disabled]="store.sending() || store.busy() || store.loading()"
+        [attr.aria-label]="'chat.placeholder' | translate" [placeholder]="'chat.placeholder' | translate"
+        [value]="draft()" (input)="draft.set(messageInput.value)" (keydown.enter)="sendMessage()" />
+      <button type="button" data-testid="chat-send"
+        [disabled]="!draft().trim() || store.sending() || store.busy() || store.loading()"
+        (click)="sendMessage()">{{ 'chat.send' | translate }}</button>
     </div>
-
-    <p class="chat-status" role="status">
-      {{ 'chat.aiNotConnected' | translate }}
-    </p>
-
+    @if (store.loading()) {
+      <p class="chat-status" role="status">{{ 'chat.loading' | translate }}</p>
+    } @else if (store.sending()) {
+      <p class="chat-status" role="status">{{ 'chat.generating' | translate }}</p>
+    } @else if (store.connected()) {
+      <p class="chat-status" role="status">{{ 'chat.backendConnected' | translate }}</p>
+    } @else {
+      <p class="chat-status" role="status">{{ 'chat.backendUnavailable' | translate }}</p>
+    }
     @if (store.saveError()) {
       <p class="chat-status chat-status--error" role="alert">
-        {{ 'chat.saveError' | translate }}
+        {{ store.errorKey() | translate }}
       </p>
     }
   </footer>

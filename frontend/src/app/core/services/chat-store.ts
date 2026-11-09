@@ -1,218 +1,188 @@
-import { DOCUMENT } from '@angular/common';
 import { computed, inject, Injectable, signal } from '@angular/core';
-
 import { ChatConversation } from '../../features/chat/models/chat-conversation';
-
 import { ChatMessage } from '../../features/chat/models/chat-message';
+import { ApiConversation, ApiMessage, ChatApiError, ChatApiService } from './chat-api';
 
-interface ChatState {
-  version: 1;
-  activeId: string;
-  chats: ChatConversation[];
+function mapMessage(message: ApiMessage): ChatMessage {
+  // Message IDs remain UUIDs; the UI uses them only for Angular tracking.
+  return { id: message.id, role: message.role === 'USER' ? 'user' : 'assistant', content: message.content };
+}
+function mapConversation(chat: ApiConversation): ChatConversation {
+  return {
+    id: chat.id, title: chat.title,
+    createdAt: Date.parse(chat.createdAt), updatedAt: Date.parse(chat.updatedAt),
+    messages: [],
+  };
+}
+function emptyChat(): ChatConversation {
+  return { id: '', title: '', createdAt: 0, updatedAt: 0, messages: [] };
 }
 
-const STORAGE_KEY = 'jarvis.chats.v1';
-
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function isChat(value: unknown): value is ChatConversation {
-  if (!isObject(value) || !Array.isArray(value['messages'])) {
-    return false;
-  }
-
-  return (
-    typeof value['id'] === 'string' &&
-    typeof value['title'] === 'string' &&
-    typeof value['createdAt'] === 'number' &&
-    Number.isFinite(value['createdAt']) &&
-    typeof value['updatedAt'] === 'number' &&
-    Number.isFinite(value['updatedAt']) &&
-    value['messages'].every(
-      (message: unknown) =>
-        isObject(message) &&
-        Number.isSafeInteger(message['id']) &&
-        (message['role'] === 'user' || message['role'] === 'assistant') &&
-        typeof message['content'] === 'string',
-    )
-  );
-}
-
-@Injectable({
-  providedIn: 'root',
-})
+/** Server owns persistence. Do not reintroduce localStorage as a second source of truth. */
+@Injectable({ providedIn: 'root' })
 export class ChatStore {
-  private readonly document = inject(DOCUMENT);
-
-  private readonly state = signal<ChatState>(this.restore() ?? this.createInitialState());
-
+  private readonly api = inject(ChatApiService);
+  private readonly chats = signal<ChatConversation[]>([emptyChat()]);
+  private readonly selectedId = signal('');
+  readonly loading = signal(true);
+  readonly sending = signal(false);
+  readonly busy = signal(false);
+  readonly connected = signal(false);
   readonly saveError = signal(false);
+  readonly errorKey = signal('');
 
   readonly conversations = computed(() =>
-    [...this.state().chats].sort((a, b) => b.updatedAt - a.updatedAt),
+    [...this.chats()].sort((a, b) => b.updatedAt - a.updatedAt),
   );
-
-  readonly activeId = computed(() => this.state().activeId);
-
+  readonly activeId = computed(() => this.selectedId());
   readonly activeChat = computed(() =>
-    this.state().chats.find((chat) => chat.id === this.state().activeId)!,
+    this.chats().find(chat => chat.id === this.selectedId()) ?? emptyChat(),
   );
-
   readonly messages = computed(() => this.activeChat().messages);
 
   constructor() {
-    this.persist();
+    void this.loadConversations();
   }
 
-  newChat(): void {
-    const chat = this.createEmptyChat();
-    const current = this.state();
-
-    this.commit({
-      version: 1,
-      activeId: chat.id,
-      chats: [chat, ...current.chats],
-    });
-  }
-
-  selectChat(id: string): void {
-    const current = this.state();
-
-    if (!current.chats.some((chat) => chat.id === id)) {
-      return;
+  async loadConversations(): Promise<void> {
+    this.loading.set(true);
+    try {
+      const chats = (await this.api.list()).map(mapConversation);
+      const previous = this.selectedId();
+      const id = chats.some(chat => chat.id === previous) ? previous : (chats[0]?.id ?? '');
+      this.chats.set(chats.length ? chats : [emptyChat()]);
+      this.selectedId.set(id);
+      this.connected.set(true);
+      this.clearError();
+      if (id) await this.loadMessages(id);
+    } catch (error) {
+      this.connected.set(false);
+      this.setError(error);
+    } finally {
+      this.loading.set(false);
     }
-
-    this.commit({
-      ...current,
-      activeId: id,
-    });
   }
 
+  /** Compatible with existing ChatHistory UI. */
+  newChat(): void {
+    void this.createChat();
+  }
+  async createChat(): Promise<boolean> {
+    if (this.busy() || this.sending() || this.loading()) return false;
+    this.busy.set(true);
+    try {
+      const chat = mapConversation(await this.api.create());
+      this.chats.update(chats => [chat, ...chats.filter(c => c.id !== '')]);
+      this.selectedId.set(chat.id);
+      this.connected.set(true);
+      this.clearError();
+      return true;
+    } catch (error) {
+      this.setError(error);
+      return false;
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  /** Compatible with existing ChatHistory UI. */
+  selectChat(id: string): void {
+    if (!this.chats().some(chat => chat.id === id)) return;
+    this.selectedId.set(id);
+    this.clearError();
+    if (id) void this.loadMessages(id);
+  }
+  async loadMessages(id: string): Promise<void> {
+    if (!id) return;
+    const previousMessages = this.chats().find(c => c.id === id)?.messages;
+    try {
+      const messages = (await this.api.messages(id))
+        .filter(msg => msg.role !== 'SYSTEM').map(mapMessage);
+      // Ignore stale requests when the user switches between chats quickly.
+      this.chats.update(chats => chats.map(c => c.id === id && c.messages === previousMessages
+        ? { ...c, messages } : c));
+      this.clearError();
+    } catch (error) {
+      this.setError(error);
+    }
+  }
+
+  /** Legacy call-sites can still validate a draft synchronously. */
   addUserMessage(text: string): boolean {
     const content = text.trim();
-
-    if (!content || content.length > 4000) {
-      return false;
-    }
-
-    const current = this.state();
-
-    const chats = current.chats.map((chat) => {
-      if (chat.id !== current.activeId) {
-        return chat;
-      }
-
-      const lastId = chat.messages.at(-1)?.id ?? 0;
-
-      const message: ChatMessage = {
-        id: lastId + 1,
-        role: 'user',
-        content,
-      };
-
-      return {
-        ...chat,
-        title: chat.title || content.slice(0, 48),
-        updatedAt: Date.now(),
-        messages: [...chat.messages, message],
-      };
-    });
-
-    this.commit({ ...current, chats });
+    if (!content || content.length > 4000 || this.sending()) return false;
+    void this.sendMessage(content);
     return true;
   }
 
+  async sendMessage(input: string): Promise<boolean> {
+    const text = input.trim();
+    if (!text || text.length > 4000 || this.sending() || this.busy() || this.loading()) return false;
+    this.sending.set(true);
+    try {
+      let id = this.selectedId();
+      if (!id) {
+        const created = mapConversation(await this.api.create());
+        id = created.id;
+        this.chats.update(chats => [created, ...chats.filter(c => c.id !== '')]);
+        this.selectedId.set(id);
+      }
+      const turn = await this.api.send(id, text);
+      const messages = [mapMessage(turn.userMessage), mapMessage(turn.assistantMessage)];
+      this.chats.update(chats => chats.map(chat => chat.id === id
+        ? {
+          ...chat,
+          // BE 11.3 does not yet support renaming a conversation.
+          updatedAt: Date.now(),
+          messages: [...chat.messages, ...messages],
+        }
+        : chat));
+      this.connected.set(true);
+      this.clearError();
+      return true;
+    } catch (error) {
+      this.setError(error);
+      return false;
+    } finally {
+      this.sending.set(false);
+    }
+  }
+
   deleteActiveChat(): void {
-    const current = this.state();
-
-    const remaining = current.chats.filter((chat) => chat.id !== current.activeId);
-
-    if (remaining.length === 0) {
-      remaining.push(this.createEmptyChat());
-    }
-
-    this.commit({
-      version: 1,
-      activeId: remaining[0].id,
-      chats: remaining,
-    });
+    void this.removeActiveChat();
   }
-
-  private createEmptyChat(): ChatConversation {
-    const now = Date.now();
-
-    const id = globalThis.crypto?.randomUUID?.() ?? `${now}-${Math.random().toString(36).slice(2)}`;
-
-    return {
-      id,
-      title: '',
-      createdAt: now,
-      updatedAt: now,
-      messages: [],
-    };
-  }
-
-  private createInitialState(): ChatState {
-    const chat = this.createEmptyChat();
-
-    return {
-      version: 1,
-      activeId: chat.id,
-      chats: [chat],
-    };
-  }
-
-  private restore(): ChatState | null {
+  async removeActiveChat(): Promise<boolean> {
+    const id = this.selectedId();
+    if (!id || this.busy() || this.sending()) return false;
+    this.busy.set(true);
     try {
-      const raw = this.document.defaultView?.localStorage.getItem(STORAGE_KEY);
-
-      if (!raw) {
-        return null;
-      }
-
-      const parsed: unknown = JSON.parse(raw);
-
-      if (
-        !isObject(parsed) ||
-        parsed['version'] !== 1 ||
-        !Array.isArray(parsed['chats']) ||
-        parsed['chats'].length === 0 ||
-        !parsed['chats'].every(isChat)
-      ) {
-        return null;
-      }
-
-      const chats: ChatConversation[] = parsed['chats'];
-
-      const activeId =
-        typeof parsed['activeId'] === 'string' &&
-        chats.some((chat) => chat.id === parsed['activeId'])
-          ? parsed['activeId']
-          : chats[0].id;
-
-      return {
-        version: 1,
-        activeId,
-        chats,
-      };
-    } catch {
-      return null;
+      await this.api.delete(id);
+      this.chats.update(chats => {
+        const remaining = chats.filter(chat => chat.id !== id);
+        return remaining.length ? remaining : [emptyChat()];
+      });
+      this.selectedId.set(this.chats()[0].id);
+      this.clearError();
+      if (this.selectedId()) await this.loadMessages(this.selectedId());
+      return true;
+    } catch (error) {
+      this.setError(error);
+      return false;
+    } finally {
+      this.busy.set(false);
     }
   }
 
-  private commit(next: ChatState): void {
-    this.state.set(next);
-    this.persist();
+  private clearError(): void {
+    this.saveError.set(false);
+    this.errorKey.set('');
   }
-
-  private persist(): void {
-    try {
-      this.document.defaultView?.localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state()));
-
-      this.saveError.set(false);
-    } catch {
-      this.saveError.set(true);
-    }
+  private setError(error: unknown): void {
+    this.saveError.set(true);
+    this.errorKey.set(error instanceof ChatApiError && (error.status === 401 || error.status === 403)
+      ? 'chat.authRequired'
+      : error instanceof ChatApiError && error.status === 0
+        ? 'chat.backendUnavailable'
+        : 'chat.requestFailed');
   }
 }

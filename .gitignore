@@ -10,3 +10,5 @@ out-tsc/
 *.p12
 backend/.env.jarvis
 *.be112.bak
+/.jarvis-patch-backups/
+desktop/.jarvis-build/

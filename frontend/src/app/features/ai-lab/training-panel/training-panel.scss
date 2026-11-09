@@ -1,0 +1,29 @@
+:host { display:block; min-width:0; }
+.jarvis-training {
+  margin: 1.25rem auto; max-width: 850px; color:inherit;
+  border: 1px solid var(--border, #283650); border-radius: 16px;
+  padding: clamp(1rem, 2vw, 1.5rem); background: var(--panel-soft, #101c32);
+  &__header {display:flex; justify-content:space-between; align-items:start; gap:1rem;
+    h2 {font-size:1.18rem; margin:0 0 .35rem;} p {opacity:.74; margin:0 0 .8rem; font-size:.9rem;}}
+  &__stats {display:grid; grid-template-columns:repeat(auto-fit,minmax(135px,1fr)); gap:.7rem; margin:1rem 0;
+    >div {background:rgba(100,130,180,.07); border:1px solid var(--border,#283650); border-radius:9px; padding:.75rem;}
+    span {opacity:.7;display:block;font-size:.76rem; margin-bottom:.4rem;}
+    strong {font-size:.96rem;}}
+  &__progress {height:8px;border-radius:100px; background:rgba(115,140,175,.18); overflow:hidden;
+    >div {height:100%;background:#549cea; transition:width .3s ease;}}
+  &__grid {display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:1rem;margin:1.2rem 0;}
+  label {display:flex;flex-direction:column;gap:.6rem;min-width:0;font-size:.87rem;}
+  textarea,input {width:100%;box-sizing:border-box; border:1px solid var(--border,#3b4a62);
+    border-radius:9px;padding:.7rem;background:var(--panel,#101a2c);color:inherit;font:inherit;}
+  small {font-size:.75rem;opacity:.7;}
+  &__actions {display:flex;gap:.7rem; flex-wrap:wrap;}
+  button {background:#1d3d6a;border:1px solid #365c88;color:#eaf1ff;border-radius:9px;padding:.65rem 1rem;cursor:pointer;
+    &:hover:not(:disabled) {background:#28528d;}
+    &:disabled {cursor:not-allowed;opacity:.5;}}
+  &__secondary {background:transparent!important;border-color:var(--border,#3b4a62)!important;}
+  &__error {border:1px solid #d35b5b;color:#ffadad;background:rgba(190,30,30,.08);padding:.75rem;border-radius:8px;overflow-wrap:anywhere;}
+  &__losses {margin-top:1.25rem;h3{font-size:.9rem;}}
+  &__bars {display:flex;align-items:end;gap:3px;height:80px;border-bottom:1px solid var(--border,#3b4a62);
+    >div{background:#5190d7; flex:1;min-width:2px; max-width:22px; opacity:.83;}}
+}
+@media(max-width:600px){.jarvis-training__grid{grid-template-columns:1fr}.jarvis-training__header{flex-wrap:wrap}}
