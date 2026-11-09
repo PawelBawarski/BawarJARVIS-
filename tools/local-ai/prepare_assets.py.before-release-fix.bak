@@ -1,0 +1,167 @@
+#!/usr/bin/env python3
+"""Download verified OFFLINE inference assets for Jarvis; Python stdlib only.
+Downloads happen once at build/provision time. The packaged Jarvis is offline.
+"""
+from __future__ import annotations
+import argparse
+import hashlib
+import json
+import os
+import shutil
+import sys
+import tempfile
+import urllib.error
+import urllib.request
+import zipfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / 'desktop' / 'ai-runtime'
+MODELPATH = OUT / 'models' / 'Qwen3-8B-Q4_K_M.gguf'
+MODEL_URL = 'https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf'
+MODEL_SHA = 'd98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785'
+RELEASE_API = 'https://api.github.com/repos/ggml-org/llama.cpp/releases/latest'
+ARCHIVE_NAMES = ('-bin-win-cuda-12.4-x64.zip', 'cudart-llama-bin-win-cuda-12.4-x64.zip')
+USER_AGENT = 'BawarJARVIS-offline-preparer/1.0'
+
+
+def sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open('rb') as handle:
+        for chunk in iter(lambda: handle.read(8 * 1024 * 1024), b''):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def verified(path: Path, digest: str) -> bool:
+    return path.is_file() and sha256(path).lower() == digest.lower()
+
+
+def get_json(url: str):
+    req = urllib.request.Request(url, headers={'User-Agent': USER_AGENT, 'Accept': 'application/vnd.github+json'})
+    with urllib.request.urlopen(req, timeout=40) as response:
+        return json.load(response)
+
+
+def get_release_assets(release: dict) -> list[dict]:
+    tag = release.get('tag_name', '')
+    if not isinstance(tag, str) or not tag.startswith('b') or not tag[1:].isdigit():
+        raise ValueError('Unexpected llama.cpp release tag')
+    names = ('llama-' + tag + ARCHIVE_NAMES[0], ARCHIVE_NAMES[1])
+    assets = {asset.get('name'): asset for asset in release.get('assets', [])}
+    chosen = []
+    for name in names:
+        item = assets.get(name)
+        if item is None: raise ValueError('Release does not provide: ' + name)
+        digest = item.get('digest', '')
+        if not isinstance(digest, str) or not digest.startswith('sha256:') or len(digest) != 71:
+            raise ValueError('Release lacks SHA256 digest for ' + name)
+        url = item.get('browser_download_url', '')
+        if not url.startswith('https://github.com/ggml-org/llama.cpp/releases/download/'):
+            raise ValueError('Unexpected GitHub asset URL')
+        chosen.append({'name': name, 'sha256': digest[7:], 'url': url})
+    return chosen
+
+
+def download_checked(url: str, dest: Path, expected: str):
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    if verified(dest, expected):
+        print('Already verified:', dest)
+        return
+    partial = dest.with_name(dest.name + '.part')
+    offset = partial.stat().st_size if partial.exists() else 0
+    headers = {'User-Agent': USER_AGENT}
+    if offset: headers['Range'] = 'bytes=' + str(offset) + '-'
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req, timeout=80) as response:
+        status = getattr(response, 'status', None)
+        # A CDN may ignore Range; restart instead of appending a duplicate file.
+        append = offset > 0 and status == 206 and response.headers.get('Content-Range', '').startswith('bytes ' + str(offset) + '-')
+        with partial.open('ab' if append else 'wb') as handle:
+            written = offset if append else 0
+            while True:
+                chunk = response.read(4 * 1024 * 1024)
+                if not chunk: break
+                handle.write(chunk)
+                written += len(chunk)
+                if written % (256 * 1024 * 1024) < len(chunk): print(f'  {written / 1e9:.2f} GB', flush=True)
+    if not verified(partial, expected):
+        raise ValueError(f'SHA256 mismatch: {url}\nDownloaded file kept at {partial}; do not run it.')
+    partial.replace(dest)
+    print('SHA256 OK:', dest)
+
+
+def stage_archive(archive: Path, destination: Path):
+    with zipfile.ZipFile(archive) as z:
+        items = z.infolist()
+        if len(items) > 2000 or sum(x.file_size for x in items) > 3 * 1024**3:
+            raise ValueError('Unusually large or complex executable archive')
+        for info in items:
+            if info.is_dir(): continue
+            # only portable binaries; never extract arbitrary paths or run scripts
+            basename = Path(info.filename.replace('\\', '/')).name
+            if not basename or '/' in basename or not basename.lower().endswith(('.dll', '.exe')): continue
+            target = destination / basename
+            if target.exists():
+                # all packages from the same release; overwrite only identical bytes
+                with z.open(info) as source:
+                    if hashlib.sha256(source.read()).hexdigest() != sha256(target):
+                        raise ValueError('Conflicting portable DLL: ' + basename)
+                continue
+            with z.open(info) as src, target.open('wb') as dst:
+                shutil.copyfileobj(src, dst)
+
+
+def prepare(model_file: Path | None = None):
+    print('Jarvis Local AI: validated assets for Windows NVIDIA CUDA 12.4')
+    if model_file:
+        if not verified(model_file, MODEL_SHA): raise ValueError('Local GGUF SHA256 does not match official Qwen model')
+        MODELPATH.parent.mkdir(parents=True, exist_ok=True)
+        if not verified(MODELPATH, MODEL_SHA): shutil.copy2(model_file, MODELPATH)
+    else:
+        print('Downloading official Qwen3 8B (approx. 5.03 GB), once:')
+        download_checked(MODEL_URL, MODELPATH, MODEL_SHA)
+    release = get_release_assets(get_json(RELEASE_API))
+    with tempfile.TemporaryDirectory(prefix='jarvis_llm_assets_') as temp:
+        t = Path(temp)
+        binaries = t / 'binaries'
+        binaries.mkdir()
+        for asset in release:
+            archive = t / asset['name']
+            print('Downloading official verified binary:', asset['name'])
+            download_checked(asset['url'], archive, asset['sha256'])
+            stage_archive(archive, binaries)
+        if not (binaries / 'llama-server.exe').is_file():
+            raise ValueError('Portable llama-server.exe missing from official release')
+        if not any(x.name.startswith('ggml-cuda') and x.suffix == '.dll' for x in binaries.iterdir()):
+            raise ValueError('CUDA backend DLL missing; verify release content')
+        target = OUT / 'bin'
+        target.mkdir(parents=True, exist_ok=True)
+        for item in binaries.iterdir():
+            os.replace(item, target / item.name)
+    (OUT / 'asset-manifest.json').write_text(json.dumps({
+        'model': MODEL_URL, 'model_sha256': MODEL_SHA,
+        'runtime_assets': [{'name': a['name'], 'sha256': a['sha256']} for a in release],
+    }, indent=2), encoding='utf-8')
+    print('DONE. Runtime and GGUF ready in', OUT)
+
+
+def main():
+    p = argparse.ArgumentParser(description='Prepare portable Qwen3 GGUF + llama.cpp CUDA runtime')
+    p.add_argument('--model-file', type=Path, help='Use your existing downloaded official GGUF (verify SHA256)')
+    p.add_argument('--verify', action='store_true', help='Check installed file hashes; do not download')
+    args = p.parse_args()
+    if args.verify:
+        ok = verified(MODELPATH, MODEL_SHA) and (OUT / 'bin' / 'llama-server.exe').is_file()
+        print('OK' if ok else 'MISSING', MODELPATH, OUT / 'bin' / 'llama-server.exe')
+        return 0 if ok else 2
+    if os.name != 'nt':
+        print('This downloader targets Windows x64. Prepare on your Windows computer.', file=sys.stderr)
+        return 2
+    try: prepare(args.model_file)
+    except Exception as exc:
+        print('ERROR:', exc, file=sys.stderr)
+        return 1
+    return 0
+
+if __name__ == '__main__': raise SystemExit(main())

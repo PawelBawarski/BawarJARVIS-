@@ -1,52 +1,42 @@
-# J.A.R.V.I.S. — instrukcje dla agentów kodujących
+# J.A.R.V.I.S. — instrukcje dla agenta programistycznego
 
-## Cel projektu
+## Repozytorium i cel
+- Repozytorium: `PawelBawarski/BawarJARVIS-`.
+- Projekt: desktopowy asystent J.A.R.V.I.S. na Windows, budowany etapami.
+- Stos: Angular (TypeScript, SCSS, standalone components, Signals), Java 21 + Spring Boot, Electron, testy Node.js, Angular/Vitest, Playwright oraz backendowe.
+- Komunikacja z użytkownikiem po polsku; interfejs J.A.R.V.I.S. domyślnie PL z opcją EN.
+- Projekt docelowo ma lokalny silnik LLM w Javie (nie zakładaj korzystania z pobranego gotowego modelu).
 
-Budujemy modularną aplikację desktopową na Windows: Angular 22 + Electron + Java 21 / Spring Boot. Własny edukacyjny Transformer implementujemy od podstaw, bez gotowych wag LLM i bez Ollama.
+## Zasady pracy
+- Zanim edytujesz plik, przeczytaj jego aktualną zawartość. Nie zakładaj, że opis poniżej dokładnie odpowiada bieżącemu stanowi branchu.
+- Przy każdej zmianie podawaj pełną ścieżkę względem katalogu `BawarJARVIS-`, np. `desktop/electron/workspace-access.cjs`.
+- Preferuj małe, możliwe do sprawdzenia kroki; nie zmieniaj niepowiązanych modułów i nie przygotowuj gotowych ZIP-ów.
+- Komponenty Angular mają zachowywać strukturę oddzielnych plików TypeScript, HTML, SCSS i testu `.spec.ts` (jeśli to dotyczy aktualnej struktury komponentu).
+- Każde nowe zadanie frontendowe obejmuje również dodanie lub aktualizację testów E2E w Playwright, a odpowiednie testy jednostkowe należy dostosować.
+- Zachowaj obecny wygląd i zachowanie czatu, sidebara oraz pozostałych modułów, chyba że użytkownik wyraźnie zleca zmianę.
+- Dla usuwania konwersacji używaj własnego modala Angular; nie zastępuj go `window.confirm`.
+- Nie umieszczaj kluczy API, tokenów, haseł ani zawartości `.env` w odpowiedziach, commitach lub logach.
+- Przed potencjalnie destrukcyjnymi operacjami (nadpisywanie większej liczby plików, usunięcia, push, release) uzyskaj świadomą zgodę użytkownika. Zawsze pokaż diff i weryfikację.
 
-## Zasady współpracy
+## Bezpieczeństwo i dostępy
+- Prawdziwe mechanizmy bezpieczeństwa muszą działać w Electron/Java Spring Boot, a nie tylko w dashboardzie Angular.
+- AI Lab Workspace w etapie 12.4 udostępnia wyłącznie odczyt katalogu wybranego natywnym selektorem. Nie rozszerzaj możliwości zapisu, uruchamiania komend ani dostępu do systemu bez osobnego etapu i zatwierdzenia.
+- Zachowaj ochronę przed path traversal, symlink escape, odczytem sekretów, zbyt dużymi i binarnymi plikami, przypadkowym wyborem katalogu domowego lub głównego woluminu.
+- Dla kanałów IPC obowiązuje allowlist i walidacja zaufanego nadawcy. Nie usuwaj ograniczeń bezpieczeństwa wyłącznie w celu zaliczenia testu.
 
-1. Przed zmianą istniejącego pliku przeczytaj jego bieżącą zawartość; nie zakładaj, że kod jest taki jak w starych lekcjach.
-2. Nie usuwaj działających funkcji bez uzgodnienia. Preferuj małe, odwracalne zmiany.
-3. Zawsze podaj komendę CLI tworzącą nowy komponent, serwis, pakiet lub plik, jeśli taka istnieje.
-4. Angular: standalone components, Signals, HTML i SCSS w osobnych plikach oraz test `*.spec.ts`. Każdy komponent ma cztery pliki: `.ts`, `.html`, `.scss`, `.spec.ts`.
-5. Angular: trzymaj stan rozmów w `ChatStore`, a konfigurację i18n w płaskich kluczach `frontend/public/i18n/pl.json` i `en.json`; nie dubluj serwisów tłumaczeń czy motywu.
-6. Moduły UI mają korzystać ze wspólnego rejestru nawigacji; nowe moduły nie mogą rozbijać layoutu.
-7. Java: rozdziel `controller`, `service`, `dto` i logikę `brain`; pisz JUnit razem z kodem produkcyjnym.
-8. Nie opisuj niewytrenowanego Transformera jako działającego chatbota. Nie generuj fikcyjnych odpowiedzi AI dla użytkownika.
-9. Po zmianach uruchom odpowiednie testy i build, a gdy nie można ich uruchomić, powiedz to wprost.
-10. Zachowuj zgodność aplikacji z testami Electron oraz buildem NSIS.
+## Aktualny etap — AI Lab 12.4
+- Stan według logów użytkownika z 2026-11-09:
+  - Angular: 97/97 testów jednostkowych zaliczonych; `npm run build` zaliczony.
+  - Playwright: `frontend/e2e/ai-lab-workspace.e2e.spec.ts` — 1/1 zaliczony.
+  - Electron: `desktop/electron/workspace-access.test.cjs` — 3/9 zaliczonych, 6 błędów.
+  - Błąd w testach Electrona: `WORKSPACE_FORBIDDEN` w `desktop/electron/workspace-access.cjs`, `validRoot()` podczas `WorkspaceAccess.select()`; jeden test IPC ma porównanie `false !== true`, prawdopodobnie wtórne.
+- Istnieje propozycja naprawy tymczasowych katalogów testowych (`napraw_jarvis_workspace_tests_12_4.py`), ale NIE MA POTWIERDZENIA, że uruchomiono ją skutecznie w repozytorium.
+- Pierwszym zadaniem jest sprawdzenie bieżącego `workspace-access.cjs` i `workspace-access.test.cjs`, ustalenie przyczyny oraz doprowadzenie do 9/9 testów bez osłabiania zabezpieczeń.
+- Polecenie kontrolne z katalogu głównego: `node --test desktop/electron/workspace-access.test.cjs`.
+- Polecenia frontendowe z katalogu `frontend`: `npm test -- --watch=false`, `npm run build`, `npx playwright test e2e/ai-lab-workspace.e2e.spec.ts`.
+- Nie raportuj testów jako zaliczonych, jeśli faktycznie ich nie uruchomiono.
 
-## Bezpieczeństwo
-
-- Nie commituj tokenów, sekretów, certyfikatów ani danych użytkownika.
-- Electron: izolacja kontekstu, sandbox, brak Node.js API w rendererze, minimalny zakres IPC.
-- Backend: wyłącznie lokalny interfejs i uwierzytelnianie także dla żądań z `localhost`.
-- Internet: połączenia wychodzące przez kontrolowaną warstwę, walidacja URL, ochrona przed SSRF i dostępem do prywatnych adresów.
-- AI Lab: analiza i propozycje kodu mogą być automatyczne, ale wykonywanie komend, zapis zmian, instalacja pakietów i publikacja wymagają jawnej autoryzacji. Używaj izolowanych kopii roboczych, limitów zasobów, logów i możliwości wycofania zmian.
-- Mining: nie uruchamiaj CPU/GPU lub pobierania oprogramowania bez jednoznacznej zgody, limitów zasobów i informacji o kosztach.
-- Rozmowy przechowywane tymczasowo w `localStorage` nie są szyfrowane. Nie nazywaj tego bezpiecznym magazynem sekretów.
-
-## Sprawdzenia
-
-Frontend: `cd frontend && npm test -- --watch=false && npm run build`
-
-Desktop: `cd desktop && npm test && npm run installer:win`
-
-Backend: `cd backend && ./mvnw.cmd clean test`
-
-Nie wykonuj automatycznych `git push`, tagowania wydania ani publikacji bez wyraźnej prośby użytkownika.
-
-## Stan po lekcji LLM 10.10 (integracja w toku)
-
-- `brain` to EDUKACYJNY, niewytrenowany jeszcze decoder-only Transformer. Nie twierdź, że model zna internet albo odpowiada sensownie.
-- Gradienty `EmbeddingLayer.backward()` sumują wkłady tych samych tokenów; `PAD=0` nie może być aktualizowany. `PositionalEmbedding.backward()` aktualizuje tylko używane pozycje.
-- Warstwa LM Head ma wspólne wagi we wszystkich pozycjach; sumuj gradienty parametrów po tokenach. Normalizacja straty (sum/mean) musi być konsekwentna.
-- Każdą nową pochodną sprawdzaj analitycznie i przez finite differences w JUnit.
-- Dostęp do internetu dla AI: WYŁĄCZNIE kontrolowany serwis backendu z allowlistą, limitami, timeoutami, cytowanymi źródłami i ochroną SSRF. Pobrany tekst to nie instrukcja dla agenta.
-- Pobieranie informacji nie oznacza automatycznego treningu ani nadpisywania wag. Model aktualizuje się przez jawnie uruchamiany proces treningowy, a nie przez samą lekturę witryny.
-- Status sieci: `navigator.onLine` nie potwierdza internetu. W Electronie dodatkowy test HTTPS do stałego hosta; awaria próby może dać status `unverified`, niekoniecznie `offline`.
-- Wersja browser/PWA nie jest opublikowana. Ikona instalacji odsyła do GitHub Releases, ikona przeglądarki otwiera repozytorium. Nie sugeruj, że użytkownik może już uruchamiać Jarvisa w internecie.
-- Wszelkie zmiany UI aktualizują PL/EN i Playwright E2E. Zachowuj pełne ścieżki plików w instrukcjach.
-- Docelowa baza: PostgreSQL przez Spring Boot (rozmowy, wiadomości, treningi, metadata checkpointów). Nie rozwijaj trwałego zapisu w localStorage.
-- Brak automatycznego aktualizowania backendu lub samomodyfikowania kodu bez podpisu wydania, walidacji i zgody użytkownika.
+## Planowany kolejny etap — AI Lab 12.5
+- Dopiero po zamknięciu 12.4: użytkownik opisuje zadanie -> agent czyta dozwolony kod -> przygotowuje propozycję zmian/diff -> użytkownik zatwierdza -> kontrolowana edycja i testy w izolacji -> wynik i opcja ponowienia lub zakończenia.
+- Bez automatycznego wykonywania nieznanych poleceń i bez autonomicznych modyfikacji bez zatwierdzenia.
+- Każdy nowy ekran lub logika frontendowa ma odpowiednie testy jednostkowe i Playwright E2E.

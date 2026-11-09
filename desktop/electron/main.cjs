@@ -1,6 +1,7 @@
 const { registerWorkspaceIpc } = require('./workspace-access.cjs');
 const { registerLabIpc } = require('./lab-ipc.cjs');
 const { startPackagedBackend, stopPackagedBackend } = require('./backend-runtime.cjs');
+const { startPackagedLlm, stopPackagedLlm } = require('./local-llm-runtime.cjs');
 const { registerChatIpc } = require('./chat-ipc.cjs');
 const { checkInternet } = require('./connectivity.cjs');
 const { shell } = require('electron');
@@ -163,10 +164,18 @@ app
     registerWorkspaceIpc(ipcMain, (event) => isTrustedSender(event, useBuiltUi), { dialog, userDataDir: app.getPath('userData') });
     // Desktop 11.5: the packaged Electron app owns its local Java process.
     if (app.isPackaged) {
+      // A missing GGUF must not hide the app or its in-app setup instructions.
+      try {
+        await startPackagedLlm({ resourcesPath: process.resourcesPath });
+      } catch (error) {
+        stopPackagedLlm();
+        console.error('Local Qwen unavailable:', String(error?.message || error));
+      }
       try {
         await startPackagedBackend({ resourcesPath: process.resourcesPath });
       } catch (error) {
-        dialog.showErrorBox('J.A.R.V.I.S. — backend', String(error?.message || error));
+        stopPackagedLlm();
+        dialog.showErrorBox('J.A.R.V.I.S. — Backend', String(error?.message || error));
         app.quit();
         return;
       }
@@ -220,4 +229,4 @@ app.on("window-all-closed", () => {
   }
 });
 
-app.on('before-quit', () => stopPackagedBackend());
+app.on('before-quit', () => { stopPackagedBackend(); stopPackagedLlm(); });

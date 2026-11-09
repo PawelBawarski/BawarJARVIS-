@@ -31,6 +31,8 @@ describe('ChatView — actual backend messages, unchanged layout', () => {
     await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('.composer')).toBeTruthy();
     expect(fixture.nativeElement.textContent).toContain('J.A.R.V.I.S.');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="chat-model-mode"]')?.textContent).toContain('Tryb lokalny podstawowy');
   });
   it('shows backend assistant response after send, never fake text', async () => {
     const fixture = TestBed.createComponent(ChatView);

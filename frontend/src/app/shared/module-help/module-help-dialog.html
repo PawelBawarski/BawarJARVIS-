@@ -1,0 +1,49 @@
+@if (help.topic(); as topic) {
+  <div class="jarvis-help-backdrop" (click)="backdropClick($event)" data-testid="module-help-overlay">
+    <section class="jarvis-help" role="dialog" aria-modal="true" aria-labelledby="jarvis-help-title" (keydown)="trapTab($event)">
+      <header class="jarvis-help__header">
+        <div>
+          <span class="jarvis-help__eyebrow">J.A.R.V.I.S. / POMOC MODUŁU</span>
+          <h2 id="jarvis-help-title">{{ guides[topic].title }}</h2>
+        </div>
+        <button #closeButton type="button" class="jarvis-help__close" (click)="close()" aria-label="Zamknij pomoc">✕</button>
+      </header>
+      <nav class="jarvis-help__topics" aria-label="Instrukcje pozostałych modułów">
+        <button type="button" [class.active]="topic === 'chat'" (click)="help.open('chat')">Czat</button>
+        <button type="button" [class.active]="topic === 'lab'" (click)="help.open('lab')">AI Lab</button>
+        <button type="button" [class.active]="topic === 'mining'" (click)="help.open('mining')">Mining</button>
+        <button type="button" [class.active]="topic === 'security'" (click)="help.open('security')">Security</button>
+        <button type="button" [class.active]="topic === 'radio'" (click)="help.open('radio')">Radio</button>
+      </nav>
+      <div class="jarvis-help__scroll">
+        <p class="jarvis-help__summary">{{ guides[topic].summary }}</p>
+        <div class="jarvis-help__status"><strong>Stan modułu:</strong> {{ guides[topic].status }}</div>
+        <h3>Jak korzystać — krok po kroku</h3>
+        <ol>
+          @for (step of guides[topic].steps; track $index) { <li>{{ step }}</li> }
+        </ol>
+        <h3>Przykłady</h3>
+        <ul>
+          @for (example of guides[topic].examples; track $index) { <li>{{ example }}</li> }
+        </ul>
+        @if (guides[topic].commands.length) {
+          <h3>Polecenia (Git Bash, katalog BawarJARVIS-)</h3>
+          @for (command of guides[topic].commands; track command.label) {
+            <div class="jarvis-help__command">
+              <div class="jarvis-help__command-head">
+                <span>{{ command.label }}</span>
+                <button type="button" (click)="copyCommand(command.value)" [attr.aria-label]="'Kopiuj: ' + command.label">Kopiuj</button>
+              </div>
+              <code>{{ command.value }}</code>
+            </div>
+          }
+          <p role="status" class="jarvis-help__feedback">{{ copied() }}</p>
+        }
+        @if (guides[topic].caution) { <p class="jarvis-help__caution">{{ guides[topic].caution }}</p> }
+      </div>
+      <footer class="jarvis-help__footer">
+        <button type="button" (click)="close()">Rozumiem — zamknij</button>
+      </footer>
+    </section>
+  </div>
+}

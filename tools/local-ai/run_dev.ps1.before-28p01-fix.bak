@@ -1,0 +1,80 @@
+﻿# Run from repository root: powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/local-ai/run_dev.ps1
+$ErrorActionPreference = 'Stop'
+$root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+$exe = Join-Path $root 'desktop\ai-runtime\bin\llama-server.exe'
+$model = Join-Path $root 'desktop\ai-runtime\models\Qwen3-8B-Q4_K_M.gguf'
+if (-not (Test-Path $exe) -or -not (Test-Path $model)) {
+  throw 'Brakuje lokalnych zasobów. Uruchom: python tools/local-ai/prepare_assets.py'
+}
+if ((Test-NetConnection -ComputerName 127.0.0.1 -Port 8765 -WarningAction SilentlyContinue).TcpTestSucceeded) {
+  throw 'Port 8765 jest zajęty. Zamknij inny proces modelu.'
+}
+$bytes = New-Object byte[] 32
+[System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+$key = -join ($bytes | ForEach-Object { $_.ToString('x2') })
+$env:LLAMA_API_KEY = $key
+$env:JARVIS_LLM_API_KEY = $key
+# JARVIS_DB_CONFIG_BRIDGE_V1
+# Reuse the existing private desktop DB settings when starting the same Spring backend in dev mode.
+# Only known JARVIS_DB_* keys are accepted. Never print credentials.
+$dbKeys = @('JARVIS_DB_HOST', 'JARVIS_DB_PORT', 'JARVIS_DB_NAME', 'JARVIS_DB_USER', 'JARVIS_DB_PASSWORD')
+$dbConfigFile = $null
+if (-not [string]::IsNullOrWhiteSpace($env:APPDATA)) {
+  $dbConfigFile = Join-Path (Join-Path $env:APPDATA 'J.A.R.V.I.S.') 'backend.env'
+}
+$dbSource = 'inherited process environment'
+if ($null -ne $dbConfigFile -and (Test-Path -LiteralPath $dbConfigFile -PathType Leaf)) {
+  $found = @{}
+  foreach ($rawLine in [System.IO.File]::ReadAllLines($dbConfigFile, [System.Text.Encoding]::UTF8)) {
+    $line = $rawLine.Trim()
+    if ($line.Length -eq 0 -or $line.StartsWith('#')) { continue }
+    if ($line -notmatch '^([A-Z][A-Z0-9_]*)=(.*)$') {
+      throw 'Invalid backend.env format. Expected KEY=VALUE lines.'
+    }
+    $name = $Matches[1]
+    $value = $Matches[2].Trim()
+    if ($dbKeys -notcontains $name) { throw 'Unknown backend.env key.' }
+    if ($found.ContainsKey($name)) { throw 'Duplicate backend.env key.' }
+    $found[$name] = $true
+    if ($value.Length -ge 2) {
+      if (($value.StartsWith('"') -and $value.EndsWith('"')) -or
+          ($value.StartsWith("'") -and $value.EndsWith("'"))) {
+        $value = $value.Substring(1, $value.Length - 2)
+      }
+    }
+    # Existing non-empty environment variables are explicit overrides.
+    if (-not [string]::IsNullOrEmpty($value) -and
+        [string]::IsNullOrEmpty([Environment]::GetEnvironmentVariable($name, 'Process'))) {
+      [Environment]::SetEnvironmentVariable($name, $value, 'Process')
+    }
+  }
+  $dbSource = 'local private backend.env (with explicit environment overrides)'
+}
+if ([string]::IsNullOrWhiteSpace($env:JARVIS_DB_PASSWORD) -or
+    $env:JARVIS_DB_PASSWORD -eq 'change_this_to_a_unique_local_password') {
+  throw 'No DB password for Spring Boot. Set JARVIS_DB_PASSWORD in the existing private backend.env under APPDATA/J.A.R.V.I.S., or pass it via a process environment variable. Reuse the credential from the working start_jarvis_dev.sh setup. Do not change the PostgreSQL volume.'
+}
+Write-Host ('Spring Boot database config source: ' + $dbSource)
+
+Write-Host 'Starting private local Qwen3 engine and Spring Boot...'
+Write-Host 'Angular: run npm start in frontend/ in a second terminal.'
+$argsLlm = @('--model', $model, '--host', '127.0.0.1', '--port', '8765', '--ctx-size', '4096', '--n-gpu-layers', '99', '--parallel', '1', '--alias', 'jarvis-qwen3-8b', '--no-webui', '--sleep-idle-seconds', '300')
+$child = Start-Process -FilePath $exe -ArgumentList $argsLlm -PassThru -WindowStyle Hidden
+try {
+  $ready = $false
+  for ($i=0; $i -lt 240; $i++) {
+    if ($child.HasExited) { throw 'llama-server zakończył pracę podczas ładowania modelu.' }
+    try {
+      $result = Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:8765/health' -TimeoutSec 2
+      if ($result.StatusCode -eq 200) { $ready = $true; break }
+    } catch { }
+    Start-Sleep -Seconds 1
+  }
+  if (-not $ready) { throw 'Model nie wystartował w ciągu 4 minut.' }
+  Push-Location (Join-Path $root 'backend')
+  try { & '.\mvnw.cmd' 'spring-boot:run' } finally { Pop-Location }
+} finally {
+  if (-not $child.HasExited) { Stop-Process -Id $child.Id -Force -ErrorAction SilentlyContinue }
+  Remove-Item Env:\JARVIS_LLM_API_KEY -ErrorAction SilentlyContinue
+  Remove-Item Env:\LLAMA_API_KEY -ErrorAction SilentlyContinue
+}

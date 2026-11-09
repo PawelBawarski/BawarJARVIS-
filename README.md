@@ -1,131 +1,62 @@
-# J.A.R.V.I.S. — Personal AI Desktop Assistant
+# J.A.R.V.I.S. – naprawa PostgreSQL `SQLSTATE 28P01`
 
-Eksperymentalna, modularna aplikacja desktopowa na Windows. Projekt edukacyjny: budujemy własny, niewielki model językowy od zera w Java 21, zamiast korzystać z gotowych wag lub Ollama.
+## Co wykryto
 
-Repozytorium: https://github.com/PawelBawarski/BawarJARVIS-
+`run_dev.ps1` uruchamia Qwen, następnie Spring Boot. Start Spring Boot zatrzymuje się na `FATAL: password authentication failed for user "jarvis"`. Nie jest to błąd CUDA lub modelu.
 
-## Stos technologiczny
+Wcześniejsza poprawka wczytuje `%APPDATA%\J.A.R.V.I.S.\backend.env`, ale nie nadpisuje istniejących zmiennych `JARVIS_DB_*` pochodzących z procesu. Mogą one zawierać stare hasło. Ponadto w Spring Boot zmienne `SPRING_DATASOURCE_*` mogą mieć pierwszeństwo względem wartości w `application.properties`.
 
-| Część | Technologie |
-| --- | --- |
-| Frontend | Angular 22, TypeScript, Angular Signals, SCSS, Vitest |
-| Desktop | Electron, electron-builder, instalator NSIS Windows x64 |
-| Backend | Java 21, Spring Boot 4.1.x, Maven, JUnit |
-| AI | Własny edukacyjny decoder-only Transformer w Javie |
-| CI/CD | GitHub Actions (frontend/backend build i testy, instalator Windows) |
+## Instalacja (Git Bash, katalog `BawarJARVIS-`)
 
-Wersję konkretnej zależności sprawdzaj w `package.json`, `package-lock.json` lub `backend/pom.xml`; nie sugeruj się numerem wersji w tym dokumencie.
-
-## Struktura katalogów
-
-```text
-.github/workflows/               # automatyzacja buildów i testów
-.github/skills/                  # lokalne instrukcje do powtarzalnych prac
-frontend/src/app/core/          # serwisy, stan i modele
-frontend/src/app/features/      # chat, mining, AI Lab
-frontend/src/app/layout/        # AppShell, sidebar, przełącznik modułów, ustawienia
-frontend/public/i18n/           # pl.json, en.json (płaskie klucze)
-desktop/electron/               # główny proces Electrona
-desktop/tests/                  # testy desktopu
-backend/src/main/java/pl/bawar/jarvis/brain/ # własna matematyka i Transformer
-backend/src/test/java/          # testy JUnit
-docs/INIT.md                    # instrukcja uruchomienia środowiska
-AGENTS.md                       # zasady pracy z agentami kodującymi
-```
-
-## Uruchomienie lokalne (Windows / Git Bash)
-
-Wymagane: Java 21, Node.js zgodny z projektem, npm oraz Git. Z katalogu głównego:
-
-**Terminal 1 — Angular**
+1. Pobierz `JARVIS_DB_28P01_FIX.zip` do głównego katalogu repozytorium.
+2. Wykonaj:
 
 ```bash
-cd frontend
-npm ci
-npm start
+cd ~/Desktop/Nauka/BawarJARVIS-
+python -m zipfile -e JARVIS_DB_28P01_FIX.zip _jarvis_db_28p01
+python _jarvis_db_28p01/napraw_jarvis_db_28p01.py --check
 ```
 
-**Terminal 2 — Electron** (po uruchomieniu frontendu)
+Jeśli wynik zawiera `CHECK OK`, wykonaj:
 
 ```bash
-cd desktop
-npm ci
-npm run dev
+python _jarvis_db_28p01/napraw_jarvis_db_28p01.py
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/local-ai/run_dev.ps1
 ```
 
-**Backend — osobny terminal**
+Skrypt tworzy kopię pliku `tools/local-ai/run_dev.ps1.before-28p01-fix.bak`. Modyfikuje tylko `tools/local-ai/run_dev.ps1`. W trakcie uruchomienia wczytuje z lokalnego prywatnego pliku ustawienia bazy i wymusza w procesie Spring Boot `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME` i `SPRING_DATASOURCE_PASSWORD`, aby odziedziczone stare ustawienia nie miały pierwszeństwa.
+
+## Gdy sprawdzanie zgłasza nieprawidłowe hasło
+
+Jeśli `--check` wyświetli `The password stored in backend.env does NOT authenticate ...`, napraw rzeczywiste hasło w bazie przez skrypt odzyskiwania (przed resetem upewnij się, że nie działają inne aplikacje potrzebujące tego konta):
 
 ```bash
-cd backend
-./mvnw.cmd test
-./mvnw.cmd spring-boot:run
+python _jarvis_db_28p01/napraw_jarvis_db_credentials.py --reset
+python _jarvis_db_28p01/napraw_jarvis_db_28p01.py --check
+python _jarvis_db_28p01/napraw_jarvis_db_28p01.py
 ```
 
-Backend nie jest jeszcze automatycznie wbudowany w instalator desktopowy. Aktualny silnik AI jest edukacyjny, niewytrenowany i nie zapewnia jeszcze sensownej konwersacji.
+Reset zmienia wyłącznie hasło roli `jarvis` i zapisuje nową konfigurację poza repozytorium. **Nie usuwa wolumenu, tabel ani historii rozmów**, ale inne procesy używające starego hasła wymagają aktualizacji. Jeśli reset nie powiedzie się, zachowaj komunikat błędu (bez sekretów) i nie modyfikuj `pg_hba.conf` na ślepo.
 
-## Testy i build
+Jeżeli `--check` zgłasza niezgodność publikowanego portu, NIE uruchamiaj resetu tylko po to, by „naprawić” port. Najpierw sprawdź mapowanie Dockera.
+
+## Cofnięcie
 
 ```bash
-cd frontend && npm test -- --watch=false && npm run build
-cd ../desktop && npm test && npm run installer:win
-cd ../backend && ./mvnw.cmd clean test
+python _jarvis_db_28p01/napraw_jarvis_db_28p01.py --rollback
 ```
 
-Plik instalatora powstaje w `desktop/release/`. Workflow GitHub Actions należy zweryfikować w zakładce Actions.
+## Testy lokalne (nie wymagają Dockera)
 
-## Moduły aplikacji
+```bash
+python _jarvis_db_28p01/tests/test_jarvis_db_28p01.py
+```
 
-- **Chat**: wiele rozmów z lokalną historią; właściwe odpowiedzi AI dopiero po podłączeniu backendu.
-- **Mining**: planowana kontrola kopania, limity sprzętowe, szacowanie kosztów energii; rzeczywisty silnik nie jest jeszcze podłączony.
-- **AI Lab**: planowany asystent modyfikujący kod w izolowanym środowisku, wyłącznie za zgodą użytkownika.
-- **Radio**: planowany globalny odtwarzacz stacji z różnych państw, z backendem Spring Boot.
+Sześć testów offline sprawdza instalację, ponowne wykonanie, cofnięcie, odmowę nadpisania zmodyfikowanego pliku, parser danych prywatnych i brak sekretów w argumentach procesu. **Nie zastępuje to testu na rzeczywistej bazie użytkownika**.
 
-Nawigacja powinna umożliwiać dodawanie następnych modułów bez przepisywania istniejących komponentów.
+## Bezpieczeństwo
 
-## Bezpieczeństwo i prywatność
-
-Projekt jest w trakcie utwardzania. Docelowe zasady:
-
-- Spring Boot nasłuchuje lokalnie; samo `127.0.0.1` nie zastępuje uwierzytelniania.
-- Electron renderer bez `nodeIntegration`, z `contextIsolation`, sandboxem i kontrolowanym IPC.
-- Połączenia internetowe wychodzące są dopuszczane przez jawne usługi; trzeba chronić przed SSRF, przekierowaniami do sieci prywatnych i niebezpiecznymi adresami URL.
-- AI Lab nie wykonuje dowolnych poleceń ani zmian w repozytorium bez oceny uprawnień, ograniczeń zasobów, prezentacji diffu i świadomego zatwierdzenia.
-- Nie commituj sekretów, certyfikatów, prywatnych kluczy, tokenów API ani prywatnych rozmów.
-- Wstępne rozmowy zapisywane w `localStorage` **nie są szyfrowane**. Nie wpisuj tam haseł ani innych sekretów; docelowo przygotujemy bezpieczniejszy magazyn danych.
-- Aktualizacje z GitHub Releases wymagają osobnej weryfikacji i prawidłowego podpisywania wydań przed publicznym wdrożeniem.
-
-Nie traktuj obecnego projektu jako systemu odpornego na wszystkie ataki.
-
-## Dokumenty współpracy
-
-- `docs/INIT.md` — uruchomienie i workflow rozwoju.
-- `AGENTS.md` — reguły dla AI pomagającej w programowaniu.
-- `.github/skills/jarvis-development/SKILL.md` — procedura implementacji funkcji z testami.
-
-## Roadmap
-
-1. Stabilny UI, wiele czatów, ustawienia w oknie modalnym.
-2. Własny trening Transformera, generowanie sekwencji, checkpointy.
-3. Bezpieczne API Spring Boot i integracja z Angular/Electron.
-4. Radio internetowe, Mining i AI Lab z kontrolą uprawnień.
-5. Trwałe przechowywanie i migracje danych, bezpieczne aktualizacje.
-
-Licencja projektu nie jest tutaj deklarowana — przed publicznym rozpowszechnianiem kodu dodaj odpowiedni plik `LICENSE`.
-
-## Aktualizacja rozwoju — LLM 10.10 / Internet / Copilot
-
-W lekcji 10.10 dodajemy `EmbeddingLayer.backward()`, `PositionalEmbedding.backward()` i zbiorczy gradient LM Head. To nie jest jeszcze pętla treningowa całego modelu; wykonamy ją w 10.11. W 10.12 dodamy ewaluację i checkpointy.
-
-Interfejs sieciowy: `NetworkStatusService` z sygnałem `online/offline/unverified/checking`, pasek narzędzi w bocznym panelu oraz przekreślony symbol radia bez połączenia. W Electronie żądanie sieciowe weryfikuje tylko **ustalony** adres HTTPS. Stan `unverified` nie jest gwarancją dostępności internetu. Ikona instalacji otwiera GitHub Releases, a ikona przeglądarki otwiera repozytorium w domyślnej przeglądarce. Sam Jarvis nie ma jeszcze publicznej aplikacji webowej ani automatycznego wyszukiwania wiadomości.
-
-Przed użyciem paczki uruchom `python scripts/apply-ui-integration.py` z katalogu głównego po skopiowaniu plików. Skrypt ogranicza edycje do znanych znaczników i przerywa bez zapisywania, jeśli lokalna struktura jest inna. Sprawdź `git diff`.
-
-### Plan dalszej integracji
-
-- **10.11**: pełne `forward/backward` na przesuniętych tokenach, AdamW i metryki treningu.
-- **10.12**: generowanie z checkpointów, ewaluacja i zapis/odczyt wag.
-- **BE-1..BE-4**: tokenowo autoryzowane API inferencji/treningu, PostgreSQL migracje (Flyway), `conversation`, `message`, `training_run`, `checkpoint`, serwis wyszukiwania sieciowego z cytowaniami i ochroną SSRF.
-- **FE-1..FE-3**: połączenie Angular ChatStore z API, usunięcie trwałego localStorage, AI Lab metryki treningu, obsługa trybu offline i komunikatów o źródłach.
-- **E2E**: Angular → Electron IPC → Spring Boot → LLM → PostgreSQL; testy odmowy dostępu, awarii sieci i odtwarzania checkpointów.
-
-**Nie wolno automatycznie trenować Jarvisa na treści przypadkowej strony internetowej ani aktualizować backendu na podstawie jej instrukcji.** Informacje z wyszukiwania to tymczasowe dane zewnętrzne, a wdrażanie aplikacji wymaga zatwierdzonej, zweryfikowanej paczki wydania.
+- Nie wysyłaj nikomu `%APPDATA%\J.A.R.V.I.S.\backend.env`.
+- Nie publikuj kopii tego pliku ani wyników poleceń wyświetlających hasło.
+- Nie wykonuj `docker compose down -v` ani `docker volume rm`.
+- Żadne hasło nie jest zapisane w skrypcie naprawczym.

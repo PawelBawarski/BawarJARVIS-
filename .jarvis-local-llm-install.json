@@ -1,0 +1,181 @@
+{
+  "installed_at": "2026-11-09T21:13:50.161254+00:00",
+  "files": [
+    {
+      "path": "backend/src/main/java/pl/bawar/jarvis/chat/api/ChatApplicationService.java",
+      "existed": true,
+      "new_sha256": "f56233eb2b5751a855752bf0eae327ca0b7c69d23ee1ec6c0d42216a6d7cca17"
+    },
+    {
+      "path": "backend/src/main/java/pl/bawar/jarvis/chat/api/ChatApiExceptionHandler.java",
+      "existed": true,
+      "new_sha256": "36460d2630cec272caf9b48b77dc696fe70fb0f3facb6537b236d95aae1436c7"
+    },
+    {
+      "path": "backend/src/test/java/pl/bawar/jarvis/chat/api/ChatApplicationServiceTest.java",
+      "existed": true,
+      "new_sha256": "10bc69f8ce76712e3e0b935470bcf7f80642b48fc194fb74e6a59df42c17d6e0"
+    },
+    {
+      "path": "desktop/electron/main.cjs",
+      "existed": true,
+      "new_sha256": "589038cd17ff5bc4222484d5ff7c1ddfc6a5c635c9060b33ab58b0b011394e03"
+    },
+    {
+      "path": "desktop/electron/chat-ipc.cjs",
+      "existed": true,
+      "new_sha256": "a3ce391f78150c39e86223c2610a642bf1254899b14b01988f9e64bd69233ab6"
+    },
+    {
+      "path": "frontend/src/app/core/services/chat-store.ts",
+      "existed": true,
+      "new_sha256": "e5803b413cbc664a47a36f15e393e7187c2776824c697d17e3eabc28f5c0aece"
+    },
+    {
+      "path": "frontend/src/app/core/services/chat-store.spec.ts",
+      "existed": true,
+      "new_sha256": "4721bad8e09e17ded026092e1f0e868ad2c53b049d990474877603ac0b6e6d8f"
+    },
+    {
+      "path": "frontend/src/app/layout/app-shell/app-shell.ts",
+      "existed": true,
+      "new_sha256": "2c49c50c641ec95b43f9d292114c89b661fb1589c30c5a86c271f93331eab59f"
+    },
+    {
+      "path": "frontend/src/app/layout/app-shell/app-shell.html",
+      "existed": true,
+      "new_sha256": "b3b4224545b04f0c04f9740884c3dc9d9943a9b80d25db5192dd570bd0d1ae37"
+    },
+    {
+      "path": "frontend/src/app/features/ai-lab/ai-lab-view.ts",
+      "existed": true,
+      "new_sha256": "6c651c420d3364dd4f72bcecd8290b5ca994824c1cc996025246f440e93cb783"
+    },
+    {
+      "path": "frontend/src/app/features/ai-lab/ai-lab-view.html",
+      "existed": true,
+      "new_sha256": "2d58921b1ddf866ad67922156d3f3db229a8eef8d70f8ec99dbcad2106f505ae"
+    },
+    {
+      "path": "frontend/src/app/features/ai-lab/ai-lab-view.scss",
+      "existed": true,
+      "new_sha256": "965886c8a7b10d7ed03fc1bedeb22e61f2710dd2848bc51ccd412c15b35a9448"
+    },
+    {
+      "path": "frontend/src/app/features/ai-lab/learning-lab/learning-lab.ts",
+      "existed": true,
+      "new_sha256": "cdd393def892110b50f6ccdb3c2f783fa20fb4587513bc9a6ba9a5071ed5e836"
+    },
+    {
+      "path": "frontend/src/app/features/ai-lab/learning-lab/learning-lab.html",
+      "existed": true,
+      "new_sha256": "c232a869f68b0f700991d0a5d8ee137d843290aad09e87c06eb426172eee446a"
+    },
+    {
+      "path": "frontend/src/app/features/ai-lab/learning-lab/learning-lab.scss",
+      "existed": true,
+      "new_sha256": "a3f0646010773bc43d63f8136dfe8b16248aac7b45706119d50ea2d2e6fdd8bb"
+    },
+    {
+      "path": "backend/src/main/java/pl/bawar/jarvis/chat/api/LocalLlmClient.java",
+      "existed": false,
+      "new_sha256": "4309cb71d74298e1ebda370cdb58a043e0df415a03040ada045b00bab9c5e37f"
+    },
+    {
+      "path": "backend/src/main/java/pl/bawar/jarvis/chat/api/LocalLlmUnavailableException.java",
+      "existed": false,
+      "new_sha256": "5554537646b9316d30405a06a672028b12d968488bdaf1d09822f7a90a776834"
+    },
+    {
+      "path": "backend/src/main/java/pl/bawar/jarvis/chat/api/ChatPromptContext.java",
+      "existed": false,
+      "new_sha256": "e812b1c5b7efa41bd25bbd3d27e14f3bea130d1c4ee28178b444ce0cafda10c0"
+    },
+    {
+      "path": "backend/src/test/java/pl/bawar/jarvis/chat/api/ChatPromptContextTest.java",
+      "existed": false,
+      "new_sha256": "8aba5633991387cb1c3b04887b4c3f650df6283c1451d4a710e5969d70dc0eb4"
+    },
+    {
+      "path": "desktop/electron/local-llm-runtime.cjs",
+      "existed": false,
+      "new_sha256": "140cebe76c2affd780978540c67fa2f437271e923d654cd1b944c5309a5d01c8"
+    },
+    {
+      "path": "desktop/electron/local-llm-runtime.test.cjs",
+      "existed": false,
+      "new_sha256": "df096198a88549bb6613179cfaecbf32c2a4fe6fcef799bb9062b5aa62e9de45"
+    },
+    {
+      "path": "frontend/e2e/chat-local-llm.e2e.spec.ts",
+      "existed": false,
+      "new_sha256": "21068e95efd11a546b687f320d5bc2f4f065b4235972f40ceb1d92b398f10648"
+    },
+    {
+      "path": "tools/local-ai/prepare_assets.py",
+      "existed": false,
+      "new_sha256": "18947639381bff9a32bbc1110b40c4b4ac6d0133da282ee74fca14aaa0257668"
+    },
+    {
+      "path": "tools/local-ai/run_dev.ps1",
+      "existed": false,
+      "new_sha256": "f371b61fd20e42a89111b66d72ad5f01ddb306ec9cb254f585e34be718c2d7ee"
+    },
+    {
+      "path": "frontend/src/app/core/services/module-help.service.ts",
+      "existed": false,
+      "new_sha256": "657c23fcfb0e6d50710746da1746cd9ae267ded9d327c846dec278911ccd2321"
+    },
+    {
+      "path": "frontend/src/app/shared/module-help/module-help.data.ts",
+      "existed": false,
+      "new_sha256": "93a6d6892146a31090e797cc0463615229dd5db82bfa6aa1ed45771aebe5cb83"
+    },
+    {
+      "path": "frontend/src/app/shared/module-help/module-help-dialog.ts",
+      "existed": false,
+      "new_sha256": "9686cdfb632d60cb82a3fed07f731de3d35e75ad93285462cb3270f949044391"
+    },
+    {
+      "path": "frontend/src/app/shared/module-help/module-help-dialog.html",
+      "existed": false,
+      "new_sha256": "d41ddac4f56b29416621bdba7b2b4ed2b3d2b9b8ddb3eb6f18f8bf6e7d5a75fd"
+    },
+    {
+      "path": "frontend/src/app/shared/module-help/module-help-dialog.scss",
+      "existed": false,
+      "new_sha256": "090280c1def33abd613d713f010c408ecdd670bb9bd07e387744e9190e00357f"
+    },
+    {
+      "path": "frontend/src/app/shared/module-help/module-help-dialog.spec.ts",
+      "existed": false,
+      "new_sha256": "d6018137fa51fce67006f2ffb87787f97c6efa7fa2e4d73a39729749a38aa83f"
+    },
+    {
+      "path": "frontend/e2e/module-context-help.e2e.spec.ts",
+      "existed": false,
+      "new_sha256": "77974da7f2c71d963e84d783636ab971f9fc9b8109d79d8abb9c1eb821e68992"
+    },
+    {
+      "path": "docs/JARVIS_LOCAL_AI_INSTRUKCJA_PL.md",
+      "existed": false,
+      "new_sha256": "03fdf7824b94f1224e4dbc62d7944bf7f2eabb4e0945b63246d29dbf6a0631a4"
+    },
+    {
+      "path": "frontend/src/app/features/chat/chat-view/chat-view.html",
+      "existed": true,
+      "new_sha256": "0c6878619fd4dee2af1674d45a295395a43408240b9a30ff02883bad6c53218f"
+    },
+    {
+      "path": "frontend/e2e/chat-safe-replies.e2e.spec.ts",
+      "existed": true,
+      "new_sha256": "c8d999db8d6ece8ff7848d6206f6c52851b3d91a886df372139ff91e8da84296"
+    },
+    {
+      "path": ".gitignore",
+      "existed": true,
+      "new_sha256": "b0a002f9b1e1c9d133769fafd87aa3da45191ece877841fed1d6dd356fde8542"
+    }
+  ],
+  "electron_builder_auto_configured": false
+}

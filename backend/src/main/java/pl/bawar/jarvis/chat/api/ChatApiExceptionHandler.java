@@ -28,5 +28,11 @@ public class ChatApiExceptionHandler {
                 .body(new ApiError("BAD_REQUEST", "Invalid JSON request body"));
     }
 
+    @ExceptionHandler(LocalLlmUnavailableException.class)
+    public ResponseEntity<ApiError> localModelUnavailable(LocalLlmUnavailableException exception) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new ApiError("LLM_NOT_READY", "Lokalny model AI jest niedostępny. Sprawdź uruchomienie silnika Qwen3."));
+    }
+
     public record ApiError(String code, String message) { }
 }

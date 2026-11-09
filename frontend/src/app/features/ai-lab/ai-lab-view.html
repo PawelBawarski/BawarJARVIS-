@@ -1,3 +1,23 @@
+<!-- JARVIS_AI_LAB_UX_REPAIR_V1 -->
+<section class="jarvis-lab-ux" data-testid="jarvis-lab-ux" aria-label="Centrum rozwoju Jarvisa">
+  <header class="jarvis-lab-ux__header">
+    <p class="jarvis-lab-ux__eyebrow">J.A.R.V.I.S. / AI LAB</p>
+    <h2>Centrum rozwoju Jarvisa</h2>
+    <button type="button" class="jarvis-lab-help-button" (click)="help.open('lab')">? Jak działa AI Lab?</button>
+    <p>AI Lab służy do badań, treningu i przygotowywania ulepszeń. Czat AI jest osobnym modułem.</p>
+  </header>
+  <div class="jarvis-lab-ux__overview" aria-label="Obszary rozwoju">
+    <div class="jarvis-lab-ux__tile"><strong>Wiedza i internet</strong><span>Weryfikacja źródeł i rozbudowa bazy wiedzy</span><small>Automatyczne badanie internetu: do wdrożenia</small></div>
+    <div class="jarvis-lab-ux__tile"><strong>Trening i jakość</strong><span>Uczenie, wersje modeli, testy jakości</span><small>Samodzielny trening LLM: do wdrożenia</small></div>
+    <div class="jarvis-lab-ux__tile"><strong>Rozwój kodu</strong><span>Pomysły, analiza projektu, testy i diff</span><small>Agent programistyczny: do podłączenia</small></div>
+    <div class="jarvis-lab-ux__tile"><strong>Twoje zatwierdzenia</strong><span>Propozycje zmian i raporty z testów</span><small>Wdrożenie wymaga osobnej zgody</small></div>
+  </div>
+  <p class="jarvis-lab-ux__notice">Ważne: poprzedni „Offline Brain” to baza wiedzy i ranking źródeł, nie model konwersacyjny GPT. Poniższe narzędzia pozostają dostępne jako eksperymentalne.</p>
+  <details class="jarvis-lab-ux__section" data-testid="jarvis-lab-existing">
+    <summary>Trening, historia i dostęp do katalogu (narzędzia eksperymentalne)</summary>
+    <button type="button" class="jarvis-lab-help-button" (click)="help.open('lab-training')">? Pomoc: trening i historia</button>
+    <button type="button" class="jarvis-lab-help-button" (click)="help.open('lab-workspace')">? Pomoc: katalog roboczy</button>
+    <div class="jarvis-lab-ux__section-content">
 <section class="ai-lab-view">
   <header class="ai-lab-view__header">
     <h2>{{ 'lab.title' | translate }}</h2>
@@ -28,3 +48,13 @@
 <app-ai-training-panel />
 
 <app-ai-lab-workspace />
+    </div>
+  </details>
+  <details class="jarvis-lab-ux__section" data-testid="jarvis-lab-offline">
+    <summary>Offline Brain — baza wiedzy, internet i ręczny trening rankera</summary>
+    <button type="button" class="jarvis-lab-help-button" (click)="help.open('lab-offline')">? Jak włączyć Offline Brain i zdobyć token?</button>
+    <div class="jarvis-lab-ux__section-content jarvis-lab-ux__section-content--offline">
+      <app-learning-lab />
+    </div>
+  </details>
+</section>

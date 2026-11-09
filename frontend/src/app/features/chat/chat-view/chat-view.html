@@ -48,12 +48,17 @@
       <p class="chat-status" role="status">{{ 'chat.generating' | translate }}</p>
     } @else if (store.connected()) {
       <p class="chat-status" role="status">{{ 'chat.backendConnected' | translate }}</p>
+      <p class="chat-status chat-status--mode" data-testid="chat-model-mode">Silnik rozmowy: lokalny Qwen3 8B</p>
     } @else {
       <p class="chat-status" role="status">{{ 'chat.backendUnavailable' | translate }}</p>
     }
     @if (store.saveError()) {
       <p class="chat-status chat-status--error" role="alert">
-        {{ store.errorKey() | translate }}
+        @if (store.errorKey() === 'chat.llmUnavailable') {
+          Model Qwen3 8B nie jest dostępny. Sprawdź, czy lokalny silnik AI jest uruchomiony.
+        } @else {
+          {{ store.errorKey() | translate }}
+        }
       </p>
     }
   </footer>

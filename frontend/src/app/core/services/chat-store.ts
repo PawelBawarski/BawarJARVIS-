@@ -179,7 +179,9 @@ export class ChatStore {
   }
   private setError(error: unknown): void {
     this.saveError.set(true);
-    this.errorKey.set(error instanceof ChatApiError && (error.status === 401 || error.status === 403)
+    this.errorKey.set(error instanceof ChatApiError && error.status === 503 && error.message === 'LLM_NOT_READY'
+      ? 'chat.llmUnavailable'
+      : error instanceof ChatApiError && (error.status === 401 || error.status === 403)
       ? 'chat.authRequired'
       : error instanceof ChatApiError && error.status === 0
         ? 'chat.backendUnavailable'

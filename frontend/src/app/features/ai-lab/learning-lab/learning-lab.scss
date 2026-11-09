@@ -1,0 +1,38 @@
+:host { display: block; width: 100%; }
+.learning-lab { color: inherit; display: grid; gap: 1rem; padding: 1rem 0; font-size: .95rem; }
+.learning-head { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap;
+  h2 { margin:.2rem 0; font-size:1.35rem; } p { margin:.35rem 0; opacity:.85; }
+  .eyebrow { font-size:.7rem; letter-spacing:.15em; font-weight:700; opacity:.65; }
+}
+.status { border:1px solid currentColor; border-radius:999px; padding:.35rem .7rem; font-size:.75rem; opacity:.7; }
+.connection,.panel { border:1px solid color-mix(in srgb,currentColor 18%,transparent); background:color-mix(in srgb,currentColor 4%,transparent); border-radius:12px; padding:1rem; min-width:0; }
+.panels { display:grid; gap:1rem; grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr)); }
+.panel { display:flex; flex-direction:column; gap:.6rem; h3 { margin:0 0 .35rem; font-size:1rem; } p { line-height:1.45; margin:.15rem 0; } }
+label { display:block; font-size:.8rem; font-weight:600; margin:.4rem 0 .25rem; }
+input,textarea,select { box-sizing:border-box; width:100%; min-width:0; padding:.55rem .65rem; color:inherit; background:transparent; border:1px solid color-mix(in srgb,currentColor 28%,transparent); border-radius:7px; font:inherit; }
+select option { color:#1c2430; background:#fff; }
+button { background:#1676c6; color:#fff; border:0; border-radius:7px; padding:.6rem .9rem; cursor:pointer; font:inherit; font-weight:600; }
+button.secondary { background:#5b6470; }
+button:disabled { opacity:.5; cursor:not-allowed; }
+.input-row { display:flex; align-items:center; gap:.6rem; >:first-child { flex:1; } }
+.metrics { display:flex; flex-wrap:wrap; gap:1rem; margin-top:.65rem; font-size:.82rem; }
+.message { padding:.7rem; border-radius:8px; }.error { border:1px solid #dc6060; }.success { border:1px solid #55a981; }
+.answer { border-radius:8px; padding:.7rem; border:1px solid color-mix(in srgb,currentColor 20%,transparent); overflow-wrap:anywhere;
+  pre { font:inherit; white-space:pre-wrap; } h4 { margin:0 0 .5rem; } }
+.step,.document { padding:.35rem 0; border-bottom:1px solid color-mix(in srgb,currentColor 12%,transparent); }
+.subheading { font-weight:700; }.hint,small { font-size:.8rem; opacity:.72; }
+@media(max-width:700px){ .learning-lab{padding:.5rem 0;} .input-row {flex-wrap:wrap;} .input-row button { flex:none; } }
+
+/* JARVIS_AI_LAB_UX_REPAIR_V1 */
+:host { display: block; width: 100%; min-width:0; max-width:100%; }
+.learning-lab { box-sizing:border-box; width:100%; max-width:100%; min-width:0; margin:0 auto; padding:.5rem 0; }
+.learning-lab .panels { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.learning-lab .panel, .learning-lab .connection, .learning-lab textarea, .learning-lab input { min-width:0; max-width:100%; }
+@media(max-width:880px) { .learning-lab .panels { grid-template-columns:minmax(0,1fr); } }
+
+
+/* JARVIS_CONTEXT_HELP_V1 */
+.learning-module-heading { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; justify-content:space-between; }
+.learning-module-heading h3 { margin: .25rem 0; }
+.learning-help { border: 1px solid var(--border,#425775); background: var(--accent-soft,#24415e); color: inherit; border-radius:8px; cursor:pointer; padding: .42rem .7rem; font-size: .78rem; }
+.learning-help:focus-visible { outline: 2px solid var(--accent,#9ac1f5); outline-offset: 2px; }

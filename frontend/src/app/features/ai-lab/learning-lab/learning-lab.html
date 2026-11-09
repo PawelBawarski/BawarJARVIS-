@@ -1,0 +1,92 @@
+<section class="learning-lab" data-testid="learning-lab" aria-label="AI Lab Learning Training Reasoning">
+  <div class="learning-head">
+    <div>
+      <p class="eyebrow">J.A.R.V.I.S. / OFFLINE AI LAB</p>
+      <h2>Learning · Training · Reasoning</h2>
+      <p>Własna pamięć wiedzy i trenowalny ranking źródeł. Bez Ollama, bez modelu GPT.</p>
+    </div>
+    <div class="status">Lokalny silnik Java 21</div>
+  </div>
+
+  <div class="connection">
+    <label for="jarvis-token">Token lokalnego API (wyświetlany w terminalu Javy)</label>
+    <button type="button" class="learning-help" (click)="help.open('lab-offline')">? Skąd wziąć token i jak uruchomić?</button>
+    <div class="input-row">
+      <input id="jarvis-token" type="password" autocomplete="off" [ngModel]="token()" (ngModelChange)="token.set($event)" placeholder="Wklej token — nie jest zapisywany" />
+      <button type="button" (click)="refresh()" [disabled]="busy()">Połącz / odśwież</button>
+    </div>
+    @if (status(); as metrics) {
+      <div class="metrics">
+        <span>Dokumenty: <strong>{{ metrics.knowledgeDocuments }}</strong></span>
+        <span>Oceny: <strong>{{ metrics.feedbackSamples }}</strong></span>
+        <span>LLM: <strong>{{ metrics.llmAvailable ? 'Tak' : 'Nie' }}</strong></span>
+        <span>GPU: <strong>{{ metrics.gpuAccelerated ? 'Tak' : 'Nie' }}</strong></span>
+      </div>
+    }
+  </div>
+
+  @if (error()) { <p class="message error" role="alert">{{ error() }}</p> }
+  @if (info()) { <p class="message success" role="status">{{ info() }}</p> }
+
+  <div class="panels">
+    <article class="panel">
+      <div class="learning-module-heading"><h3>Reasoning — odpowiedzi oparte na dowodach</h3><button type="button" class="learning-help" (click)="help.open('lab-reasoning')" aria-label="Pomoc: Reasoning — odpowiedzi oparte na dowodach">? Pomoc</button></div>
+      <label for="lab-question">Pytanie</label>
+      <textarea id="lab-question" rows="3" [ngModel]="question()" (ngModelChange)="question.set($event)" placeholder="Np. Co to są Angular Signals albo (2+3)*4?"></textarea>
+      <button type="button" (click)="ask()" [disabled]="busy() || !question().trim()">Zadaj pytanie</button>
+      @if (answer()) {
+        <div class="answer" data-testid="offline-answer"><h4>Odpowiedź</h4><pre>{{ answer() }}</pre></div>
+        @if (steps().length) {
+          <p class="subheading">Etapy weryfikacji</p>
+          @for (step of steps(); track step.step) { <p class="step">{{ step.step }}: {{ step.summary }}</p> }
+        }
+      }
+      @if (sources().length) {
+        <label for="evidence-source">Oceń źródło, aby trenować ranking</label>
+        <select id="evidence-source" [ngModel]="feedbackDocument()" (ngModelChange)="feedbackDocument.set($event)">
+          @for (item of sources(); track item.id) { <option [value]="item.id">{{ item.title }} ({{ item.score }})</option> }
+        </select>
+        <div class="input-row">
+          <select aria-label="Ocena źródła" [ngModel]="positive()" (ngModelChange)="positive.set($event === true || $event === 'true')">
+            <option [ngValue]="true">Trafne</option><option [ngValue]="false">Nietrafne</option>
+          </select>
+          <button type="button" (click)="sendFeedback()" [disabled]="busy()">Zapisz ocenę</button>
+        </div>
+      }
+    </article>
+
+    <article class="panel">
+      <div class="learning-module-heading"><h3>Learning — lokalna baza wiedzy</h3><button type="button" class="learning-help" (click)="help.open('lab-learning')" aria-label="Pomoc: Learning — lokalna baza wiedzy">? Pomoc</button></div>
+      <label for="new-title">Tytuł dokumentu</label>
+      <input id="new-title" [ngModel]="title()" (ngModelChange)="title.set($event)" placeholder="Angular Signals" />
+      <label for="new-source">Źródło</label>
+      <input id="new-source" [ngModel]="source()" (ngModelChange)="source.set($event)" placeholder="https://angular.dev/..." />
+      <label for="new-content">Treść (bez sekretów i tokenów)</label>
+      <textarea id="new-content" rows="5" [ngModel]="content()" (ngModelChange)="content.set($event)"></textarea>
+      <button type="button" (click)="addDocument()" [disabled]="busy() || !title().trim() || !content().trim()">Dodaj do pamięci</button>
+      @if (documents().length) {
+        <p class="subheading">Zapisane dokumenty ({{ documents().length }})</p>
+        @for (item of documents(); track item.id) { <p class="document">{{ item.title }} <small>· {{ item.origin }}</small></p> }
+      }
+    </article>
+
+    <article class="panel">
+      <div class="learning-module-heading"><h3>Internet — import tylko po akceptacji</h3><button type="button" class="learning-help" (click)="help.open('lab-internet')" aria-label="Pomoc: Internet — import tylko po akceptacji">? Pomoc</button></div>
+      <p>Dozwolone domeny: angular.dev, docs.oracle.com, spring.io, MDN, Wikipedia.</p>
+      <label for="web-source">Adres HTTPS</label>
+      <input id="web-source" [ngModel]="url()" (ngModelChange)="url.set($event)" placeholder="https://angular.dev/overview" />
+      <button type="button" (click)="previewUrl()" [disabled]="busy() || !url().trim()">Pobierz podgląd</button>
+      @if (preview(); as item) {
+        <div class="answer" data-testid="web-preview"><h4>{{ item.title }}</h4><p>{{ item.preview }}</p></div>
+        <button type="button" (click)="approveUrl()" [disabled]="busy()">Zatwierdź import do bazy wiedzy</button>
+      }
+    </article>
+
+    <article class="panel">
+      <div class="learning-module-heading"><h3>Training — rzeczywisty trening rankera</h3><button type="button" class="learning-help" (click)="help.open('lab-ranking')" aria-label="Pomoc: Training — rzeczywisty trening rankera">? Pomoc</button></div>
+      <p>Wymaga co najmniej 8 ocen, w tym 3 trafnych i 3 nietrafnych. Przetrenowanie zostanie odrzucone, jeśli nie poprawi wyniku walidacji.</p>
+      <div class="input-row"><button type="button" (click)="train()" [disabled]="busy()">Trenuj ranking</button><button class="secondary" type="button" (click)="rollback()" [disabled]="busy()">Cofnij model</button></div>
+      <p class="hint">Trening dotyczy trafności wyszukiwania, nie parametrów dużego modelu językowego.</p>
+    </article>
+  </div>
+</section>

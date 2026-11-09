@@ -62,6 +62,15 @@ describe('ChatStore — PostgreSQL is the source of truth', () => {
     expect(store.messages()).toHaveLength(0);
     expect(store.saveError()).toBe(true);
   });
+  it('shows an actionable error when Qwen is not running', async () => {
+    api.list.mockResolvedValue([conversation('chat-1')]);
+    api.send.mockRejectedValue(new ChatApiError(503, 'LLM_NOT_READY'));
+    const store = TestBed.inject(ChatStore);
+    await vi.waitFor(() => expect(store.loading()).toBe(false));
+    expect(await store.sendMessage('Cześć')).toBe(false);
+    expect(store.errorKey()).toBe('chat.llmUnavailable');
+    expect(store.messages()).toHaveLength(0);
+  });
   it('deletes a chat only after backend confirmation', async () => {
     api.list.mockResolvedValue([conversation('chat-1')]);
     const store = TestBed.inject(ChatStore);

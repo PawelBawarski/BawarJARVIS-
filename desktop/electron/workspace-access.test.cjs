@@ -6,7 +6,8 @@ const os = require('node:os');
 const path = require('node:path');
 const { WorkspaceAccess, registerWorkspaceIpc, routeWorkspaceRequest, validRoot } = require('./workspace-access.cjs');
 function fixture(t) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jarvis-workspace-'));
+  // Windows TEMP is usually under AppData, intentionally forbidden by validRoot().
+  const dir = fs.mkdtempSync(path.join(__dirname, 'jarvis-workspace-'));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   const root = path.join(dir, 'project');fs.mkdirSync(root);
   fs.mkdirSync(path.join(root, 'src'));
@@ -40,11 +41,21 @@ test('rejects traversal, absolute routes, Windows separators, and hidden files',
     assert.throws(() => instance.read(value));
   }
 });
-test('refuses symlinks pointing outside selected workspace', t => {
+test('refuses symlinks or Windows junctions pointing outside selected workspace', t => {
   const { dir, root, instance } = fixture(t);instance.select(root);
   const external = path.join(dir, 'outside.ts');fs.writeFileSync(external,'secret');
   try { fs.symlinkSync(external, path.join(root, 'src', 'link.ts')); }
-  catch (error) { if (error.code === 'EPERM') return t.skip('No symlink privileges'); throw error; }
+  catch (error) {
+    if (process.platform !== 'win32' || error.code !== 'EPERM') throw error;
+    // Junctions exercise the same escape protection without symlink privileges.
+    const externalDir = path.join(dir, 'outside');
+    fs.mkdirSync(externalDir);
+    fs.writeFileSync(path.join(externalDir, 'hello.ts'), 'secret');
+    fs.symlinkSync(externalDir, path.join(root, 'src', 'link'), 'junction');
+    assert.throws(() => instance.list('src/link'), /WORKSPACE_ACCESS_DENIED/);
+    assert.throws(() => instance.read('src/link/hello.ts'), /WORKSPACE_ACCESS_DENIED/);
+    return;
+  }
   assert.throws(() => instance.read('src/link.ts'), /WORKSPACE_ACCESS_DENIED/);
 });
 test('rejects large text and binary files', t => {
@@ -54,9 +65,13 @@ test('rejects large text and binary files', t => {
   assert.throws(() => instance.read('huge.ts'), /WORKSPACE_FILE_TOO_LARGE/);
   assert.throws(() => instance.read('binary.ts'), /WORKSPACE_BINARY_FILE/);
 });
-test('does not permit choosing home or volume root', t => {
+test('does not permit choosing home, volume root, or protected system directories', t => {
+  const { root } = fixture(t);
   assert.throws(() => validRoot(os.homedir()), /WORKSPACE_TOO_BROAD/);
   assert.throws(() => validRoot(path.parse(os.homedir()).root), /WORKSPACE_TOO_BROAD/);
+  for (const segment of ['AppData', 'aPpDaTa', 'Windows', 'System32', 'Program Files', 'Program Files (x86)']) {
+    assert.throws(() => validRoot(path.join(root, segment, 'project')), /WORKSPACE_FORBIDDEN/);
+  }
 });
 test('IPC sender must be trusted; renderer cannot supply an arbitrary root', async t => {
   const { dir, root } = fixture(t);

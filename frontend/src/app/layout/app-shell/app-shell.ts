@@ -7,9 +7,12 @@ import { WorkspaceTabs } from '../../features/workspace/workspace-tabs';
 import { ModuleSwitcher } from '../module-switcher/module-switcher';
 import { SettingsDialog } from '../settings-dialog/settings-dialog';
 import { RadioPanel } from '../radio-panel/radio-panel';
+import { ModuleHelpDialog } from '../../shared/module-help/module-help-dialog';
+import { ModuleHelpService } from '../../core/services/module-help.service';
+import { ModuleNavigationService } from '../../core/services/module-navigation.service';
 @Component({
   selector: 'app-app-shell',
-  imports: [Sidebar, WorkspaceTabs, ModuleSwitcher, SettingsDialog, RadioPanel, TranslatePipe],
+  imports: [Sidebar, WorkspaceTabs, ModuleSwitcher, SettingsDialog, RadioPanel, ModuleHelpDialog, TranslatePipe],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.scss',
   host: {
@@ -18,6 +21,8 @@ import { RadioPanel } from '../radio-panel/radio-panel';
 })
 export class AppShell {
   private readonly document = inject(DOCUMENT);
+  readonly help = inject(ModuleHelpService);
+  readonly navigation = inject(ModuleNavigationService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly isMobile = signal(false);

@@ -78,3 +78,58 @@
   margin-bottom: 1.5rem;
 }
 
+/* JARVIS_AI_LAB_UX_REPAIR_V1 */
+.jarvis-lab-ux {
+  box-sizing: border-box;
+  width: min(100%, 1040px);
+  max-width: 100%;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 1rem clamp(.35rem, 1.4vw, 1rem) 2rem;
+  display: grid;
+  gap: 1rem;
+  color: inherit;
+}
+.jarvis-lab-ux, .jarvis-lab-ux * { box-sizing: border-box; }
+.jarvis-lab-ux__header {
+  padding: .4rem .25rem;
+  h2 { margin: .2rem 0 .5rem; font-size: clamp(1.3rem, 2vw, 1.8rem); }
+  p { margin: 0; line-height: 1.55; opacity: .88; }
+}
+.jarvis-lab-ux__eyebrow { font-size: .75rem; letter-spacing: .12em; font-weight: 700; opacity: .7; }
+.jarvis-lab-ux__overview { display: grid; gap: .8rem; grid-template-columns: repeat(2,minmax(0,1fr)); }
+.jarvis-lab-ux__tile {
+  min-width:0; padding:1rem; display:grid; gap:.45rem;
+  border:1px solid color-mix(in srgb,currentColor 18%,transparent);
+  border-radius:12px; background:color-mix(in srgb,currentColor 5%,transparent);
+  strong { font-size:1rem; }
+  span { font-size:.88rem; line-height:1.45; opacity:.9; }
+  small { font-size:.75rem; opacity:.7; }
+}
+.jarvis-lab-ux__notice { margin:0; line-height:1.5; opacity:.8; font-size:.85rem; }
+.jarvis-lab-ux__section {
+  min-width:0; max-width:100%; border:1px solid color-mix(in srgb,currentColor 22%,transparent);
+  border-radius:12px; background:color-mix(in srgb,currentColor 3%,transparent);
+  > summary { padding:1rem; cursor:pointer; font-weight:650; list-style-position:inside; }
+  > summary:focus-visible { outline:2px solid #75aaff; outline-offset:-4px; }
+  &[open] > summary { border-bottom:1px solid color-mix(in srgb,currentColor 15%,transparent); }
+}
+.jarvis-lab-ux__section-content { padding:1rem; width:100%; max-width:100%; min-width:0; overflow-wrap:anywhere; }
+.jarvis-lab-ux__section-content--offline { max-width:100%; }
+@media(max-width:720px) {
+  .jarvis-lab-ux { padding:.6rem .25rem 1rem; }
+  .jarvis-lab-ux__overview { grid-template-columns:minmax(0,1fr); }
+  .jarvis-lab-ux__section-content { padding:.5rem; }
+}
+
+
+/* JARVIS_CONTEXT_HELP_V1 */
+.jarvis-lab-help-button {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: fit-content; margin: .6rem .2rem .5rem; padding: .52rem .8rem;
+  border: 1px solid var(--border, #435878); border-radius: 10px;
+  background: var(--accent-soft, #1c3558); color: inherit;
+  cursor: pointer; font-size: .86rem;
+}
+.jarvis-lab-help-button:hover { filter: brightness(1.15); }
+.jarvis-lab-help-button:focus-visible { outline: 2px solid var(--accent, #8bb9fa); outline-offset: 3px; }

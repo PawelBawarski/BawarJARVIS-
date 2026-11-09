@@ -20,7 +20,7 @@ const DEFAULTS = {
   JARVIS_DB_NAME: 'jarvis_db',
   JARVIS_DB_USER: 'jarvis',
 };
-const TEMPLATE = `# Konfiguracja lokalnej bazy JARVIS (tylko na tym komputerze).\n# Nie dodawaj tego pliku do repozytorium.\nJARVIS_DB_HOST=127.0.0.1\nJARVIS_DB_PORT=5433\nJARVIS_DB_NAME=jarvis_db\nJARVIS_DB_USER=jarvis\nJARVIS_DB_PASSWORD=\n`;
+const TEMPLATE = `# Konfiguracja lokalnej bazy JARVIS (tylko na tym komputerze).\n# Nie dodawaj tego pliku do repozytorium.\nJARVIS_DB_HOST=127.0.0.1\nJARVIS_DB_PORT=5433\nJARVIS_DB_NAME=jarvis_db\nJARVIS_DB_USER=jarvis\nJARVIS_DB_PASSWORD=0567ac0b-7b70-4100-890f-d53a6f5201b0\n`;
 
 function configPath(env = process.env) {
   if (!env.APPDATA) {

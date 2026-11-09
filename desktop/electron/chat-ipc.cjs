@@ -44,7 +44,7 @@ async function performChatRequest(input, token, fetchImpl = fetch) {
       },
       ...(route.body ? { body: JSON.stringify(route.body) } : {}),
       redirect: 'error',
-      signal: AbortSignal.timeout(route.method === 'GET' ? 7000 : 45000),
+      signal: AbortSignal.timeout(route.method === 'GET' ? 7000 : 165000),
     });
     if (response.status === 204) return { ok: true, status: 204, data: null };
     const contentType = response.headers?.get?.('content-type') || '';

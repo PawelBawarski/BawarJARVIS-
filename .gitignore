@@ -12,3 +12,6 @@ backend/.env.jarvis
 *.be112.bak
 /.jarvis-patch-backups/
 desktop/.jarvis-build/
+
+# Local Qwen model and portable inference runtime (several GB)
+desktop/ai-runtime/

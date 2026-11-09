@@ -1,4 +1,5 @@
 <app-settings-dialog #settingsDialog />
+<app-module-help-dialog />
 <div
   class="shell"
   [class.shell--sidebar-open]="sidebarOpen()"
@@ -41,6 +42,12 @@
 
       <div class="shell__toolbar-actions">
         <app-radio-panel />
+
+        <button type="button" class="toolbar-action" data-testid="open-module-help"
+          aria-label="Jak działa ten moduł?" title="Jak działa ten moduł?"
+          (click)="help.open(navigation.activeId())">
+          <span aria-hidden="true">?</span>
+        </button>
 
         <button
           type="button"
