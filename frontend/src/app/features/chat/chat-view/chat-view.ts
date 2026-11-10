@@ -11,6 +11,9 @@ import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 export class ChatView {
   readonly store = inject(ChatStore);
   readonly draft = signal('');
+  // JARVIS_16A_SAFE_DELETE_MODAL_V1
+  readonly deleteDialogOpen = signal(false);
+  private deleteTargetId = "";
   readonly pendingText = signal('');
   readonly messages = this.store.messages;
   readonly messageList = viewChild<ElementRef<HTMLElement>>('messageList');
@@ -103,5 +106,26 @@ export class ChatView {
     }
   }
   newChat(): void { this.store.newChat(); }
-  deleteChat(): void { this.store.deleteActiveChat(); }
+  deleteChat(): void {
+    // Never delete directly from an unconfirmed click.
+    if (!this.store.activeId() || this.store.busy() || this.store.sending() || this.store.loading()) return;
+    this.deleteTargetId = this.store.activeId();
+    this.deleteDialogOpen.set(true);
+  }
+
+  cancelDelete(): void {
+    this.deleteDialogOpen.set(false);
+    this.deleteTargetId = '';
+  }
+
+  async confirmDelete(): Promise<void> {
+    if (!this.deleteDialogOpen() || !this.deleteTargetId) return;
+    // Do not delete another conversation if selection changed while modal was open.
+    if (this.store.activeId() !== this.deleteTargetId) {
+      this.cancelDelete();
+      return;
+    }
+    this.cancelDelete();
+    await this.store.removeActiveChat();
+  }
 }

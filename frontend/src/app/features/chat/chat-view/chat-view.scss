@@ -384,3 +384,40 @@
 @media (prefers-reduced-motion: reduce) {
   .typing-indicator span { animation: none; opacity: .85; }
 }
+
+/* JARVIS_16A_SAFE_DELETE_MODAL_V1 — scoped confirmation, separate from chat layout. */
+.chat-delete-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.68);
+}
+.chat-delete-dialog {
+  width: min(100%, 420px);
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--panel-soft);
+  color: var(--text);
+  box-shadow: 0 16px 60px rgba(0, 0, 0, .4);
+  h2 { margin: 0 0 .75rem; font-size: 1.15rem; }
+  p { margin: 0 0 1.2rem; color: var(--muted); }
+  &__actions { display: flex; justify-content: flex-end; gap: .65rem; }
+  &__actions button {
+    padding: .6rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    color: var(--text);
+    background: var(--panel-soft);
+    cursor: pointer;
+  }
+  &__actions button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  &__actions .chat-delete-dialog__confirm {
+    border-color: var(--accent);
+    color: white;
+    background: #a43238;
+  }
+}

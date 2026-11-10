@@ -28,6 +28,14 @@ test('AI Lab displays saved training history and compares snapshots safely', asy
   const label=options.find(x=>/ai lab|laboratorium ai/i.test(x));
   expect(label).toBeTruthy();
   await switcher.selectOption({label:label!});
+  // JARVIS_16A_E2E_NAV_PREP_V1 — aktywuj moduł rzeczywistym przełącznikiem UI
+  const jarvisAuditLabSelect = page.locator('app-module-switcher select').first();
+  await expect(jarvisAuditLabSelect).toBeVisible();
+  await jarvisAuditLabSelect.selectOption('lab');
+  await expect(page.getByTestId('jarvis-lab-ux')).toBeVisible();
+  await page.getByTestId('jarvis-lab-existing').evaluate(element => {
+    (element as HTMLDetailsElement).open = true;
+  });
   await expect(page.getByTestId('ai-lab-history')).toBeVisible();
   await expect(page.getByTestId('ai-lab-history-runs').locator('tbody tr')).toHaveCount(1);
   await expect(page.getByTestId('ai-lab-epoch-metrics')).toContainText('#2');

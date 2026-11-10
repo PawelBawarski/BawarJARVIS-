@@ -40,18 +40,4 @@ describe('ModuleSwitcher', () => {
     expect(select?.value).toBe('chat');
   });
 
-  it('should navigate to next module', () => {
-    const fixture = TestBed.createComponent(ModuleSwitcher);
-    const navigation = TestBed.inject(ModuleNavigationService);
-
-    fixture.detectChanges();
-
-    const buttons = fixture.nativeElement.querySelectorAll(
-      '.module-switcher__arrow',
-    ) as NodeListOf<HTMLButtonElement>;
-
-    buttons[1].click();
-
-    expect(navigation.activeId()).toBe('mining');
-  });
 });

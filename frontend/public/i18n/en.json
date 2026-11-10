@@ -22,11 +22,7 @@
   "sidebar.openMenu": "Open menu",
   "sidebar.closeMenu": "Close menu",
   "workspace.chat": "Chat",
-  "workspace.mining": "Mining",
   "workspace.lab": "AI Lab",
-  "mining.title": "Mining",
-  "mining.description": "Cryptocurrency mining management module.",
-  "mining.status": "The mining engine is not connected yet.",
   "lab.title": "AI Lab",
   "lab.description": "Workspace for controlled Jarvis development.",
   "lab.status": "The agent is stopped.",
@@ -157,5 +153,12 @@
   "aiLab.workspace.readOnly": "READ ONLY",
   "aiLab.workspace.none": "No folder selected",
   "aiLab.workspace.permission": "No files are written or executed. Future proposed edits will require individual approval.",
-  "aiLab.workspace.empty": "No permitted source files in this folder."
+  "aiLab.workspace.empty": "No permitted source files in this folder.",
+  "chat.llmUnavailable": "The Qwen3 8B model is unavailable.",
+  "security.reachable": "API is responding",
+  "security.unavailable": "API is unavailable",
+  "chat.deleteDialog.title": "Delete conversation?",
+  "chat.deleteDialog.warning": "This action cannot be undone.",
+  "chat.deleteDialog.cancel": "Cancel",
+  "chat.deleteDialog.confirm": "Delete"
 }

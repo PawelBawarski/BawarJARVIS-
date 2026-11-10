@@ -36,6 +36,14 @@ test('AI Lab creates a versioned dataset and uses separate train/validation exam
   const aiLab=options.find(x=>/ai lab|laboratorium ai/i.test(x));
   expect(aiLab).toBeTruthy();
   await switcher.selectOption({label:aiLab!});
+  // JARVIS_16A_E2E_NAV_PREP_V1 — aktywuj moduł rzeczywistym przełącznikiem UI
+  const jarvisAuditLabSelect = page.locator('app-module-switcher select').first();
+  await expect(jarvisAuditLabSelect).toBeVisible();
+  await jarvisAuditLabSelect.selectOption('lab');
+  await expect(page.getByTestId('jarvis-lab-ux')).toBeVisible();
+  await page.getByTestId('jarvis-lab-existing').evaluate(element => {
+    (element as HTMLDetailsElement).open = true;
+  });
   await expect(page.getByTestId('ai-lab-datasets')).toBeVisible();
   await page.getByTestId('dataset-name').fill('Próbki');
   await page.getByTestId('dataset-examples').fill('a\nb\nc\nd\ne');

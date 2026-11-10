@@ -1,0 +1,17 @@
+:host { display: block; min-width: 0; }
+.sandbox {
+  box-sizing: border-box; display: grid; gap: .55rem; margin-top: 1rem;
+  padding: .85rem; min-width: 0; border: 1px solid var(--border);
+  background: var(--panel-soft); border-radius: 10px; color: var(--text);
+  h4, p { margin: 0; } p { line-height: 1.5; font-size: .82rem; }
+  button { justify-self: start; cursor: pointer; padding: .55rem .8rem;
+    border: 1px solid var(--border); border-radius: 9px;
+    background: var(--accent-soft); color: var(--text); font: inherit;
+    &:disabled { opacity: .6; cursor: not-allowed; }
+    &:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  }
+  &__result { padding: .65rem; border-radius: 8px; background: var(--bg); }
+  &__result pre { overflow: auto; max-height: 12rem; white-space: pre-wrap; overflow-wrap: anywhere;
+    font: .76rem/1.4 monospace; }
+  &__error { color: #ff9696; }
+}

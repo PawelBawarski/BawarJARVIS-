@@ -16,9 +16,19 @@ export interface AgentCodeSource {
   readonly content: string;
 }
 
+/** Preview generated on the backend from ONE explicitly approved excerpt. Never saved or applied. */
+export interface AgentPatchPreview {
+  readonly relativePath: string;
+  readonly original: string;
+  readonly proposed: string;
+  readonly diff: string;
+  readonly notice: string;
+}
+
 export type AgentProposalRequest =
   | { operation: 'list' }
   | { operation: 'generate'; task: string; sources?: readonly AgentCodeSource[] }
+  | { operation: 'patch-preview'; task: string; source: AgentCodeSource }
   | { operation: 'decide'; id: string; decision: 'APPROVED' | 'REJECTED' }
   | { operation: 'revise'; id: string; feedback: string };
 
@@ -51,6 +61,9 @@ export class AgentProposalApiService {
   list(): Promise<AgentProposal[]> { return this.request({ operation: 'list' }); }
   generate(task: string, sources?: readonly AgentCodeSource[]): Promise<AgentProposal> {
     return this.request({ operation: 'generate', task, ...(sources?.length ? { sources } : {}) });
+  }
+  previewPatch(task: string, source: AgentCodeSource): Promise<AgentPatchPreview> {
+    return this.request({ operation: 'patch-preview', task, source });
   }
   approve(id: string): Promise<AgentProposal> {
     return this.request({ operation: 'decide', id, decision: 'APPROVED' });

@@ -74,3 +74,22 @@
 }
 .agent-planner__selected > div { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; }
 .agent-planner__selected span { overflow-wrap: anywhere; }
+
+
+/* Stage 16.3: read-only code comparison. Scoped to the AI Lab panel. */
+.agent-planner__patch {
+  display: grid; min-width: 0; border: 1px solid var(--border); border-radius: 12px;
+  padding: .9rem; color: var(--text);
+  summary { cursor: pointer; font-weight: 650; }
+  > p { margin: .55rem 0; line-height: 1.5; color: var(--muted); }
+  label { display: block; margin: .6rem 0; }
+  select { display: block; margin: .5rem 0; max-width: 100%; width: 100%; min-width: 0;
+    padding: .6rem; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; }
+}
+.agent-planner__patch-result { display: grid; gap: .65rem; min-width: 0; margin-top: 1rem; }
+.agent-planner__patch-columns { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,19rem),1fr)); gap: .8rem; min-width: 0;
+  > div { min-width: 0; } }
+.agent-planner__patch pre { max-height: 24rem; overflow: auto; margin: .35rem 0;
+  padding: .75rem; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text); white-space: pre; font: .78rem/1.5 monospace; }
+.agent-planner__patch-diff { max-height: 30rem !important; }

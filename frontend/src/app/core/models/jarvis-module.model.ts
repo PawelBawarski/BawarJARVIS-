@@ -9,10 +9,6 @@ export const JARVIS_MODULES = [
     labelKey: 'workspace.chat',
   },
   {
-    id: 'mining',
-    labelKey: 'workspace.mining',
-  },
-  {
     id: 'lab',
     labelKey: 'workspace.lab',
   },

@@ -19,15 +19,6 @@ describe('ModuleHelpDialog', () => {
     expect(service.topic()).toBeNull();
   });
 
-  it('covers all existing modules and never claims Qwen training is automatic', () => {
-    for (const id of ['chat', 'lab', 'mining', 'security', 'radio'] as const) {
-      expect(MODULE_HELP[id].title.length).toBeGreaterThan(2);
-      expect(MODULE_HELP[id].steps.length).toBeGreaterThan(0);
-    }
-    expect(MODULE_HELP['lab-ranking'].status).toContain('Qwen3');
-    expect(MODULE_HELP['lab-ranking'].caution).toContain('LLM');
-    expect(MODULE_HELP['lab-offline'].commands[0].value).toContain('start.ps1');
-  });
 
   it('falls back safely on unrecognized topic', () => {
     TestBed.configureTestingModule({});

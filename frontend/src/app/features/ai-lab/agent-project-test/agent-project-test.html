@@ -1,0 +1,31 @@
+<section class="project-test" data-testid="agent-project-test" aria-label="Testy zmiany w izolowanej kopii">
+  <h4>16.5 — Testy w izolowanej kopii projektu</h4>
+  <p>Po Twojej zgodzie Jarvis spróbuje podmienić jeden zatwierdzony fragment <strong>wyłącznie w kopii</strong>
+    i uruchomić Angular build + Vitest albo Maven/JUnit w Dockerze bez sieci.</p>
+  <p>Nie uruchamia Playwright. Wykonywanie buildów i testów potencjalnie wykonuje kod z propozycji AI
+    <strong>wewnątrz kontenera</strong> — Docker ogranicza ryzyko, ale nie daje absolutnej izolacji.</p>
+
+  <label class="project-test__consent">
+    <input type="checkbox" [checked]="confirmed()" (change)="confirmed.set($any($event.target).checked)"
+      data-testid="agent-project-test-consent" />
+    Rozumiem i zgadzam się na uruchomienie testów kodu w kontenerze Docker.
+  </label>
+  <button type="button" data-testid="agent-project-test-run" (click)="run()"
+    [disabled]="busy() || !confirmed() || !supported() || !api.available">
+    {{ busy() ? 'Trwa testowanie izolowanej kopii…' : 'Przetestuj zmianę w kopii projektu' }}
+  </button>
+
+  @if (!api.available) { <p role="status">Dostępne tylko w aplikacji Electron.</p> }
+  @if (!supported()) { <p role="status">Ten format nie jest obsługiwany przez testy projektu.</p> }
+  @if (visibleResult(); as report) {
+    <div class="project-test__result" data-testid="agent-project-test-report" role="status">
+      <strong>{{ report.status === 'passed' ? 'Testy zaliczone' : report.status === 'failed' ? 'Testy niezaliczone' : report.status === 'inconclusive' ? 'Wynik niejednoznaczny' : 'Testy niedostępne' }}</strong>
+      <p>{{ report.message }}</p>
+      @if (report.copiedFiles) { <p>Pliki w kopii: {{ report.copiedFiles }}</p> }
+      @if (report.diagnostics) { <pre data-testid="agent-project-test-log">{{ report.diagnostics }}</pre> }
+    </div>
+  }
+  @if (error()) { <p class="project-test__error" role="alert">{{ error() }}</p> }
+</section>
+<!-- JARVIS_16_6_NATIVE_APPLY -->
+<app-agent-workspace-apply [preview]="preview()" [report]="visibleResult()" />

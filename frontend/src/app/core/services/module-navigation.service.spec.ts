@@ -14,7 +14,7 @@ describe('ModuleNavigationService', () => {
 
     navigation.next();
 
-    expect(navigation.activeId()).toBe('mining');
+    expect(navigation.activeId()).toBe(navigation.modules[1].id);
   });
 
   it('should wrap from last module to first', () => {

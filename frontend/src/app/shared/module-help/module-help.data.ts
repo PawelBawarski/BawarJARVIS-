@@ -1,6 +1,6 @@
 /** Context help is local/static: no network, no credentials, no hidden side effects. */
 export type HelpTopic = 'chat' | 'lab' | 'lab-training' | 'lab-workspace' | 'lab-offline' |
-  'lab-reasoning' | 'lab-learning' | 'lab-internet' | 'lab-ranking' | 'mining' | 'security' | 'radio';
+  'lab-reasoning' | 'lab-learning' | 'lab-internet' | 'lab-ranking' | 'security' | 'radio';
 
 export interface HelpGuide {
   readonly title: string;
@@ -117,15 +117,6 @@ export const MODULE_HELP: Record<HelpTopic, HelpGuide> = {
     steps: ['Zadaj pytania w Reasoning i oceniaj wskazane źródła.', 'Zbierz minimum 8 ocen, w tym co najmniej 3 trafne i 3 nietrafne.', 'Kliknij „Trenuj ranking”.', 'Porównaj walidację; w razie potrzeby cofnij zmianę.'],
     examples: ['Źródło o Angularze przy pytaniu o Signals → trafne.', 'Źródło o CSS przy pytaniu o Javę → nietrafne.'], commands: [],
     caution: 'Poprawa rankera nie oznacza, że główny LLM nauczył się nowych umiejętności.'
-  },
-  mining: {
-    title: 'Mining / Bitcoin',
-    summary: 'Oddzielny moduł aplikacji. Jego funkcje będą rozwijane niezależnie od AI Lab.',
-    status: 'Zakres rzeczywistego mining-u i monitoringu wymaga osobnej implementacji.',
-    steps: ['Otwórz zakładkę Mining.', 'Sprawdź dostępne wskaźniki i konfigurację.', 'Nie uruchamiaj rzeczywistego kopania bez oceny opłacalności, poboru prądu i temperatury GPU.'],
-    examples: ['Porównaj koszt 1 kWh z przychodem.', 'Monitoruj temperaturę i pobór energii RTX 3080.'],
-    commands: [{ label: 'Sprawdź moc i temperaturę GPU', value: 'nvidia-smi --query-gpu=temperature.gpu,power.draw,power.limit --format=csv' }],
-    caution: 'Moduł mining nie powinien wykorzystywać GPU automatycznie ani uruchamiać obciążeń bez Twojej zgody.'
   },
   security: {
     title: 'Security — diagnostyka bezpieczeństwa',

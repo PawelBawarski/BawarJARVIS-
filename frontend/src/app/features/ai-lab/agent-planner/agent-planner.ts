@@ -1,11 +1,12 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { AgentCodeSource, AgentProposal, AgentProposalApiService } from '../../../core/services/agent-proposal-api';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { AgentCodeSource, AgentPatchPreview, AgentProposal, AgentProposalApiService } from '../../../core/services/agent-proposal-api';
 import { WorkspaceApiService, WorkspaceEntry, WorkspaceListing, WorkspacePreview } from '../../../core/services/workspace-api';
+import { AgentSandbox } from '../agent-sandbox/agent-sandbox'; // JARVIS_STAGE16_4_SANDBOX
 
 @Component({
   selector: 'app-agent-planner',
   standalone: true,
-  imports: [],
+  imports: [AgentSandbox],
   templateUrl: './agent-planner.html',
   styleUrl: './agent-planner.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -19,6 +20,11 @@ export class AgentPlanner implements OnInit {
   readonly sources = signal<AgentCodeSource[]>([]);
   readonly contextBusy = signal(false);
   readonly contextError = signal('');
+  readonly selectedDiffPath = signal('');
+  readonly diffBusy = signal(false);
+  readonly diffError = signal('');
+  readonly diffPreview = signal<AgentPatchPreview | null>(null);
+  readonly diffSource = computed(() => this.sources().find(s => s.relativePath === this.selectedDiffPath()) ?? this.sources()[0] ?? null);
   readonly MAX_EXCERPT = 3600;
   readonly MAX_TOTAL = 8000;
   readonly task = signal('');
@@ -83,7 +89,7 @@ export class AgentPlanner implements OnInit {
       const old = this.workspaceRoot();
       const status = await this.workspaceApi.choose();
       this.workspaceRoot.set(status.selected);
-      if (old !== status.selected) this.sources.set([]);
+      if (old !== status.selected) { this.sources.set([]); this.clearDiff(); }
       this.workspacePreview.set(null);
       this.workspaceListing.set(status.selected ? await this.workspaceApi.list('') : null);
     });
@@ -94,7 +100,7 @@ export class AgentPlanner implements OnInit {
       const old = this.workspaceRoot();
       const status = await this.workspaceApi.status();
       this.workspaceRoot.set(status.selected);
-      if (old !== status.selected) this.sources.set([]);
+      if (old !== status.selected) { this.sources.set([]); this.clearDiff(); }
       this.workspacePreview.set(null);
       this.workspaceListing.set(status.selected ? await this.workspaceApi.list('') : null);
     });
@@ -132,11 +138,51 @@ export class AgentPlanner implements OnInit {
       return;
     }
     this.sources.set([...previous, { relativePath: preview.relativePath, content: excerpt }]);
+    this.selectedDiffPath.set(preview.relativePath);
+    this.clearDiff();
     this.contextError.set('');
   }
 
   removeSource(relativePath: string): void {
     this.sources.update(items => items.filter(item => item.relativePath !== relativePath));
+    this.clearDiff();
+    if (this.selectedDiffPath() === relativePath) this.selectedDiffPath.set(this.sources()[0]?.relativePath ?? '');
+  }
+
+  /** Stage 16.3. Generates a temporary diff ONLY from user-approved source. No file writes. */
+  async generateDiff(): Promise<void> {
+    const source = this.diffSource();
+    const goal = (this.task().trim() || this.selected()?.task || '').trim();
+    if (!source || !goal || goal.length > 1200 || this.diffBusy() || this.busy()) return;
+    this.diffBusy.set(true);
+    this.diffError.set('');
+    this.diffPreview.set(null);
+    try {
+      const preview = await this.api.previewPatch(goal, source);
+      // Reject a response for another file and never show a preview for a removed source.
+      if (preview.relativePath !== source.relativePath ||
+        this.diffSource()?.relativePath !== source.relativePath ||
+        preview.original !== source.content ||
+        !this.sources().some(item => item.relativePath === source.relativePath && item.content === source.content)) {
+        throw new Error('Niezgodny lub nieaktualny podgląd. Wybierz plik ponownie.');
+      }
+      this.diffPreview.set(preview);
+    } catch (error) {
+      this.diffError.set(error instanceof Error ? error.message : 'Nie udało się wygenerować diffu.');
+    } finally {
+      this.diffBusy.set(false);
+    }
+  }
+
+  selectDiffSource(relativePath: string): void {
+    if (!this.sources().some(s => s.relativePath === relativePath)) return;
+    this.selectedDiffPath.set(relativePath);
+    this.clearDiff();
+  }
+
+  private clearDiff(): void {
+    this.diffPreview.set(null);
+    this.diffError.set('');
   }
 
   async approve(): Promise<void> { return this.review('APPROVED'); }

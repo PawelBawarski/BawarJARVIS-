@@ -121,4 +121,26 @@
     }
       <p class="chat-status" data-testid="chat-model-mode">Silnik rozmowy: lokalny Qwen3 8B</p>
   </footer>
+
+  <!-- JARVIS_16A_SAFE_DELETE_MODAL_V1: confirmation before calling the backend. -->
+  @if (deleteDialogOpen()) {
+    <div class="chat-delete-backdrop" data-testid="chat-delete-backdrop">
+      <div class="chat-delete-dialog" role="alertdialog" aria-modal="true"
+        aria-labelledby="chat-delete-title" aria-describedby="chat-delete-warning"
+        (keydown.escape)="cancelDelete()" tabindex="-1">
+        <h2 id="chat-delete-title">{{ 'chat.deleteDialog.title' | translate }}</h2>
+        <p id="chat-delete-warning">{{ 'chat.deleteDialog.warning' | translate }}</p>
+        <div class="chat-delete-dialog__actions">
+          <button #deleteCancel type="button" data-testid="chat-delete-cancel"
+            class="chat-delete-dialog__cancel" (click)="cancelDelete()">
+            {{ 'chat.deleteDialog.cancel' | translate }}
+          </button>
+          <button type="button" data-testid="chat-delete-confirm"
+            class="chat-delete-dialog__confirm" (click)="confirmDelete()">
+            {{ 'chat.deleteDialog.confirm' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 </section>

@@ -52,6 +52,13 @@ function routeAgent(input) {
       }
       return { method: 'POST', path: '/api/agent/proposals', body };
     }
+    case 'patch-preview': {
+      if (typeof input.task !== 'string' || !input.task.trim() || input.task.length > 1200) {
+        throw new Error('Invalid patch preview task');
+      }
+      const [source] = validateAgentSources([input.source]);
+      return { method: 'POST', path: '/api/agent/patch-preview', body: { task: input.task.trim(), source } };
+    }
     case 'decide': {
       if (!['APPROVED', 'REJECTED'].includes(input.decision)) throw new Error('Invalid decision');
       return { method: 'POST', path: `/api/agent/proposals/${id}/decision`, body: { decision: input.decision } };

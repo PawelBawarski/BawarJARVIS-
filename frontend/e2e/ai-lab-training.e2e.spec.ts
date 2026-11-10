@@ -18,6 +18,14 @@ test('AI Lab renders training controls and reflects backend progress', async ({p
   const match=options.find(x=>/ai lab|laboratorium ai/i.test(x));
   expect(match, 'An AI Lab module must be registered').toBeTruthy();
   await switcher.selectOption({label:match!});
+  // JARVIS_16A_E2E_NAV_PREP_V1 — aktywuj moduł rzeczywistym przełącznikiem UI
+  const jarvisAuditLabSelect = page.locator('app-module-switcher select').first();
+  await expect(jarvisAuditLabSelect).toBeVisible();
+  await jarvisAuditLabSelect.selectOption('lab');
+  await expect(page.getByTestId('jarvis-lab-ux')).toBeVisible();
+  await page.getByTestId('jarvis-lab-existing').evaluate(element => {
+    (element as HTMLDetailsElement).open = true;
+  });
   await expect(page.getByTestId('ai-lab-training')).toBeVisible();
   await expect(page.getByTestId('ai-lab-status')).toHaveText('RUNNING');
   await expect(page.getByTestId('ai-lab-start')).toBeDisabled();

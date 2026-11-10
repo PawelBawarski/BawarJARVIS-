@@ -1,0 +1,22 @@
+<section class="sandbox" data-testid="agent-sandbox" aria-label="Izolowana kontrola składni">
+  <h4>16.4 — Izolowana kontrola składni (Docker)</h4>
+  <p>Sprawdza składnię propozycji poza projektem, bez uruchamiania kodu i bez dostępu do sieci.
+    Obsługuje TS, TSX, JS, CJS, JSON i samodzielne pliki Java.
+    To <strong>nie jest pełny build ani test jednostkowy</strong>.</p>
+  <button type="button" data-testid="agent-sandbox-check" (click)="check()"
+    [disabled]="busy() || !sandbox.available || !supported()">
+    {{ busy() ? 'Kontrola trwa…' : 'Sprawdź propozycję w Dockerze' }}
+  </button>
+  @if (!supported()) { <p role="status">Dla tego formatu kontrola składni nie jest jeszcze dostępna.</p> }
+  @if (!sandbox.available) { <p role="status">Uruchom aplikację Electron, aby sprawdzić propozycję.</p> }
+  @if (result(); as report) {
+    <div class="sandbox__result" data-testid="agent-sandbox-report" role="status">
+      <strong>Wynik: {{ report.status === 'passed' ? 'Składnia poprawna' : report.status === 'failed' ? 'Błąd składni' : report.status === 'inconclusive' ? 'Wynik niejednoznaczny' : 'Kontrola niedostępna' }}</strong>
+      <p>{{ report.message }}</p>
+      @if (report.diagnostics) { <pre data-testid="agent-sandbox-diagnostics">{{ report.diagnostics }}</pre> }
+    </div>
+  }
+  @if (error()) { <p class="sandbox__error" data-testid="agent-sandbox-error" role="alert">{{ error() }}</p> }
+</section>
+<!-- JARVIS_STAGE16_5_PROJECT_TEST -->
+<app-agent-project-test [preview]="preview()" />

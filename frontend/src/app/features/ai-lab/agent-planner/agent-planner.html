@@ -68,6 +68,41 @@
     @if (!workspaceApi.available) { <p>Odczyt plików wymaga okna Electron.</p> }
   </details>
 
+  <details class="agent-planner__patch" data-testid="agent-diff-section" open>
+    <summary>16.3 — proponowane zmiany kodu (podgląd diff)</summary>
+    <p>Najpierw dodaj plik do kontekstu powyżej. Jarvis użyje tylko wybranego fragmentu
+      i zadania z pola poniżej (lub zadania zaznaczonego planu). Nie zmienia plików na dysku.</p>
+    @if (sources().length) {
+      <label for="jarvis-agent-diff-file">Fragment do zmiany</label>
+      <select id="jarvis-agent-diff-file" data-testid="agent-diff-file"
+        [value]="diffSource()?.relativePath ?? ''"
+        (change)="selectDiffSource($any($event.target).value)">
+        @for (source of sources(); track source.relativePath) {
+          <option [value]="source.relativePath">{{ source.relativePath }}</option>
+        }
+      </select>
+    }
+    <button type="button" data-testid="agent-generate-diff"
+      [disabled]="!api.available || !diffSource() || !(task().trim() || selected()?.task) || busy() || diffBusy()"
+      (click)="generateDiff()">{{ diffBusy() ? 'Qwen przygotowuje zmianę…' : 'Wygeneruj podgląd diff' }}</button>
+    @if (diffError()) { <p role="alert" class="agent-planner__error" data-testid="agent-diff-error">{{ diffError() }}</p> }
+    @if (diffPreview(); as patch) {
+      <div class="agent-planner__patch-result" data-testid="agent-diff-result">
+        <p class="agent-planner__notice">{{ patch.notice }}</p>
+        <p><strong>Plik:</strong> {{ patch.relativePath }}</p>
+        <div class="agent-planner__patch-columns">
+          <div><h4>Oryginalny fragment</h4><pre data-testid="agent-diff-original">{{ patch.original }}</pre></div>
+          <div><h4>Propozycja Qwen</h4><pre data-testid="agent-diff-proposed">{{ patch.proposed }}</pre></div>
+        </div>
+        <h4>Porównanie zmian (tylko do podglądu)</h4>
+        <pre class="agent-planner__patch-diff" data-testid="agent-diff-text">{{ patch.diff }}</pre>
+        <!-- JARVIS_STAGE16_4_SANDBOX -->
+        <app-agent-sandbox [preview]="patch" />
+        <p>Żadna zmiana nie została zapisana ani uruchomiona. Zatwierdzenie planu nie wdraża tego diffu.</p>
+      </div>
+    }
+  </details>
+
   <div class="agent-planner__form">
     <label for="jarvis-agent-task">Co Jarvis ma zaplanować?</label>
     <textarea id="jarvis-agent-task" rows="3" maxlength="1200"
@@ -128,6 +163,6 @@
     <p>Przykład: wpisz „Dodaj eksport czatu do PDF i testy”. Qwen przygotuje plan. Akceptacja
       zapisuje status w PostgreSQL, ale <strong>nie edytuje kodu ani nie uruchamia poleceń</strong>.
       Model widzi tylko fragmenty plików zatwierdzone przez Ciebie w sekcji „Analiza kodu projektu”.
-      Podgląd diffu i uruchamianie testów w izolacji będą osobnym, późniejszym etapem.</p>
+      Podgląd diffu jest dostępny w etapie 16.3; uruchamianie testów i wdrażanie zmian będą osobnymi etapami.</p>
   </details>
 </section>

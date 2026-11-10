@@ -1,0 +1,37 @@
+<section class="workspace-apply" data-testid="agent-workspace-apply" aria-label="Wdrażanie przetestowanej zmiany">
+  <h4>16.6 — Wdrożenie po Twojej akceptacji</h4>
+  <p>Zmiana jednego fragmentu w wybranym pliku projektu. Wymaga testu 16.5 zaliczonego w Electronie,
+    świadomej zgody i dodatkowego natywnego potwierdzenia. Kopia zapasowa pozwoli ją cofnąć.</p>
+  @if (!api.available) { <p role="status">Zapis dostępny wyłącznie w aplikacji Electron.</p> }
+  @if (!grant()) { <p data-testid="agent-apply-blocked" role="status">Najpierw uruchom i zalicz testy z etapu 16.5. Bez pomyślnego wyniku zapis jest zablokowany.</p> }
+  <label class="workspace-apply__consent">
+    <input type="checkbox" data-testid="agent-apply-consent" [checked]="confirmed()"
+      [disabled]="busy() || !!deployment() || !grant()"
+      (change)="confirmed.set($any($event.target).checked)" />
+    Przeczytałem diff i świadomie zgadzam się na zapis tej jednej zmiany do projektu.
+  </label>
+  <button type="button" data-testid="agent-apply-run" [disabled]="!canApply()" (click)="apply()">
+    {{ busy() ? 'Operacja w toku…' : 'Wdróż przetestowaną zmianę' }}
+  </button>
+  @if (deployment(); as saved) {
+    <p data-testid="agent-apply-file">Zmieniony plik: <code>{{ saved.relativePath }}</code></p>
+    <button type="button" data-testid="agent-apply-rollback" [disabled]="busy()" (click)="rollback()">
+      Cofnij to wdrożenie
+    </button>
+  }
+  @if (history().length) {
+    <div class="workspace-apply__history" data-testid="agent-apply-history">
+      <strong>Ostatnie wdrożenia — dostępne do cofnięcia także po restarcie Jarvisa</strong>
+      @for (entry of history(); track entry.deploymentId) {
+        <div class="workspace-apply__history-row">
+          <code>{{ entry.relativePath }}</code>
+          <button type="button" [disabled]="busy()" (click)="rollbackId(entry.deploymentId)">
+            Cofnij wdrożenie
+          </button>
+        </div>
+      }
+    </div>
+  }
+  @if (message()) { <p role="status" data-testid="agent-apply-message">{{ message() }}</p> }
+  @if (error()) { <p role="alert" data-testid="agent-apply-error">{{ error() }}</p> }
+</section>

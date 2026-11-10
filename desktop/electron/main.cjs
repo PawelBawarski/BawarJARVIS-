@@ -3,7 +3,10 @@ const { registerLabIpc } = require('./lab-ipc.cjs');
 const { startPackagedBackend, stopPackagedBackend } = require('./backend-runtime.cjs');
 const { startPackagedLlm, stopPackagedLlm } = require('./local-llm-runtime.cjs');
 const { registerChatIpc } = require('./chat-ipc.cjs');
-const { registerAgentIpc } = require('./agent-proposal-ipc.cjs'); // JARVIS_STAGE16_PLANNER
+const { registerAgentIpc } = require('./agent-proposal-ipc.cjs');
+const { registerSandboxIpc } = require('./agent-sandbox-check.cjs'); // JARVIS_STAGE16_4_SANDBOX // JARVIS_STAGE16_PLANNER
+const { registerProjectTestIpc } = require('./agent-project-test.cjs');
+const { createDeploymentGate, registerWorkspaceApplyIpc } = require('./agent-workspace-apply.cjs'); // JARVIS_16_6_NATIVE_APPLY // JARVIS_STAGE16_5_PROJECT_TEST
 const { registerResearchIpc, registerResearchOpenIpc } = require('./research-ipc.cjs');
 const { checkInternet } = require('./connectivity.cjs');
 const { shell } = require('electron');
@@ -163,6 +166,13 @@ app
     // Chat: fixed HTTP endpoints, validated sender, token only in Electron main.
     registerChatIpc(ipcMain, (event) => isTrustedSender(event, useBuiltUi));
     registerAgentIpc(ipcMain, (event) => isTrustedSender(event, useBuiltUi));
+    registerSandboxIpc(ipcMain, (event) => isTrustedSender(event, useBuiltUi));
+    const deploymentGate = createDeploymentGate({ userDataDir: app.getPath('userData'), dialog });
+    registerProjectTestIpc(ipcMain, (event) => isTrustedSender(event, useBuiltUi), {
+      userDataDir: app.getPath('userData'),
+      onPassed: (request, sourceSha256) => deploymentGate.issueGrant(request, sourceSha256),
+    });
+    registerWorkspaceApplyIpc(ipcMain, (event) => isTrustedSender(event, useBuiltUi), deploymentGate);
     // JARVIS_15_RESEARCH_MEMORY - only fixed research operations and approved Wikimedia links.
     registerResearchIpc(ipcMain, (event) => isTrustedSender(event, useBuiltUi));
     registerResearchOpenIpc(ipcMain, (event) => isTrustedSender(event, useBuiltUi), shell);

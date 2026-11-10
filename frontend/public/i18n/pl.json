@@ -22,11 +22,7 @@
   "sidebar.openMenu": "Otwórz menu",
   "sidebar.closeMenu": "Zamknij menu",
   "workspace.chat": "Czat",
-  "workspace.mining": "Kopanie",
   "workspace.lab": "AI Lab",
-  "mining.title": "Mining",
-  "mining.description": "Moduł zarządzania kopaniem kryptowalut.",
-  "mining.status": "Silnik wydobycia nie jest jeszcze podłączony.",
   "lab.title": "AI Lab",
   "lab.description": "Miejsce kontrolowanego rozwoju Jarvisa.",
   "lab.status": "Agent jest zatrzymany.",
@@ -157,5 +153,12 @@
   "aiLab.workspace.readOnly": "TYLKO ODCZYT",
   "aiLab.workspace.none": "Nie wybrano katalogu",
   "aiLab.workspace.permission": "Żaden plik nie będzie zapisywany ani wykonywany. W przyszłości każdą proponowaną zmianę zatwierdzisz osobno.",
-  "aiLab.workspace.empty": "Brak dozwolonych plików w tym folderze."
+  "aiLab.workspace.empty": "Brak dozwolonych plików w tym folderze.",
+  "chat.llmUnavailable": "Model Qwen3 8B nie jest dostępny.",
+  "security.reachable": "API odpowiada",
+  "security.unavailable": "Brak odpowiedzi API",
+  "chat.deleteDialog.title": "Usunąć rozmowę?",
+  "chat.deleteDialog.warning": "Tej operacji nie można cofnąć.",
+  "chat.deleteDialog.cancel": "Anuluj",
+  "chat.deleteDialog.confirm": "Usuń"
 }

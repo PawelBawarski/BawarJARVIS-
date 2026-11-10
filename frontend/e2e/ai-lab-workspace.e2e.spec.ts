@@ -23,6 +23,14 @@ test('AI Lab workspace is read-only and shows approved files', async ({ page }) 
   const option = options.find(v => /ai lab/i.test(v));
   expect(option).toBeTruthy();
   await select.selectOption({ label: option! });
+  // JARVIS_16A_E2E_NAV_PREP_V1 — aktywuj moduł rzeczywistym przełącznikiem UI
+  const jarvisAuditLabSelect = page.locator('app-module-switcher select').first();
+  await expect(jarvisAuditLabSelect).toBeVisible();
+  await jarvisAuditLabSelect.selectOption('lab');
+  await expect(page.getByTestId('jarvis-lab-ux')).toBeVisible();
+  await page.getByTestId('jarvis-lab-existing').evaluate(element => {
+    (element as HTMLDetailsElement).open = true;
+  });
   await expect(page.getByTestId('ai-lab-workspace')).toBeAttached();
   const workspace = page.getByTestId('ai-lab-workspace');
   await workspace.getByTestId('workspace-choose').click();

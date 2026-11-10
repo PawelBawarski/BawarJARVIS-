@@ -1,0 +1,19 @@
+:host { display: block; min-width: 0; }
+.workspace-apply {
+  display: grid; gap: 0.7rem; padding: 1rem; margin-top: 1rem;
+  border: 1px solid var(--border); border-radius: 12px;
+  background: var(--panel-soft); color: var(--text);
+  h4, p { margin: 0; }
+  h4 { font-size: 0.9rem; }
+  p, label { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+  &__consent { display: flex; gap: 0.5rem; align-items: flex-start; }
+  &__consent input { flex: 0 0 auto; margin-top: 0.2rem; }
+  button { justify-self: start; padding: 0.6rem 0.9rem; border: 1px solid var(--border);
+    border-radius: 8px; background: var(--accent-soft); color: var(--text); cursor: pointer; }
+  button:disabled { opacity: 0.55; cursor: not-allowed; }
+  [role="alert"] { color: var(--danger, #d55); }
+  code { overflow-wrap: anywhere; }
+  &__history { display: grid; gap: 0.45rem; padding-top: 0.7rem; border-top: 1px solid var(--border); }
+  &__history-row { display: flex; gap: 0.5rem; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+
+}

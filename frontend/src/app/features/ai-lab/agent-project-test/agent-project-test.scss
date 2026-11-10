@@ -1,0 +1,22 @@
+:host { display: block; min-width: 0; }
+.project-test {
+  min-width: 0;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel-soft);
+  color: var(--text);
+
+  h4 { margin: 0 0 .5rem; font-size: 1rem; }
+  p { color: var(--muted); line-height: 1.5; }
+  &__consent { display: flex; gap: .6rem; align-items: flex-start; margin: .8rem 0; cursor: pointer; }
+  &__consent input { margin-top: .25rem; }
+  button { padding: .65rem 1rem; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--accent-soft); color: var(--text); cursor: pointer; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  &__result { margin-top: .75rem; }
+  &__error { color: #dd5656; }
+  pre { max-height: 250px; overflow: auto; white-space: pre-wrap; word-break: break-word;
+    background: var(--bg); padding: .8rem; border-radius: 8px; font-size: .75rem; }
+}

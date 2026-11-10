@@ -49,8 +49,11 @@ test('only user-reviewed local code reaches the Qwen planning request', async ({
     for (let step = 0; step < 12 && !(await panel.isVisible()); step++) await next.click();
   }
   await expect(panel).toBeVisible();
-  const context = page.getByTestId('agent-context');
-  await context.locator('summary').click();
+  const context = panel.getByTestId('agent-context');
+  // This test checks explicit consent for Qwen context, not the native <details> click.
+  // Open the native disclosure directly to avoid an intermittent hidden-summary click.
+  await context.evaluate(element => { (element as HTMLDetailsElement).open = true; });
+  await expect(context.getByTestId('agent-workspace-choose')).toBeVisible();
   await context.getByTestId('agent-workspace-choose').click();
   await context.getByRole('button', { name: 'README.md' }).click();
   await expect(context.getByTestId('agent-workspace-preview')).toContainText('Architektura projektu');
