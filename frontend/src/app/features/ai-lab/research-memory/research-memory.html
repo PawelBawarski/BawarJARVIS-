@@ -1,0 +1,38 @@
+<section class="research-memory" data-testid="research-memory" aria-label="Badania internetu i pamięć Jarvisa">
+  <div class="research-memory__head">
+    <div><p class="eyebrow">J.A.R.V.I.S. / RESEARCH</p><h3>Internet i pamięć wiedzy</h3>
+      <p>Wyszukaj w Wikipedii, przejrzyj źródła i zatwierdź, co Jarvis ma zapamiętać. Zapisane fragmenty mogą uzupełniać kontekst czatu Qwen.</p></div>
+    <button type="button" (click)="refresh()" [disabled]="busy()" data-testid="research-refresh">Moja pamięć</button>
+  </div>
+  <div class="research-memory__form">
+    <label for="jarvis-research-query">Czego szukamy?</label>
+    <div class="research-memory__controls">
+      <input id="jarvis-research-query" type="search" data-testid="research-input" [value]="query()" (input)="query.set($any($event.target).value)" (keydown.enter)="search()" placeholder="Np. Angular, transformery, elektryczność" />
+      <select aria-label="Język Wikipedii" [value]="language()" (change)="language.set($any($event.target).value)"><option value="pl">Polski</option><option value="en">English</option></select>
+      <button type="button" (click)="search()" [disabled]="busy() || !query().trim()" data-testid="research-search">Szukaj</button>
+    </div>
+  </div>
+  @if(error()) { <p role="alert" class="research-memory__error">{{error()}}</p> }
+  @if(info()) { <p role="status">{{info()}}</p> }
+  @if(results().length) {
+    <div class="research-memory__results" data-testid="research-results">
+      <h4>Wyniki — wymagają Twojej akceptacji</h4>
+      @for(hit of results();track hit.url) {
+        <article class="research-memory__card">
+          <h5>{{hit.title}}</h5><p>{{hit.excerpt}}</p>
+          <div class="research-memory__actions"><button type="button" (click)="openSource(hit.url)">Otwórz źródło</button>
+          <button type="button" (click)="approve(hit)" [disabled]="busy()">Zatwierdź do pamięci</button></div>
+        </article>
+      }
+    </div>
+  }
+  @if(notes().length) {
+    <div class="research-memory__saved" data-testid="research-notes"><h4>Zapisana wiedza ({{notes().length}})</h4>
+      @for(note of notes(); track note.id) {
+        <article class="research-memory__card"><h5>{{note.title}}</h5><p>{{note.excerpt}}</p>
+        <div class="research-memory__actions"><button type="button" (click)="openSource(note.url)">Otwórz źródło</button><button type="button" (click)="remove(note)" [disabled]="busy()">Usuń</button></div></article>
+      }
+    </div>
+  }
+  <details><summary>Jak to działa? Przykłady</summary><p>Wpisz „Angular Signals”, kliknij Szukaj, otwórz źródło, a następnie zatwierdź wybrany artykuł. Jarvis zapisze wyłącznie jego krótki opis w PostgreSQL. Przy kolejnych pytaniach o ten temat użyje pasujących notatek jako kontekstu. To wyszukiwanie tekstowe, nie trenowanie parametrów Qwen.</p><p>Internet wymaga połączenia. Zapisana wiedza może być potem wykorzystana offline.</p></details>
+</section>

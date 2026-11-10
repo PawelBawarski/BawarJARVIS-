@@ -1,0 +1,133 @@
+<section class="agent-planner" data-testid="agent-planner" aria-label="Propozycje rozwoju Jarvisa">
+  <header class="agent-planner__header">
+    <div>
+      <p class="agent-planner__eyebrow">J.A.R.V.I.S. / AGENT 16.0</p>
+      <h3>Propozycje ulepszeń</h3>
+      <p>Opisz zadanie. Lokalny Qwen przygotuje plan, który możesz ocenić, poprawić lub odrzucić.</p>
+    </div>
+    <button type="button" (click)="refresh()" [disabled]="busy() || !api.available" data-testid="agent-refresh">
+      Odśwież historię
+    </button>
+  </header>
+
+  @if (!api.available) {
+    <p role="status" class="agent-planner__notice">Planowanie wymaga uruchomienia Jarvisa w Electronie.</p>
+  }
+
+  <details class="agent-planner__context" data-testid="agent-context">
+    <summary>Analiza kodu projektu (tylko wybrane pliki, tylko do odczytu)</summary>
+    <p>Wybierz katalog roboczy i przejrzyj plik. Dopiero kliknięcie „Dodaj do kontekstu”
+      przekaże jego fragment do lokalnego Qwen podczas generowania planu. Nie wysyłaj plików z hasłami i kluczami.</p>
+    <div class="agent-planner__context-actions">
+      <button type="button" data-testid="agent-workspace-choose" [disabled]="contextBusy() || busy() || !workspaceApi.available"
+        (click)="chooseWorkspace()">Wybierz katalog</button>
+      <button type="button" data-testid="agent-workspace-refresh" [disabled]="contextBusy() || busy() || !workspaceApi.available"
+        (click)="loadWorkspace()">Otwórz wybrany katalog</button>
+    </div>
+    @if (workspaceRoot()) {
+      <p class="agent-planner__path" data-testid="agent-workspace-path">{{ workspaceRoot() }}</p>
+    }
+    @if (workspaceListing(); as listing) {
+      <div class="agent-planner__files" data-testid="agent-workspace-files">
+        <div class="agent-planner__context-actions">
+          <button type="button" data-testid="agent-workspace-back" [disabled]="contextBusy() || !listing.relativePath"
+            (click)="goWorkspaceBack()">Wstecz</button>
+          <span>{{ listing.relativePath || '/' }}</span>
+        </div>
+        @for (entry of listing.entries; track entry.relativePath) {
+          <button type="button" [disabled]="contextBusy()" (click)="openWorkspaceEntry(entry)">
+            {{ entry.kind === 'directory' ? '📁' : '📄' }} {{ entry.name }}
+          </button>
+        }
+      </div>
+    }
+    @if (workspacePreview(); as preview) {
+      <div class="agent-planner__preview" data-testid="agent-workspace-preview">
+        <p><strong>{{ preview.relativePath }}</strong> — podgląd maks. {{ MAX_EXCERPT }} znaków</p>
+        <pre>{{ preview.content.slice(0, MAX_EXCERPT) }}</pre>
+        @if (preview.content.length > MAX_EXCERPT) {
+          <p>Pokazano tylko początek pliku. Dalsza część NIE zostanie wysłana.</p>
+        }
+        <button type="button" data-testid="agent-attach-source" [disabled]="contextBusy() || busy()"
+          (click)="attachPreview()">Dodaj do kontekstu Qwen</button>
+      </div>
+    }
+    @if (sources().length) {
+      <div class="agent-planner__selected" data-testid="agent-selected-sources">
+        <h4>Zatwierdzone fragmenty ({{ sources().length }}/3)</h4>
+        @for (source of sources(); track source.relativePath) {
+          <div>
+            <span>{{ source.relativePath }} ({{ source.content.length }} znaków)</span>
+            <button type="button" [disabled]="busy()" [attr.aria-label]="'Usuń z kontekstu ' + source.relativePath"
+              (click)="removeSource(source.relativePath)">Usuń</button>
+          </div>
+        }
+      </div>
+    }
+    @if (contextError()) { <p class="agent-planner__error" role="alert">{{ contextError() }}</p> }
+    @if (!workspaceApi.available) { <p>Odczyt plików wymaga okna Electron.</p> }
+  </details>
+
+  <div class="agent-planner__form">
+    <label for="jarvis-agent-task">Co Jarvis ma zaplanować?</label>
+    <textarea id="jarvis-agent-task" rows="3" maxlength="1200"
+      data-testid="agent-task" [value]="task()"
+      (input)="task.set($any($event.target).value)"
+      placeholder="Np. Dodaj wyszukiwanie w historii rozmów oraz testy Vitest i Playwright"></textarea>
+    <button type="button" data-testid="agent-generate"
+      [disabled]="busy() || !api.available || !task().trim()"
+      (click)="generate()">{{ busy() ? 'Pracuję…' : 'Zaproponuj plan' }}</button>
+  </div>
+
+  @if (error()) { <p role="alert" class="agent-planner__error">{{ error() }}</p> }
+  @if (info()) { <p role="status" class="agent-planner__notice">{{ info() }}</p> }
+
+  @if (proposals().length) {
+    <div class="agent-planner__history" data-testid="agent-proposals">
+      <h4>Historia propozycji</h4>
+      <div class="agent-planner__tabs">
+        @for (proposal of proposals(); track proposal.id) {
+          <button type="button" [disabled]="busy()"
+            [attr.aria-pressed]="selected()?.id === proposal.id"
+            [class.agent-planner__tab--active]="selected()?.id === proposal.id"
+            (click)="choose(proposal)">
+            <span>{{ proposal.task }}</span>
+            <small>{{ statusLabel(proposal.status) }}</small>
+          </button>
+        }
+      </div>
+    </div>
+  }
+
+  @if (selected(); as proposal) {
+    <article class="agent-planner__detail" data-testid="agent-proposal-detail">
+      <div class="agent-planner__detail-head">
+        <h4>Plan do przeglądu</h4>
+        <span data-testid="agent-status">{{ statusLabel(proposal.status) }}</span>
+      </div>
+      <h5>{{ proposal.task }}</h5>
+      <pre class="agent-planner__plan" data-testid="agent-plan">{{ proposal.plan }}</pre>
+      @if (proposal.status === 'PENDING') {
+        <div class="agent-planner__review">
+          <button type="button" data-testid="agent-approve" [disabled]="busy()" (click)="approve()">Akceptuj plan</button>
+          <button type="button" data-testid="agent-reject" [disabled]="busy()" (click)="reject()">Odrzuć</button>
+        </div>
+        <label for="jarvis-agent-feedback">Uwagi do kolejnej wersji planu</label>
+        <textarea id="jarvis-agent-feedback" rows="2" maxlength="1200"
+          data-testid="agent-feedback" [value]="feedback()"
+          (input)="feedback.set($any($event.target).value)"
+          placeholder="Np. Dodaj test bezpieczeństwa i nie ruszaj bazy danych"></textarea>
+        <button type="button" data-testid="agent-revise"
+          [disabled]="busy() || !feedback().trim()" (click)="revise()">Popraw plan</button>
+      }
+    </article>
+  }
+
+  <details class="agent-planner__help">
+    <summary>Jak działa planowanie w AI Lab?</summary>
+    <p>Przykład: wpisz „Dodaj eksport czatu do PDF i testy”. Qwen przygotuje plan. Akceptacja
+      zapisuje status w PostgreSQL, ale <strong>nie edytuje kodu ani nie uruchamia poleceń</strong>.
+      Model widzi tylko fragmenty plików zatwierdzone przez Ciebie w sekcji „Analiza kodu projektu”.
+      Podgląd diffu i uruchamianie testów w izolacji będą osobnym, późniejszym etapem.</p>
+  </details>
+</section>

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { afterEveryRender, Component, ElementRef, inject, signal, viewChild, DestroyRef } from '@angular/core';
 import { ChatStore } from '../../../core/services/chat-store';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 
@@ -11,12 +11,96 @@ import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 export class ChatView {
   readonly store = inject(ChatStore);
   readonly draft = signal('');
+  readonly pendingText = signal('');
   readonly messages = this.store.messages;
+  readonly messageList = viewChild<ElementRef<HTMLElement>>('messageList');
+  readonly messageInput = viewChild<ElementRef<HTMLInputElement>>('messageInput');
+  private lastScrollMarker = '';
+  private focusAfterReply = false;
+
+  // JARVIS_CHAT_SCROLL_15_6: scroll after message DOM changes and model replies.
+  private readonly destroyRef = inject(DestroyRef);
+  private observedPane?: HTMLElement;
+  private contentObserver?: MutationObserver;
+  private scrollFrameId?: number;
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.contentObserver?.disconnect();
+      if (this.scrollFrameId !== undefined && typeof cancelAnimationFrame === 'function') {
+        cancelAnimationFrame(this.scrollFrameId);
+      }
+    });
+
+    afterEveryRender({
+      write: () => {
+        const pane = this.messageList()?.nativeElement;
+        if (pane && pane !== this.observedPane) {
+          this.contentObserver?.disconnect();
+          this.observedPane = pane;
+          // Detect actual DOM insertions, including asynchronous model answers.
+          this.contentObserver = new MutationObserver(() => this.scrollToBottom());
+          this.contentObserver.observe(pane, {
+            childList: true, subtree: true, characterData: true,
+          });
+          this.scrollToBottom();
+        }
+
+        const marker = [
+          this.store.activeId(),
+          ...this.messages().map(message => message.id),
+          this.pendingText(),
+          String(this.store.sending()),
+        ].join('|');
+        if (pane && marker !== this.lastScrollMarker) {
+          this.lastScrollMarker = marker;
+          this.scrollToBottom();
+        }
+
+        if (this.focusAfterReply && !this.store.sending() && !this.store.loading()) {
+          const input = this.messageInput()?.nativeElement;
+          if (input && !input.disabled) {
+            input.focus({ preventScroll: true });
+            this.focusAfterReply = false;
+          }
+        }
+      },
+    });
+  }
+
+  /** The message pane scrolls, not the whole desktop window. */
+  private scrollToBottom(): void {
+    const pane = this.messageList()?.nativeElement;
+    if (!pane) return;
+    pane.scrollTop = pane.scrollHeight;
+    // One extra pass after layout: useful for fonts and delayed content sizing.
+    if (typeof requestAnimationFrame === 'function') {
+      if (this.scrollFrameId !== undefined && typeof cancelAnimationFrame === 'function') {
+        cancelAnimationFrame(this.scrollFrameId);
+      }
+      this.scrollFrameId = requestAnimationFrame(() => {
+        this.scrollFrameId = undefined;
+        if (pane.isConnected && pane === this.messageList()?.nativeElement) {
+          pane.scrollTop = pane.scrollHeight;
+        }
+      });
+    }
+  }
 
   async sendMessage(): Promise<void> {
     const text = this.draft().trim();
-    if (!text || this.store.sending()) return;
-    if (await this.store.sendMessage(text)) this.draft.set('');
+    if (!text || this.store.sending() || this.store.busy() || this.store.loading()) return;
+    this.draft.set('');
+    this.pendingText.set(text);
+    try {
+      const success = await this.store.sendMessage(text);
+      if (!success && !this.draft()) this.draft.set(text);
+    } catch {
+      if (!this.draft()) this.draft.set(text);
+    } finally {
+      this.pendingText.set('');
+      this.focusAfterReply = true;
+    }
   }
   newChat(): void { this.store.newChat(); }
   deleteChat(): void { this.store.deleteActiveChat(); }

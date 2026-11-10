@@ -14,13 +14,11 @@ import java.util.UUID;
 public class ChatConversationRepository {
     private final JdbcTemplate jdbc;
 
-    private static final RowMapper<ChatConversation> MAPPER = (rs, rowNum) ->
-            new ChatConversation(
-                    rs.getObject("id", UUID.class),
-                    rs.getString("title"),
-                    rs.getObject("created_at", OffsetDateTime.class).toInstant(),
-                    rs.getObject("updated_at", OffsetDateTime.class).toInstant()
-            );
+    private static final RowMapper<ChatConversation> MAPPER = (rs, rowNum) -> new ChatConversation(
+            rs.getObject("id", UUID.class),
+            rs.getString("title"),
+            rs.getObject("created_at", OffsetDateTime.class).toInstant(),
+            rs.getObject("updated_at", OffsetDateTime.class).toInstant());
 
     public ChatConversationRepository(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
@@ -62,5 +60,20 @@ public class ChatConversationRepository {
 
     public boolean delete(UUID id) {
         return jdbc.update("DELETE FROM jarvis_conversations WHERE id = ?", id) == 1;
+    }
+
+    public Optional<ChatConversation> rename(UUID id, String title) {
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        int updated = jdbc.update("""
+                UPDATE jarvis_conversations
+                SET title = ?, updated_at = ?
+                WHERE id = ?
+                """, title, now, id);
+
+        if (updated != 1) {
+            return Optional.empty();
+        }
+
+        return findById(id);
     }
 }

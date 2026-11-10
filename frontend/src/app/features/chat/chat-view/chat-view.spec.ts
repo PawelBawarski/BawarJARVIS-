@@ -32,7 +32,7 @@ describe('ChatView — actual backend messages, unchanged layout', () => {
     expect(fixture.nativeElement.querySelector('.composer')).toBeTruthy();
     expect(fixture.nativeElement.textContent).toContain('J.A.R.V.I.S.');
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="chat-model-mode"]')?.textContent).toContain('Tryb lokalny podstawowy');
+    expect(fixture.nativeElement.querySelector('[data-testid="chat-model-mode"]')?.textContent).toContain('Silnik rozmowy: lokalny Qwen3 8B');
   });
   it('shows backend assistant response after send, never fake text', async () => {
     const fixture = TestBed.createComponent(ChatView);

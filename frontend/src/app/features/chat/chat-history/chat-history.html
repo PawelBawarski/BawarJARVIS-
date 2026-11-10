@@ -1,14 +1,13 @@
 <section class="chat-history">
   <div class="chat-history__header">
-    <h2>
-      {{ 'sidebar.history' | translate }}
-    </h2>
-
+    <h2>{{ 'sidebar.history' | translate }}</h2>
     <button
       type="button"
       class="chat-history__new"
+      data-testid="chat-new"
       [attr.aria-label]="'chat.new' | translate"
       [title]="'chat.new' | translate"
+      [disabled]="store.busy() || store.sending() || store.loading()"
       (click)="createChat()"
     >
       <span aria-hidden="true">+</span>
@@ -17,17 +16,52 @@
 
   <div class="chat-history__list">
     @for (chat of store.conversations(); track chat.id) {
-      <button
-        type="button"
-        class="chat-history__item"
-        [class.chat-history__item--active]="chat.id === store.activeId()"
-        [attr.aria-current]="chat.id === store.activeId() ? 'true' : null"
-        (click)="selectChat(chat.id)"
-      >
-        <span class="chat-history__item-title">
-          {{ chat.title || ('chat.new' | translate) }}
-        </span>
-      </button>
+      @if (chat.id) {
+        <div
+          class="chat-history__card"
+          [class.chat-history__card--active]="chat.id === store.activeId()"
+          [class.chat-history__card--editing]="editingId() === chat.id"
+        >
+          @if (editingId() === chat.id) {
+            <input
+              #renameInput
+              class="chat-history__edit-input"
+              type="text"
+              maxlength="200"
+              [attr.aria-label]="'Zmień nazwę rozmowy'"
+              [value]="editingTitle()"
+              (input)="updateEditingTitle(renameInput.value)"
+              (keydown.enter)="saveRename(chat.id)"
+              (keydown.escape)="cancelRename()"
+            />
+            <div class="chat-history__actions">
+              <button type="button" class="chat-history__icon-button"
+                title="Zapisz" aria-label="Zapisz" [disabled]="store.busy() || !editingTitle().trim()"
+                (click)="saveRename(chat.id)"><span aria-hidden="true">✓</span></button>
+              <button type="button" class="chat-history__icon-button"
+                title="Anuluj" aria-label="Anuluj" [disabled]="store.busy()"
+                (click)="cancelRename()"><span aria-hidden="true">×</span></button>
+            </div>
+          } @else {
+            <button
+              type="button"
+              class="chat-history__item"
+              [attr.aria-current]="chat.id === store.activeId() ? 'true' : null"
+              (click)="selectChat(chat.id)"
+            >
+              <span class="chat-history__item-title">{{ chat.title || ('chat.new' | translate) }}</span>
+            </button>
+            <div class="chat-history__actions">
+              <button type="button" class="chat-history__icon-button" title="Zmień nazwę"
+                aria-label="Zmień nazwę" [disabled]="store.busy() || store.sending()"
+                (click)="startRename(chat.id, chat.title, $event)"><span aria-hidden="true">✎</span></button>
+              <button type="button" class="chat-history__icon-button" title="Usuń rozmowę"
+                aria-label="Usuń rozmowę" [disabled]="store.busy() || store.sending()"
+                (click)="deleteChat(chat.id, $event)"><span aria-hidden="true">🗑</span></button>
+            </div>
+          }
+        </div>
+      }
     }
   </div>
 </section>

@@ -14,7 +14,7 @@ public class ChatPersistenceService {
     private final ChatMessageRepository messages;
 
     public ChatPersistenceService(ChatConversationRepository conversations,
-                                  ChatMessageRepository messages) {
+            ChatMessageRepository messages) {
         this.conversations = conversations;
         this.messages = messages;
     }
@@ -32,8 +32,8 @@ public class ChatPersistenceService {
     @Transactional(readOnly = true)
     public ChatConversation getConversation(UUID id) {
         Objects.requireNonNull(id, "Conversation ID cannot be null");
-        return conversations.findById(id).orElseThrow(() ->
-                new NoSuchElementException("Conversation not found: " + id));
+        return conversations.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Conversation not found: " + id));
     }
 
     @Transactional(readOnly = true)
@@ -65,5 +65,13 @@ public class ChatPersistenceService {
                     field + " must be non-blank and at most " + maxLength + " characters");
         }
         return value.strip();
+    }
+
+    @Transactional
+    public ChatConversation renameConversation(UUID conversationId, String title) {
+        Objects.requireNonNull(conversationId, "Conversation ID cannot be null");
+        String validated = validate(title, 200, "Title");
+        return conversations.rename(conversationId, validated)
+                .orElseThrow(() -> new NoSuchElementException("Conversation not found: " + conversationId));
     }
 }

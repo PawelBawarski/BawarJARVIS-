@@ -7,7 +7,7 @@ const os = require('node:os');
 
 const MAX_FILE_BYTES = 64 * 1024;
 const MAX_ENTRIES = 100;
-const MAX_DEPTH = 6;
+const MAX_DEPTH = 12; // Support Angular/Java nested source paths; protections unchanged.
 const ALLOWED_EXT = new Set([
   '.java', '.ts', '.tsx', '.js', '.jsx', '.cjs', '.mjs', '.json', '.html',
   '.scss', '.css', '.sql', '.xml', '.py', '.md', '.txt', '.yml', '.yaml',

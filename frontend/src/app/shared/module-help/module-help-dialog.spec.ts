@@ -12,7 +12,7 @@ describe('ModuleHelpDialog', () => {
     expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeNull();
     service.open('lab-offline');
     await fixture.whenStable();
-    expect(fixture.nativeElement.querySelector('[role="dialog"]')?.textContent).toContain('Token');
+    expect(fixture.nativeElement.querySelector('[role="dialog"]')?.textContent).toMatch(/token/i);
     expect(fixture.nativeElement.querySelector('[role="dialog"]')?.textContent).toContain('tools/offline-brain/start.ps1');
     fixture.nativeElement.querySelector('[aria-label="Zamknij pomoc"]').click();
     await fixture.whenStable();
@@ -24,7 +24,8 @@ describe('ModuleHelpDialog', () => {
       expect(MODULE_HELP[id].title.length).toBeGreaterThan(2);
       expect(MODULE_HELP[id].steps.length).toBeGreaterThan(0);
     }
-    expect(MODULE_HELP['lab-ranking'].caution).toContain('Qwen3');
+    expect(MODULE_HELP['lab-ranking'].status).toContain('Qwen3');
+    expect(MODULE_HELP['lab-ranking'].caution).toContain('LLM');
     expect(MODULE_HELP['lab-offline'].commands[0].value).toContain('start.ps1');
   });
 

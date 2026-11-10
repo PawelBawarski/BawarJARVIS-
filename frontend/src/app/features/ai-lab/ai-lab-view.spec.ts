@@ -39,7 +39,7 @@ describe('AiLabView', () => {
 
     const element: HTMLElement = fixture.nativeElement;
 
-    expect(element.querySelector('[role="status"]')?.textContent).toContain('lab.status');
+    expect(element.querySelector('.ai-lab-view__status[role="status"]')?.textContent).toContain('lab.status');
   });
 
   it('should keep agent controls disabled', () => {

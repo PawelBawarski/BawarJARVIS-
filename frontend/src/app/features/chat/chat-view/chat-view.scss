@@ -355,3 +355,32 @@
     font-size: 2rem;
   }
 }
+
+/* JARVIS_CHAT_LAYOUT_15_4: message sending state */
+.message--pending { opacity: 0.82; }
+.message--thinking { min-width: 100px; }
+.typing-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 1.5rem;
+  padding: 0.1rem 0;
+}
+.typing-indicator span {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  opacity: 0.4;
+  animation: jarvisChatTyping 1.05s ease-in-out infinite;
+}
+.typing-indicator span:nth-child(2) { animation-delay: .16s; }
+.typing-indicator span:nth-child(3) { animation-delay: .32s; }
+@keyframes jarvisChatTyping {
+  0%, 80%, 100% { transform: translateY(0); opacity: .35; }
+  40% { transform: translateY(-4px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .typing-indicator span { animation: none; opacity: .85; }
+}

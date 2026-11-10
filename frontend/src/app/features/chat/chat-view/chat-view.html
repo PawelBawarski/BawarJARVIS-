@@ -7,59 +7,118 @@
         {{ store.activeChat().title || ('chat.new' | translate) }}
       </p>
     </div>
+
     <div class="chat-header__actions">
-      <button type="button" class="chat-action" [disabled]="store.busy() || store.sending() || store.loading()"
-        [title]="'chat.new' | translate" [attr.aria-label]="'chat.new' | translate"
-        (click)="newChat()"><span aria-hidden="true">+</span></button>
-      <button type="button" class="chat-action" [disabled]="!store.activeId() || store.busy() || store.sending() || store.loading()"
-        [title]="'chat.delete' | translate" [attr.aria-label]="'chat.delete' | translate"
-        (click)="deleteChat()"><span aria-hidden="true">🗑</span></button>
+      <button
+        type="button"
+        class="chat-action"
+        [disabled]="store.busy() || store.sending() || store.loading()"
+        [title]="'chat.new' | translate"
+        [attr.aria-label]="'chat.new' | translate"
+        (click)="newChat()"
+      >
+        <span aria-hidden="true">+</span>
+      </button>
+
+      <button
+        type="button"
+        class="chat-action"
+        [disabled]="!store.activeId() || store.busy() || store.sending() || store.loading()"
+        [title]="'chat.delete' | translate"
+        [attr.aria-label]="'chat.delete' | translate"
+        (click)="deleteChat()"
+      >
+        <span aria-hidden="true">🗑</span>
+      </button>
     </div>
   </header>
-  <main class="chat-messages" data-testid="chat-messages">
-    @if (store.messages().length === 0) {
+
+  <main #messageList #messagesContainer class="chat-messages" data-testid="chat-messages">
+    @if (store.messages().length === 0 && !store.sending()) {
       <div class="welcome">
         <div class="ai-orb">J</div>
         <h2>J.A.R.V.I.S.</h2>
         <p>{{ 'chat.tagline' | translate }}</p>
       </div>
     }
+
     @for (message of store.messages(); track message.id) {
-      <div class="message" [class.message--user]="message.role === 'user'"
-        [class.message--assistant]="message.role === 'assistant'">
-        <span class="message__author">{{ message.role === 'user' ? ('chat.you' | translate) : 'JARVIS' }}</span>
+      <div
+        class="message"
+        [class.message--user]="message.role === 'user'"
+        [class.message--assistant]="message.role === 'assistant'"
+      >
+        <span class="message__author">
+          {{ message.role === 'user' ? ('chat.you' | translate) : 'JARVIS' }}
+        </span>
         <p>{{ message.content }}</p>
       </div>
     }
+
+    
+    @if (pendingText()) {
+      <div class="message message--user message--pending" data-testid="chat-pending-message">
+        <span class="message__author">{{ 'chat.you' | translate }}</span>
+        <p>{{ pendingText() }}</p>
+      </div>
+    }
+@if (store.sending()) {
+      <div
+        class="message message--assistant message--thinking" data-testid="chat-typing"
+        aria-live="polite"
+        aria-label="Jarvis pisze odpowiedź"
+      >
+        <span class="message__author">JARVIS</span>
+
+        <div class="typing-indicator" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    }
   </main>
+
   <footer class="chat-footer">
     <div class="composer">
-      <input #messageInput type="text" maxlength="4000"
-        data-testid="chat-input" [disabled]="store.sending() || store.busy() || store.loading()"
-        [attr.aria-label]="'chat.placeholder' | translate" [placeholder]="'chat.placeholder' | translate"
-        [value]="draft()" (input)="draft.set(messageInput.value)" (keydown.enter)="sendMessage()" />
-      <button type="button" data-testid="chat-send"
+      <input
+        #messageInput
+        type="text"
+        maxlength="4000"
+        data-testid="chat-input"
+        [disabled]="store.sending() || store.busy() || store.loading()"
+        [attr.aria-label]="'chat.placeholder' | translate"
+        [placeholder]="'chat.placeholder' | translate"
+        [value]="draft()"
+        (input)="draft.set(messageInput.value)"
+        (keydown.enter)="sendMessage()"
+      />
+
+      <button
+        type="button"
+        data-testid="chat-send"
         [disabled]="!draft().trim() || store.sending() || store.busy() || store.loading()"
-        (click)="sendMessage()">{{ 'chat.send' | translate }}</button>
+        (click)="sendMessage()"
+      >
+        {{ 'chat.send' | translate }}
+      </button>
     </div>
+
     @if (store.loading()) {
       <p class="chat-status" role="status">{{ 'chat.loading' | translate }}</p>
     } @else if (store.sending()) {
       <p class="chat-status" role="status">{{ 'chat.generating' | translate }}</p>
     } @else if (store.connected()) {
       <p class="chat-status" role="status">{{ 'chat.backendConnected' | translate }}</p>
-      <p class="chat-status chat-status--mode" data-testid="chat-model-mode">Silnik rozmowy: lokalny Qwen3 8B</p>
     } @else {
       <p class="chat-status" role="status">{{ 'chat.backendUnavailable' | translate }}</p>
     }
+
     @if (store.saveError()) {
       <p class="chat-status chat-status--error" role="alert">
-        @if (store.errorKey() === 'chat.llmUnavailable') {
-          Model Qwen3 8B nie jest dostępny. Sprawdź, czy lokalny silnik AI jest uruchomiony.
-        } @else {
-          {{ store.errorKey() | translate }}
-        }
+        {{ store.errorKey() | translate }}
       </p>
     }
+      <p class="chat-status" data-testid="chat-model-mode">Silnik rozmowy: lokalny Qwen3 8B</p>
   </footer>
 </section>

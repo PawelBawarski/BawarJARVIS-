@@ -91,3 +91,15 @@ test('IPC allows only read/status/choose/clear/list operations', () => {
     assert.throws(() => routeWorkspaceRequest({operation}), /UNSUPPORTED/);
   }
 });
+
+test('accepts deep project source paths but still denies traversal', t => {
+  const { root, instance } = fixture(t);
+  instance.select(root);
+  const rel = 'backend/src/main/java/pl/bawar/jarvis/chat/api/Sample.java';
+  const folders = path.dirname(rel);
+  fs.mkdirSync(path.join(root, folders), { recursive: true });
+  fs.writeFileSync(path.join(root, rel), 'class Sample {}');
+  assert.equal(instance.read(rel).content, 'class Sample {}');
+  assert.throws(() => instance.read('backend/src/../.env'));
+  assert.throws(() => instance.read('backend/node_modules/foo.java'));
+});

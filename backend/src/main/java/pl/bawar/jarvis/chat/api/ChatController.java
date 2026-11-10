@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pl.bawar.jarvis.persistence.chat.ChatConversation;
 import pl.bawar.jarvis.persistence.chat.ChatMessage;
-
+import org.springframework.web.bind.annotation.PatchMapping;
 import java.net.URI;
 import java.util.List;
 import java.util.Objects;
@@ -51,7 +51,7 @@ public class ChatController {
 
     @PostMapping("/{id}/messages")
     public ChatExchangeWriter.ChatTurn send(@PathVariable UUID id,
-                                             @RequestBody SendMessageRequest request) {
+            @RequestBody SendMessageRequest request) {
         return chats.sendMessage(id, request == null ? null : request.content());
     }
 
@@ -61,6 +61,18 @@ public class ChatController {
         return ResponseEntity.noContent().build();
     }
 
-    public record CreateChatRequest(String title) { }
-    public record SendMessageRequest(String content) { }
+    @PatchMapping("/{id}")
+    public ChatConversation rename(@PathVariable UUID id,
+            @RequestBody RenameChatRequest request) {
+        return chats.renameConversation(id, request == null ? null : request.title());
+    }
+
+    public record CreateChatRequest(String title) {
+    }
+
+    public record SendMessageRequest(String content) {
+    }
+
+    public record RenameChatRequest(String title) {
+    }
 }

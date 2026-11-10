@@ -1,0 +1,76 @@
+:host { display: block; min-width: 0; }
+.agent-planner {
+  box-sizing: border-box; width: 100%; min-width: 0; display: grid; gap: 1rem;
+  padding: 1rem; color: var(--text);
+  border: 1px solid var(--border); border-radius: 14px; background: var(--panel-soft);
+  * { box-sizing: border-box; }
+  button, input, textarea { font: inherit; }
+  button {
+    border: 1px solid var(--border); border-radius: 9px; background: var(--accent-soft);
+    color: var(--text); padding: .55rem .85rem; cursor: pointer;
+    &:hover:not(:disabled) { border-color: var(--accent); }
+    &:disabled { cursor: not-allowed; opacity: .6; }
+    &:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  }
+  textarea {
+    display: block; width: 100%; min-width: 0; resize: vertical;
+    padding: .7rem; border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text); background: var(--bg);
+    &:focus-visible { outline: 2px solid var(--accent); }
+  }
+  label { font-weight: 600; font-size: .85rem; }
+  h3, h4, h5, p { margin: 0; }
+  h3 { font-size: 1.16rem; }
+  h4 { font-size: 1rem; }
+  h5 { font-size: .94rem; }
+  &__eyebrow { color: var(--accent); font-size: .7rem; letter-spacing: .1em; }
+  &__header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; }
+  &__header > div { display: grid; gap: .35rem; flex: 1 1 17rem; }
+  &__header p { font-size: .86rem; opacity: .84; line-height: 1.5; }
+  &__form, &__detail, &__history { display: grid; gap: .65rem; min-width: 0; }
+  &__form > button, &__detail > button { justify-self: start; }
+  &__tabs { display: flex; flex-wrap: wrap; gap: .5rem; }
+  &__tabs button { max-width: 100%; min-width: 0; display: grid; text-align: left; gap: .2rem; }
+  &__tabs span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  &__tabs small { font-size: .7rem; opacity: .75; }
+  &__tab--active { border-color: var(--accent) !important; }
+  &__detail { padding: .9rem; border: 1px solid var(--border); border-radius: 11px; }
+  &__detail-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem; }
+  &__detail-head span { color: var(--accent); font-size: .8rem; }
+  &__plan { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; line-height: 1.55; font-size: .88rem; }
+  &__review { display: flex; flex-wrap: wrap; gap: .5rem; }
+  &__error { color: #ff9292; }
+  &__notice, &__error { font-size: .84rem; line-height: 1.45; }
+  &__help { font-size: .83rem; line-height: 1.5; }
+  &__help summary { cursor: pointer; }
+  &__help p { margin-top: .5rem; }
+}
+
+/* Stage 16.2 — user-reviewed, read-only local code context. */
+.agent-planner__context {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.9rem;
+  min-width: 0;
+  color: var(--text);
+  summary { cursor: pointer; font-weight: 650; }
+  p { color: var(--muted); line-height: 1.5; }
+}
+.agent-planner__context-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem; margin: 0.7rem 0; }
+.agent-planner__path { overflow-wrap: anywhere; }
+.agent-planner__files { display: grid; gap: 0.4rem; max-height: 15rem; overflow-y: auto; }
+.agent-planner__files > button { text-align: left; }
+.agent-planner__preview { min-width: 0; }
+.agent-planner__preview pre {
+  box-sizing: border-box;
+  max-height: 14rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: 0.78rem/1.45 monospace;
+  background: var(--panel-soft);
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+.agent-planner__selected > div { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.agent-planner__selected span { overflow-wrap: anywhere; }

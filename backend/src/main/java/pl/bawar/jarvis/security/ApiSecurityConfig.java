@@ -12,6 +12,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+// JARVIS_15_RESEARCH_MEMORY
 public class ApiSecurityConfig {
 
     @Bean
@@ -30,6 +31,8 @@ public class ApiSecurityConfig {
                     .hasAuthority("ROLE_JARVIS")
                 .requestMatchers("/api/chats", "/api/chats/**").hasAuthority("ROLE_JARVIS")
                 .requestMatchers("/api/ai-lab", "/api/ai-lab/**").hasAuthority("ROLE_JARVIS")
+                .requestMatchers("/api/research", "/api/research/**").hasAuthority("ROLE_JARVIS")
+                .requestMatchers("/api/agent", "/api/agent/**").hasAuthority("ROLE_JARVIS") // JARVIS_STAGE16_PLANNER
                 .anyRequest().denyAll()
         );
 
@@ -38,7 +41,12 @@ public class ApiSecurityConfig {
                         response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
         ));
 
-        http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/chats", "/api/chats/**", "/api/ai-lab", "/api/ai-lab/**"));
+        http.csrf(csrf -> csrf.ignoringRequestMatchers(
+                        "/api/chats", "/api/chats/**",
+                        "/api/ai-lab", "/api/ai-lab/**",
+                        "/api/research", "/api/research/**",
+                        "/api/agent", "/api/agent/**"
+                ));
         http.formLogin(AbstractHttpConfigurer::disable);
         http.httpBasic(AbstractHttpConfigurer::disable);
         // Keep CSRF protection enabled; do not open arbitrary POST endpoints yet.

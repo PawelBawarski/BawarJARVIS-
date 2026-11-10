@@ -3,6 +3,8 @@ const { registerLabIpc } = require('./lab-ipc.cjs');
 const { startPackagedBackend, stopPackagedBackend } = require('./backend-runtime.cjs');
 const { startPackagedLlm, stopPackagedLlm } = require('./local-llm-runtime.cjs');
 const { registerChatIpc } = require('./chat-ipc.cjs');
+const { registerAgentIpc } = require('./agent-proposal-ipc.cjs'); // JARVIS_STAGE16_PLANNER
+const { registerResearchIpc, registerResearchOpenIpc } = require('./research-ipc.cjs');
 const { checkInternet } = require('./connectivity.cjs');
 const { shell } = require('electron');
 const path = require("node:path");
@@ -160,6 +162,10 @@ app
 
     // Chat: fixed HTTP endpoints, validated sender, token only in Electron main.
     registerChatIpc(ipcMain, (event) => isTrustedSender(event, useBuiltUi));
+    registerAgentIpc(ipcMain, (event) => isTrustedSender(event, useBuiltUi));
+    // JARVIS_15_RESEARCH_MEMORY - only fixed research operations and approved Wikimedia links.
+    registerResearchIpc(ipcMain, (event) => isTrustedSender(event, useBuiltUi));
+    registerResearchOpenIpc(ipcMain, (event) => isTrustedSender(event, useBuiltUi), shell);
     registerLabIpc(ipcMain, (event) => isTrustedSender(event, useBuiltUi));
     registerWorkspaceIpc(ipcMain, (event) => isTrustedSender(event, useBuiltUi), { dialog, userDataDir: app.getPath('userData') });
     // Desktop 11.5: the packaged Electron app owns its local Java process.

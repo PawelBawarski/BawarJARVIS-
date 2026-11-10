@@ -25,13 +25,16 @@ export type ChatApiRequest =
   | { operation: 'get'; id: string }
   | { operation: 'messages'; id: string }
   | { operation: 'send'; id: string; content: string }
+  | { operation: 'rename'; id: string; title: string }
   | { operation: 'delete'; id: string };
 export type ChatApiResult =
-  | { ok: true; status: number; data: unknown }
-  | { ok: false; status: number; error: string };
+  { ok: true; status: number; data: unknown } | { ok: false; status: number; error: string };
 
 export class ChatApiError extends Error {
-  constructor(readonly status: number, message: string) {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
     super(message);
     this.name = 'ChatApiError';
   }
@@ -66,6 +69,9 @@ export class ChatApiService {
   }
   send(id: string, content: string): Promise<ApiChatTurn> {
     return this.request<ApiChatTurn>({ operation: 'send', id, content });
+  }
+  rename(id: string, title: string): Promise<ApiConversation> {
+    return this.request<ApiConversation>({ operation: 'rename', id, title });
   }
   async delete(id: string): Promise<void> {
     await this.request<null>({ operation: 'delete', id });

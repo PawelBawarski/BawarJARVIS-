@@ -5,12 +5,18 @@ import { ApiConversation, ApiMessage, ChatApiError, ChatApiService } from './cha
 
 function mapMessage(message: ApiMessage): ChatMessage {
   // Message IDs remain UUIDs; the UI uses them only for Angular tracking.
-  return { id: message.id, role: message.role === 'USER' ? 'user' : 'assistant', content: message.content };
+  return {
+    id: message.id,
+    role: message.role === 'USER' ? 'user' : 'assistant',
+    content: message.content,
+  };
 }
 function mapConversation(chat: ApiConversation): ChatConversation {
   return {
-    id: chat.id, title: chat.title,
-    createdAt: Date.parse(chat.createdAt), updatedAt: Date.parse(chat.updatedAt),
+    id: chat.id,
+    title: chat.title,
+    createdAt: Date.parse(chat.createdAt),
+    updatedAt: Date.parse(chat.updatedAt),
     messages: [],
   };
 }
@@ -35,8 +41,8 @@ export class ChatStore {
     [...this.chats()].sort((a, b) => b.updatedAt - a.updatedAt),
   );
   readonly activeId = computed(() => this.selectedId());
-  readonly activeChat = computed(() =>
-    this.chats().find(chat => chat.id === this.selectedId()) ?? emptyChat(),
+  readonly activeChat = computed(
+    () => this.chats().find((chat) => chat.id === this.selectedId()) ?? emptyChat(),
   );
   readonly messages = computed(() => this.activeChat().messages);
 
@@ -49,7 +55,7 @@ export class ChatStore {
     try {
       const chats = (await this.api.list()).map(mapConversation);
       const previous = this.selectedId();
-      const id = chats.some(chat => chat.id === previous) ? previous : (chats[0]?.id ?? '');
+      const id = chats.some((chat) => chat.id === previous) ? previous : (chats[0]?.id ?? '');
       this.chats.set(chats.length ? chats : [emptyChat()]);
       this.selectedId.set(id);
       this.connected.set(true);
@@ -72,7 +78,7 @@ export class ChatStore {
     this.busy.set(true);
     try {
       const chat = mapConversation(await this.api.create());
-      this.chats.update(chats => [chat, ...chats.filter(c => c.id !== '')]);
+      this.chats.update((chats) => [chat, ...chats.filter((c) => c.id !== '')]);
       this.selectedId.set(chat.id);
       this.connected.set(true);
       this.clearError();
@@ -87,20 +93,22 @@ export class ChatStore {
 
   /** Compatible with existing ChatHistory UI. */
   selectChat(id: string): void {
-    if (!this.chats().some(chat => chat.id === id)) return;
+    if (!this.chats().some((chat) => chat.id === id)) return;
     this.selectedId.set(id);
     this.clearError();
     if (id) void this.loadMessages(id);
   }
   async loadMessages(id: string): Promise<void> {
     if (!id) return;
-    const previousMessages = this.chats().find(c => c.id === id)?.messages;
+    const previousMessages = this.chats().find((c) => c.id === id)?.messages;
     try {
       const messages = (await this.api.messages(id))
-        .filter(msg => msg.role !== 'SYSTEM').map(mapMessage);
+        .filter((msg) => msg.role !== 'SYSTEM')
+        .map(mapMessage);
       // Ignore stale requests when the user switches between chats quickly.
-      this.chats.update(chats => chats.map(c => c.id === id && c.messages === previousMessages
-        ? { ...c, messages } : c));
+      this.chats.update((chats) =>
+        chats.map((c) => (c.id === id && c.messages === previousMessages ? { ...c, messages } : c)),
+      );
       this.clearError();
     } catch (error) {
       this.setError(error);
@@ -117,26 +125,31 @@ export class ChatStore {
 
   async sendMessage(input: string): Promise<boolean> {
     const text = input.trim();
-    if (!text || text.length > 4000 || this.sending() || this.busy() || this.loading()) return false;
+    if (!text || text.length > 4000 || this.sending() || this.busy() || this.loading())
+      return false;
     this.sending.set(true);
     try {
       let id = this.selectedId();
       if (!id) {
         const created = mapConversation(await this.api.create());
         id = created.id;
-        this.chats.update(chats => [created, ...chats.filter(c => c.id !== '')]);
+        this.chats.update((chats) => [created, ...chats.filter((c) => c.id !== '')]);
         this.selectedId.set(id);
       }
       const turn = await this.api.send(id, text);
       const messages = [mapMessage(turn.userMessage), mapMessage(turn.assistantMessage)];
-      this.chats.update(chats => chats.map(chat => chat.id === id
-        ? {
-          ...chat,
-          // BE 11.3 does not yet support renaming a conversation.
-          updatedAt: Date.now(),
-          messages: [...chat.messages, ...messages],
-        }
-        : chat));
+      this.chats.update((chats) =>
+        chats.map((chat) =>
+          chat.id === id
+            ? {
+                ...chat,
+                // BE 11.3 does not yet support renaming a conversation.
+                updatedAt: Date.now(),
+                messages: [...chat.messages, ...messages],
+              }
+            : chat,
+        ),
+      );
       this.connected.set(true);
       this.clearError();
       return true;
@@ -157,8 +170,8 @@ export class ChatStore {
     this.busy.set(true);
     try {
       await this.api.delete(id);
-      this.chats.update(chats => {
-        const remaining = chats.filter(chat => chat.id !== id);
+      this.chats.update((chats) => {
+        const remaining = chats.filter((chat) => chat.id !== id);
         return remaining.length ? remaining : [emptyChat()];
       });
       this.selectedId.set(this.chats()[0].id);
@@ -179,12 +192,47 @@ export class ChatStore {
   }
   private setError(error: unknown): void {
     this.saveError.set(true);
-    this.errorKey.set(error instanceof ChatApiError && error.status === 503 && error.message === 'LLM_NOT_READY'
-      ? 'chat.llmUnavailable'
-      : error instanceof ChatApiError && (error.status === 401 || error.status === 403)
-      ? 'chat.authRequired'
-      : error instanceof ChatApiError && error.status === 0
-        ? 'chat.backendUnavailable'
-        : 'chat.requestFailed');
+    this.errorKey.set(
+      error instanceof ChatApiError && error.status === 503 && error.message === 'LLM_NOT_READY'
+        ? 'chat.llmUnavailable'
+        : error instanceof ChatApiError && (error.status === 401 || error.status === 403)
+          ? 'chat.authRequired'
+          : error instanceof ChatApiError && error.status === 0
+            ? 'chat.backendUnavailable'
+            : 'chat.requestFailed',
+    );
+  }
+
+  async renameChat(id: string, title: string): Promise<boolean> {
+    const nextTitle = title.trim();
+    if (
+      !id ||
+      !nextTitle ||
+      nextTitle.length > 200 ||
+      this.busy() ||
+      this.sending() ||
+      this.loading()
+    ) {
+      return false;
+    }
+
+    this.busy.set(true);
+    try {
+      const updated = mapConversation(await this.api.rename(id, nextTitle));
+      const existingMessages = this.chats().find((chat) => chat.id === id)?.messages ?? [];
+
+      this.chats.update((chats) =>
+        chats.map((chat) => (chat.id === id ? { ...updated, messages: existingMessages } : chat)),
+      );
+
+      this.connected.set(true);
+      this.clearError();
+      return true;
+    } catch (error) {
+      this.setError(error);
+      return false;
+    } finally {
+      this.busy.set(false);
+    }
   }
 }
