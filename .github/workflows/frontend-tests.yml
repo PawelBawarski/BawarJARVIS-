@@ -41,3 +41,41 @@ jobs:
       - name: Run unit tests
         working-directory: frontend
         run: npm test -- --watch=false
+
+  e2e-tests:
+    name: Playwright Chromium
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "26"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Chromium
+        working-directory: frontend
+        run: npx --no-install playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        working-directory: frontend
+        run: npx --no-install playwright test --workers=1
+
+      - name: Upload failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jarvis-playwright-results
+          path: frontend/test-results/
+          if-no-files-found: ignore
+          retention-days: 7

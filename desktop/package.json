@@ -11,7 +11,10 @@
     "installer:win": "npm run build:ui && electron-builder --config electron-builder.config.cjs --win nsis --x64 --publish never",
     "pack:win": "npm run build:ui && electron-builder --config electron-builder.config.cjs --win --dir --x64 --publish never",
     "installer:full": "node scripts/build-full.cjs",
-    "pack:full": "node scripts/build-full.cjs --dir"
+    "pack:full": "node scripts/build-full.cjs --dir",
+    "installer:stage17-5": "npm run build:ui && node ../scripts/stage-llm-licenses.cjs && electron-builder --config ../electron-builder.stage17-5.desktop.config.cjs --win nsis --x64 --publish never && node ../scripts/verify-release-artifact.cjs --write-manifest",
+    "verify:artifact": "node ../scripts/verify-release-artifact.cjs",
+    "test:release-tools": "node --test ../scripts/verify-release-artifact.test.cjs ../scripts/postgres-native-smoke.test.cjs ../scripts/backend-native-smoke.test.cjs ../tools/desktop17/test_builder_config_17_5.cjs"
   },
   "keywords": [],
   "author": "",

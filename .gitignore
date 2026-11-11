@@ -15,3 +15,34 @@ desktop/.jarvis-build/
 
 # Local Qwen model and portable inference runtime (several GB)
 desktop/ai-runtime/
+
+# J.A.R.V.I.S. 17.2 generated runtime artifacts (local, not Git)
+/desktop/resources/java/
+/desktop/resources/backend/
+/desktop/resources/.stage17-2-backups/
+/.jarvis-stage17-2-backups/
+
+# J.A.R.V.I.S. 17.3 PostgreSQL runtime
+/desktop/resources/postgres/
+/.jarvis-stage17-3-backups/
+
+# J.A.R.V.I.S. 17.4 Qwen runtime
+/.jarvis-stage17-4-backups/
+
+# J.A.R.V.I.S. 17.5 installer
+/.jarvis-stage17-5-backups/
+/dist/jarvis-17-5/
+
+# Generated test results, Python bytecode and local rollback copies.
+/frontend/test-results/
+/frontend/playwright-report/
+**/__pycache__/
+*.py[cod]
+*.bak
+*.backup*
+/.jarvis-stage*-backups/
+/.jarvis-stage*-backups.zip
+
+# Private runtime configuration must never enter Git.
+backend.env
+credentials.json

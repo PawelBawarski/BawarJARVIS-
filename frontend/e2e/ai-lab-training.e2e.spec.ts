@@ -1,13 +1,26 @@
 import { test, expect } from '@playwright/test';
 
 test('AI Lab renders training controls and reflects backend progress', async ({page}) => {
+  const uiErrors: string[] = [];
+  page.on('pageerror', error => uiErrors.push(error.message));
+  page.on('console', message => {
+    if (message.type() === 'error' && message.text().startsWith('ERROR ')) {
+      uiErrors.push(message.text());
+    }
+  });
   await page.addInitScript(() => {
     const state = {id:'demo',status:'RUNNING',epoch:2,totalEpochs:3,losses:[1.4,1.1],error:null};
     Object.defineProperty(window,'jarvisDesktop',{configurable:true,value:{
-      aiLabApi: async (request:{operation:string}) => ({
-        ok:true,status:200,data:request.operation==='model' ?
-          {vocabularySize:50,contextLength:128,trainedExamplesThisSession:2,checkpointAvailable:false,restoredFromCheckpoint:false} : state,
-      })
+      aiLabApi: async (request:{operation:string}) => {
+        if (request.operation === 'model') {
+          return {ok:true,status:200,data:{vocabularySize:50,contextLength:128,trainedExamplesThisSession:2,checkpointAvailable:false,restoredFromCheckpoint:false}};
+        }
+        if (request.operation === 'state') return {ok:true,status:200,data:state};
+        if (['datasetList','historyRuns','historyCheckpoints','historyEvaluations'].includes(request.operation)) {
+          return {ok:true,status:200,data:[]};
+        }
+        return {ok:false,status:400,error:'UNSUPPORTED_TEST_OPERATION'};
+      }
     }});
   });
   await page.goto('/');
@@ -29,4 +42,5 @@ test('AI Lab renders training controls and reflects backend progress', async ({p
   await expect(page.getByTestId('ai-lab-training')).toBeVisible();
   await expect(page.getByTestId('ai-lab-status')).toHaveText('RUNNING');
   await expect(page.getByTestId('ai-lab-start')).toBeDisabled();
+  expect(uiErrors).toEqual([]);
 });

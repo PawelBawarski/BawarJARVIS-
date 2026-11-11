@@ -53,6 +53,25 @@ describe('AppShell', () => {
     expect(component.sidebarOpen()).toBe(true);
   });
 
+  it('powinien otwierać radio w pasku narzędzi bez zmiany aktywnej zakładki', async () => {
+    const fixture = TestBed.createComponent(AppShell);
+    const component = fixture.componentInstance;
+    component.navigation.select('security');
+    await fixture.whenStable();
+
+    const toolbar: HTMLElement = fixture.nativeElement.querySelector('.shell__toolbar');
+    const radioButton = toolbar.querySelector<HTMLButtonElement>('.radio-control__trigger')!;
+    expect(radioButton).not.toBeNull();
+    expect(toolbar.querySelector('#jarvis-radio-panel')).toBeNull();
+
+    radioButton.click();
+    await fixture.whenStable();
+
+    expect(radioButton.getAttribute('aria-expanded')).toBe('true');
+    expect(toolbar.querySelector('#jarvis-radio-panel')).not.toBeNull();
+    expect(component.navigation.activeId()).toBe('security');
+  });
+
   it('should use an overlay on small screens', async () => {
     vi.stubGlobal('matchMedia', () => ({
       matches: true,

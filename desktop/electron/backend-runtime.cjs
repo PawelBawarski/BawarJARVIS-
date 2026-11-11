@@ -10,6 +10,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { spawn } = require('node:child_process');
+const { resolveBundledJava } = require('./bundled-java.cjs');
 
 const API_URL = 'http://127.0.0.1:8080/api/chats';
 const HEALTH_URL = 'http://127.0.0.1:8080/api/security/health';
@@ -20,13 +21,13 @@ const DEFAULTS = {
   JARVIS_DB_NAME: 'jarvis_db',
   JARVIS_DB_USER: 'jarvis',
 };
-const TEMPLATE = `# Konfiguracja lokalnej bazy JARVIS (tylko na tym komputerze).\n# Nie dodawaj tego pliku do repozytorium.\nJARVIS_DB_HOST=127.0.0.1\nJARVIS_DB_PORT=5433\nJARVIS_DB_NAME=jarvis_db\nJARVIS_DB_USER=jarvis\nJARVIS_DB_PASSWORD=0567ac0b-7b70-4100-890f-d53a6f5201b0\n`;
+const TEMPLATE = `# Konfiguracja lokalnej bazy JARVIS (tylko na tym komputerze).\n# Nie dodawaj tego pliku do repozytorium.\nJARVIS_DB_HOST=127.0.0.1\nJARVIS_DB_PORT=5433\nJARVIS_DB_NAME=jarvis_db\nJARVIS_DB_USER=jarvis\nJARVIS_DB_PASSWORD=\n`;
 
 function configPath(env = process.env) {
   if (!env.APPDATA) {
     throw new Error('Brak APPDATA. Ten etap dotyczy aplikacji Windows.');
   }
-  return path.join(env.APPDATA, 'J.A.R.V.I.S.', 'backend.env');
+  return path.join(env.APPDATA, 'JarvisData', 'backend.env');
 }
 
 /** Parse a deliberately narrow .env subset (not source/eval/JS). */
@@ -88,10 +89,14 @@ function createBackendRuntime({
   now = Date.now,
   sleepImpl = sleep,
   maxWaitMs = 60000,
+  stopWaitMs = 5000,
 } = {}) {
   if (typeof fetchImpl !== 'function') throw new TypeError('fetch is required');
+  if (!Number.isFinite(stopWaitMs) || stopWaitMs <= 0) throw new TypeError('stopWaitMs must be positive');
   let ownedProcess = null;
   let startPromise = null;
+  let stopPromise = null;
+  let processFinished = false;
   let shuttingDown = false;
 
   async function request(url, token, signal) {
@@ -126,6 +131,7 @@ function createBackendRuntime({
     if (occupied !== 0) {
       throw new Error(`Port 8080 jest już zajęty (HTTP ${occupied}). Zamknij inny backend przed uruchomieniem Jarvisa.`);
     }
+    if (shuttingDown) throw new Error('Zatrzymano uruchamianie backendu.');
     const token = env.JARVIS_SESSION_TOKEN || crypto.randomBytes(32).toString('hex');
     // The Electron main chat IPC reads this value; renderer never receives it.
     env.JARVIS_SESSION_TOKEN = token;
@@ -145,7 +151,9 @@ function createBackendRuntime({
     let processError = null;
     let exited = false;
     child.once('error', error => { processError = error; exited = true; });
-    child.once('exit', () => { exited = true; });
+    const markFinished = () => { exited = true; processFinished = true; };
+    child.once('exit', markFinished);
+    child.once('close', markFinished);
     const deadline = now() + maxWaitMs;
     while (now() < deadline) {
       if (shuttingDown) throw new Error('Zatrzymano uruchamianie backendu.');
@@ -160,6 +168,7 @@ function createBackendRuntime({
       let code;
       try { code = await request(API_URL, token, controller.signal); }
       finally { clearTimeout(timer); }
+      if (shuttingDown) throw new Error('Zatrzymano uruchamianie backendu.');
       if (code === 200) return { started: true };
       if (code === 401 || code === 403) {
         throw new Error('Backend odrzuca token sesji (401/403). Sprawdź konfigurację Spring Security.');
@@ -171,16 +180,51 @@ function createBackendRuntime({
 
   async function start() {
     if (startPromise) return startPromise;
-    startPromise = doStart().catch(error => { stop(); startPromise = null; throw error; });
+    startPromise = doStart().catch(async error => {
+      try {
+        await stop();
+      } finally {
+        startPromise = null;
+      }
+      throw error;
+    });
     return startPromise;
   }
 
   function stop() {
     shuttingDown = true;
-    if (ownedProcess && !ownedProcess.killed) {
-      try { ownedProcess.kill(); } catch { /* already exited */ }
+    if (stopPromise) return stopPromise;
+    const child = ownedProcess;
+    if (!child || processFinished || child.exitCode != null || child.signalCode != null) {
+      ownedProcess = null;
+      stopPromise = Promise.resolve();
+      return stopPromise;
     }
-    ownedProcess = null;
+    let resolveStop;
+    let rejectStop;
+    stopPromise = new Promise((resolve, reject) => { resolveStop = resolve; rejectStop = reject; })
+      .catch(error => { stopPromise = null; throw error; });
+    let finished = false;
+    const finish = error => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      child.removeListener('exit', onExit);
+      child.removeListener('close', onExit);
+      if (error) rejectStop(error);
+      else {
+        ownedProcess = null;
+        resolveStop();
+      }
+    };
+    const onExit = () => finish();
+    const timer = setTimeout(() => finish(new Error('Nie potwierdzono zatrzymania backendu Java w wyznaczonym czasie.')), stopWaitMs);
+    child.once('exit', onExit);
+    child.once('close', onExit);
+    // A successful kill request does not prove the process has exited.
+    try { if (!child.killed) child.kill(); }
+    catch { finish(new Error('Nie można zatrzymać własnego procesu backendu Java.')); }
+    return stopPromise;
   }
 
   return { start, stop };
@@ -190,12 +234,15 @@ let manager = null;
 async function startPackagedBackend({ resourcesPath } = {}) {
   if (manager) return manager.start();
   const jarPath = path.join(resourcesPath, 'backend', 'jarvis-backend.jar');
-  manager = createBackendRuntime({ jarPath });
+  const javaBin = resolveBundledJava(resourcesPath);
+  manager = createBackendRuntime({ jarPath, javaBin });
   return manager.start();
 }
-function stopPackagedBackend() {
-  manager?.stop();
-  manager = null;
+async function stopPackagedBackend() {
+  const current = manager;
+  if (!current) return;
+  await current.stop();
+  if (manager === current) manager = null;
 }
 
 module.exports = {

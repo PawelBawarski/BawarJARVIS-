@@ -1,7 +1,8 @@
 const { registerWorkspaceIpc } = require('./workspace-access.cjs');
 const { registerLabIpc } = require('./lab-ipc.cjs');
 const { startPackagedBackend, stopPackagedBackend } = require('./backend-runtime.cjs');
-const { startPackagedLlm, stopPackagedLlm } = require('./local-llm-runtime.cjs');
+const { startPackagedQwen, stopPackagedQwen } = require('./qwen-runtime.cjs');
+const { startPackagedDatabase, stopPackagedDatabase } = require('./postgres-runtime.cjs');
 const { registerChatIpc } = require('./chat-ipc.cjs');
 const { registerAgentIpc } = require('./agent-proposal-ipc.cjs');
 const { registerSandboxIpc } = require('./agent-sandbox-check.cjs'); // JARVIS_STAGE16_4_SANDBOX // JARVIS_STAGE16_PLANNER
@@ -23,6 +24,25 @@ const {
   ipcMain,
 } = require("electron");
 const { createWindowOptions } = require("./window-options.cjs");
+const { createRuntimeLifecycle } = require('./runtime-lifecycle.cjs');
+const packagedRuntime = createRuntimeLifecycle({
+  startDatabase: startPackagedDatabase,
+  startQwen: startPackagedQwen,
+  startBackend: startPackagedBackend,
+  stopBackend: stopPackagedBackend,
+  stopQwen: stopPackagedQwen,
+  stopDatabase: stopPackagedDatabase,
+});
+const ownsInstanceLock = !app.isPackaged || app.requestSingleInstanceLock();
+if (!ownsInstanceLock) app.quit();
+app.on('second-instance', () => {
+  const window = BrowserWindow.getAllWindows()[0];
+  if (window) {
+    if (window.isMinimized()) window.restore();
+    window.show();
+    window.focus();
+  }
+});
 
 const { resolveUiAsset } = require("./asset-path.cjs");
 const { autoUpdater } = require("electron-updater");
@@ -124,6 +144,7 @@ function createWindow() {
 app
   .whenReady()
   .then(async () => {
+    if (!ownsInstanceLock) return;
     // Na razie nie udzielamy uprawnień systemowych.
     // Obsługę mikrofonu dodamy w lekcji o głosie.
     session.defaultSession.setPermissionRequestHandler(
@@ -180,18 +201,21 @@ app
     registerWorkspaceIpc(ipcMain, (event) => isTrustedSender(event, useBuiltUi), { dialog, userDataDir: app.getPath('userData') });
     // Desktop 11.5: the packaged Electron app owns its local Java process.
     if (app.isPackaged) {
-      // A missing GGUF must not hide the app or its in-app setup instructions.
+      // Native first-run consent/setup precedes the main application window.
       try {
-        await startPackagedLlm({ resourcesPath: process.resourcesPath });
+        await packagedRuntime.start({
+          resourcesPath: process.resourcesPath,
+          onUnexpectedExit: (message) => {
+            if (!packagedRuntime.isStopping()) {
+              dialog.showErrorBox('J.A.R.V.I.S. — Qwen', message);
+              app.quit();
+            }
+          },
+        });
       } catch (error) {
-        stopPackagedLlm();
-        console.error('Local Qwen unavailable:', String(error?.message || error));
-      }
-      try {
-        await startPackagedBackend({ resourcesPath: process.resourcesPath });
-      } catch (error) {
-        stopPackagedLlm();
-        dialog.showErrorBox('J.A.R.V.I.S. — Backend', String(error?.message || error));
+        if (!packagedRuntime.isStopping()) {
+          dialog.showErrorBox('J.A.R.V.I.S. — Backend', String(error?.message || error));
+        }
         app.quit();
         return;
       }
@@ -245,4 +269,18 @@ app.on("window-all-closed", () => {
   }
 });
 
-app.on('before-quit', () => { stopPackagedBackend(); stopPackagedLlm(); });
+let shutdownComplete = false;
+let shutdownPending = false;
+app.on('before-quit', (event) => {
+  if (!app.isPackaged || shutdownComplete) return;
+  event.preventDefault();
+  if (shutdownPending) return;
+  shutdownPending = true;
+  void packagedRuntime.stop()
+    .then(() => { shutdownComplete = true; app.quit(); })
+    .catch(() => {
+      shutdownPending = false;
+      dialog.showErrorBox('J.A.R.V.I.S. — zamykanie',
+        'Nie potwierdzono zakończenia procesów aplikacji. Zachowano dane. Spróbuj zamknąć aplikację ponownie.');
+    });
+});
