@@ -1,0 +1,42 @@
+@if (summary(); as report) {
+  <section class="agent-change-review" data-testid="agent-change-review" [attr.aria-label]="'lab.planner.review.aria' | translate">
+    <header class="agent-change-review__header">
+      <div>
+        <h4>{{ 'lab.planner.review.title' | translate }}</h4>
+        <p>{{ 'lab.planner.review.intro' | translate }}</p>
+      </div>
+      <button type="button" data-testid="agent-copy-proposed" (click)="copyProposed()">
+        {{ 'lab.planner.review.copy' | translate }}
+      </button>
+    </header>
+    <dl class="agent-change-review__metrics" data-testid="agent-review-metrics">
+      <div><dt>{{ 'lab.planner.review.before' | translate }}</dt><dd>{{ report.beforeLines }}</dd></div>
+      <div><dt>{{ 'lab.planner.review.after' | translate }}</dt><dd>{{ report.afterLines }}</dd></div>
+      <div><dt>{{ 'lab.planner.review.removed' | translate }}</dt><dd>{{ report.removedLines }}</dd></div>
+      <div><dt>{{ 'lab.planner.review.added' | translate }}</dt><dd>{{ report.addedLines }}</dd></div>
+    </dl>
+    <div class="agent-change-review__risks" data-testid="agent-review-risks">
+      <h5>{{ 'lab.planner.review.risks' | translate }}</h5>
+      @if (report.warnings.length) {
+        <ul>
+          @for (warning of report.warnings; track warning) {
+            <li>{{ warningKey(warning) | translate }}</li>
+          }
+        </ul>
+      } @else {
+        <p>{{ 'lab.planner.review.noWarnings' | translate }}</p>
+      }
+      @if (!preview()?.review) {
+        <p>{{ 'lab.planner.review.legacy' | translate }}</p>
+      }
+    </div>
+    <p class="agent-change-review__caution" data-testid="agent-review-no-tests">
+      {{ 'lab.planner.review.notVerified' | translate }}
+    </p>
+    @if (copyMessageKey() && copiedFor() === preview()) {
+      <p role="status" aria-live="polite" data-testid="agent-review-copy-status">
+        {{ copyMessageKey() | translate }}
+      </p>
+    }
+  </section>
+}

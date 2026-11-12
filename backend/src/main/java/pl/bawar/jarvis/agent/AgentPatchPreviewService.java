@@ -47,7 +47,8 @@ public class AgentPatchPreviewService {
         }
         String diff = AgentPatchDiff.unified(source.relativePath(), source.content(), replacement);
         return new PatchPreview(source.relativePath(), source.content(), replacement, diff,
-            "Podgląd dotyczy WYŁĄCZNIE zatwierdzonego fragmentu. Nic nie zapisano na dysku.");
+            "Podgląd dotyczy WYŁĄCZNIE zatwierdzonego fragmentu. Nic nie zapisano na dysku.",
+            AgentPatchReview.examine(source.content(), replacement));
     }
 
     static String parseReplacement(String modelOutput) {
@@ -73,5 +74,6 @@ public class AgentPatchPreviewService {
         return replacement;
     }
 
-    public record PatchPreview(String relativePath, String original, String proposed, String diff, String notice) { }
+    public record PatchPreview(String relativePath, String original, String proposed, String diff,
+                               String notice, AgentPatchReview.Summary review) { }
 }

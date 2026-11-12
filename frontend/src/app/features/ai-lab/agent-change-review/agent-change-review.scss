@@ -1,0 +1,23 @@
+:host { display: block; min-width: 0; }
+.agent-change-review {
+  display: grid; gap: .8rem; min-width: 0; padding: .9rem;
+  border: 1px solid var(--border); border-radius: 12px; background: var(--panel);
+  h4, h5, p, dl { margin: 0; }
+  p { font-size: .82rem; line-height: 1.5; color: var(--muted); }
+  &__header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: start; gap: .7rem; }
+  &__header > div { display: grid; gap: .3rem; }
+  &__header button {
+    font: inherit; font-size: .85rem; padding: .5rem .7rem; border-radius: 9px;
+    border: 1px solid var(--border); background: var(--accent-soft); color: var(--text); cursor: pointer;
+    &:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  }
+  &__metrics { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .5rem; }
+  &__metrics > div { min-width: 0; background: var(--panel-soft); border-radius: 9px; padding: .65rem; }
+  dt { font-size: .72rem; color: var(--muted); }
+  dd { margin: .3rem 0 0; font-weight: 700; font-size: 1.05rem; color: var(--text); }
+  &__risks { display: grid; gap: .4rem; }
+  &__risks ul { margin: 0; padding-left: 1.25rem; font-size: .85rem; line-height: 1.6; }
+  &__risks li { color: var(--text); }
+  &__caution { border-left: 3px solid var(--accent); padding: .55rem .7rem; background: var(--panel-soft); }
+  @media (max-width: 540px) { &__metrics { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+}

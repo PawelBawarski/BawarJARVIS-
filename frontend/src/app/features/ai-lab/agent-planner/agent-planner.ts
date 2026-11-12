@@ -5,11 +5,13 @@ import { isAllowedCodePath } from './source-validation';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { BrowserApiError, browserApiErrorKey } from '../../../core/services/browser-api';
 import { AgentSandbox } from '../agent-sandbox/agent-sandbox'; // JARVIS_STAGE16_4_SANDBOX
+import { AgentChangeReview } from '../agent-change-review/agent-change-review';
+import { checkedPatchPreview } from './patch-review-validation';
 
 @Component({
   selector: 'app-agent-planner',
   standalone: true,
-  imports: [AgentSandbox, TranslatePipe],
+  imports: [AgentSandbox, AgentChangeReview, TranslatePipe],
   templateUrl: './agent-planner.html',
   styleUrl: './agent-planner.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,6 +29,7 @@ export class AgentPlanner implements OnInit {
   readonly diffBusy = signal(false);
   readonly diffError = signal('');
   readonly diffPreview = signal<AgentPatchPreview | null>(null);
+  private diffGeneration = 0;
   readonly diffSource = computed(() => this.sources().find(s => s.relativePath === this.selectedDiffPath()) ?? this.sources()[0] ?? null);
   readonly MAX_EXCERPT = 3600;
   readonly MAX_TOTAL = 8000;
@@ -118,6 +121,7 @@ export class AgentPlanner implements OnInit {
       this.proposals.update(all => [created, ...all]);
       this.selected.set(created);
       this.task.set('');
+      this.clearDiff();
       this.info.set(files.length ? `Qwen przeanalizował ${files.length} zatwierdzonych fragmentów i przygotował plan.` : 'Qwen przygotował propozycję. Przejrzyj ją przed decyzją.');
     }, 'generate');
   }
@@ -259,13 +263,16 @@ export class AgentPlanner implements OnInit {
     const source = this.diffSource();
     const goal = (this.task().trim() || this.selected()?.task || '').trim();
     if (!source || !goal || goal.length > 1200 || this.diffBusy() || this.busy()) return;
+    const requestGeneration = ++this.diffGeneration;
     this.diffBusy.set(true);
     this.diffError.set('');
     this.diffPreview.set(null);
     try {
-      const preview = await this.api.previewPatch(goal, source);
+      const response = await this.api.previewPatch(goal, source);
+      const preview = checkedPatchPreview(response, source);
       // Reject a response for another file and never show a preview for a removed source.
-      if (preview.relativePath !== source.relativePath ||
+      if (requestGeneration !== this.diffGeneration ||
+        (this.task().trim() || this.selected()?.task || '').trim() !== goal ||
         this.diffSource()?.relativePath !== source.relativePath ||
         preview.original !== source.content ||
         !this.sources().some(item => item.relativePath === source.relativePath && item.content === source.content)) {
@@ -286,6 +293,7 @@ export class AgentPlanner implements OnInit {
   }
 
   private clearDiff(): void {
+    this.diffGeneration++;
     this.diffPreview.set(null);
     this.diffError.set('');
   }
@@ -320,7 +328,13 @@ export class AgentPlanner implements OnInit {
   }
 
   choose(item: AgentProposal): void {
-    if (!this.busy()) { this.selected.set(item); this.error.set(''); this.info.set(''); }
+    if (!this.busy()) { this.selected.set(item); this.clearDiff(); this.error.set(''); this.info.set(''); }
+  }
+
+  updateTask(value: string): void {
+    if (value === this.task()) return;
+    this.task.set(value);
+    this.clearDiff();
   }
 
   statusKey(status: string): string {

@@ -76,4 +76,24 @@ describe('AgentPlanner 16.3: preview diff never applies changes', () => {
     expect(planner.sources()).toEqual([source]);
     expect(planner.task()).toBe('Zmień stałą x na 2');
   });
+
+  it('does not show a stale preview when the task changes while Qwen is generating', async () => {
+    let resolvePreview!: (value: typeof patch) => void;
+    api.previewPatch.mockReturnValue(new Promise(resolve => { resolvePreview = resolve; }));
+    const { planner } = await prepared();
+    const pending = planner.generateDiff();
+    planner.updateTask('Nowa treść zadania');
+    resolvePreview(patch);
+    await pending;
+    expect(planner.diffPreview()).toBeNull();
+    expect(planner.diffError()).toContain('nieaktualny');
+  });
+
+  it('rejects model output identical to the submitted source', async () => {
+    api.previewPatch.mockResolvedValue({ ...patch, proposed: source.content });
+    const { planner } = await prepared();
+    await planner.generateDiff();
+    expect(planner.diffPreview()).toBeNull();
+    expect(planner.diffError()).toContain('zmienionej wersji');
+  });
 });

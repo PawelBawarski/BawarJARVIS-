@@ -141,6 +141,7 @@
       <div class="agent-planner__patch-result" data-testid="agent-diff-result">
         <p class="agent-planner__notice">{{ patch.notice }}</p>
         <p><strong>{{ 'lab.planner.file' | translate }}</strong> {{ patch.relativePath }}</p>
+        <app-agent-change-review [preview]="patch" />
         <div class="agent-planner__patch-columns">
           <div><h4>{{ 'lab.planner.original' | translate }}</h4><pre data-testid="agent-diff-original">{{ patch.original }}</pre></div>
           <div><h4>{{ 'lab.planner.proposed' | translate }}</h4><pre data-testid="agent-diff-proposed">{{ patch.proposed }}</pre></div>
@@ -160,7 +161,7 @@
     <textarea id="jarvis-agent-task" rows="3" maxlength="1200"
       aria-describedby="agent-task-instructions"
       data-testid="agent-task" [value]="task()"
-      (input)="task.set($any($event.target).value)"
+      (input)="updateTask($any($event.target).value)"
       [placeholder]="'lab.planner.taskPlaceholder' | translate"></textarea>
     <button type="button" data-testid="agent-generate"
       [disabled]="busy() || !api.available || !task().trim()"

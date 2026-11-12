@@ -17,6 +17,15 @@ export interface AgentCodeSource {
   readonly content: string;
 }
 
+export type AgentReviewWarning = 'LARGE_CHANGE' | 'PROCESS_EXECUTION' | 'DYNAMIC_CODE' | 'POSSIBLE_SECRET';
+export interface AgentReviewSummary {
+  readonly beforeLines: number;
+  readonly afterLines: number;
+  readonly removedLines: number;
+  readonly addedLines: number;
+  readonly warnings: readonly AgentReviewWarning[];
+}
+
 /** Preview generated on the backend from ONE explicitly approved excerpt. Never saved or applied. */
 export interface AgentPatchPreview {
   readonly relativePath: string;
@@ -24,6 +33,8 @@ export interface AgentPatchPreview {
   readonly proposed: string;
   readonly diff: string;
   readonly notice: string;
+  /** Added in 19.0; optional for compatibility with older preview API/mocks. */
+  readonly review?: AgentReviewSummary;
 }
 
 export type AgentProposalRequest =

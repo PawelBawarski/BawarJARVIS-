@@ -22,6 +22,9 @@ class AgentPatchPreviewServiceTest {
         assertEquals("export const x = 2;", result.proposed());
         assertTrue(result.diff().contains("-export const x = 1;"));
         assertTrue(result.diff().contains("+export const x = 2;"));
+        assertEquals(1, result.review().addedLines());
+        assertEquals(1, result.review().removedLines());
+        assertTrue(result.review().warnings().isEmpty());
         verify(llm).reply(eq(List.of()), argThat(prompt -> prompt.contains(source.content()) && prompt.contains(source.relativePath())));
     }
 
