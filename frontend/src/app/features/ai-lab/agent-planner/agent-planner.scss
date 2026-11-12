@@ -3,7 +3,6 @@
   box-sizing: border-box; width: 100%; min-width: 0; display: grid; gap: 1rem;
   padding: 1rem; color: var(--text);
   border: 1px solid var(--border); border-radius: 14px; background: var(--panel-soft);
-  * { box-sizing: border-box; }
   button, input, textarea { font: inherit; }
   button {
     border: 1px solid var(--border); border-radius: 9px; background: var(--accent-soft);
@@ -46,14 +45,24 @@
   &__help p { margin-top: .5rem; }
 }
 
-/* Stage 16.2 — user-reviewed, read-only local code context. */
-.agent-planner__context {
-  border: 1px solid var(--border);
+/* Shared disclosure surface: identical styling for source context and diff preview. */
+.agent-planner__context, .agent-planner__patch {
+  padding: .9rem;
   border-radius: 12px;
-  padding: 0.9rem;
-  min-width: 0;
   color: var(--text);
   summary { cursor: pointer; font-weight: 650; }
+}
+
+/* Stage 16.2 — user-reviewed, read-only local code context. */
+.agent-planner__context,
+.agent-planner__patch,
+.agent-planner__web-source,
+.agent-planner__workflow,
+.agent-planner__metric {
+  border: 1px solid var(--border);
+  min-width: 0;
+}
+.agent-planner__context {
   p { color: var(--muted); line-height: 1.5; }
 }
 .agent-planner__context-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem; margin: 0.7rem 0; }
@@ -62,7 +71,6 @@
 .agent-planner__files > button { text-align: left; }
 .agent-planner__preview { min-width: 0; }
 .agent-planner__preview pre {
-  box-sizing: border-box;
   max-height: 14rem;
   overflow: auto;
   white-space: pre-wrap;
@@ -78,9 +86,7 @@
 
 /* Stage 16.3: read-only code comparison. Scoped to the AI Lab panel. */
 .agent-planner__patch {
-  display: grid; min-width: 0; border: 1px solid var(--border); border-radius: 12px;
-  padding: .9rem; color: var(--text);
-  summary { cursor: pointer; font-weight: 650; }
+  display: grid;
   > p { margin: .55rem 0; line-height: 1.5; color: var(--muted); }
   label { display: block; margin: .6rem 0; }
   select { display: block; margin: .5rem 0; max-width: 100%; width: 100%; min-width: 0;
@@ -93,3 +99,45 @@
   padding: .75rem; border-radius: 8px; border: 1px solid var(--border);
   background: var(--bg); color: var(--text); white-space: pre; font: .78rem/1.5 monospace; }
 .agent-planner__patch-diff { max-height: 30rem !important; }
+
+/* 18.2 — explicit web-only source selection; never reads project folders. */
+.agent-planner__web-source {
+  display: grid;
+  gap: .6rem;
+  padding: .9rem;
+  margin: .75rem 0;
+  border-radius: 11px;
+  > p { font-size: .84rem; line-height: 1.5; }
+  > input[type='text'], > input[type='file'] {
+    width: 100%;
+    min-width: 0;
+    padding: .6rem;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+  }
+  > button { justify-self: start; }
+}
+
+/* 18.3 UI: dashboard and safe, understandable work stages. */
+.agent-planner__dashboard { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .65rem; min-width: 0; }
+.agent-planner__metric {
+  display: grid; align-content: start; gap: .3rem;
+  padding: .95rem; border-radius: 11px;
+  background: var(--panel);
+  > span { font-size: .75rem; color: var(--muted); font-weight: 650; }
+  > strong { font-size: clamp(.92rem, 1.7vw, 1.25rem); color: var(--text); overflow-wrap: anywhere; }
+  > small { color: var(--muted); line-height: 1.4; }
+}
+.agent-planner__workflow { display: grid; gap: .75rem; background: var(--panel); border-radius: 12px; padding: 1rem; }
+.agent-planner__workflow h4 { margin: 0; }
+.agent-planner__workflow ol { padding: 0; margin: 0; list-style: none; display: grid; gap: .6rem; counter-reset: agent-steps; }
+.agent-planner__workflow li { display: grid; gap: .2rem; padding-left: 2.4rem; position: relative; line-height: 1.4; counter-increment: agent-steps; }
+.agent-planner__workflow li:before { content: counter(agent-steps); position: absolute; left: 0; top: .1rem; display: grid; place-items: center; width: 1.65rem; height: 1.65rem; border-radius: .5rem; background: var(--accent-soft); color: var(--accent); font-weight: 800; }
+.agent-planner__workflow li span { color: var(--muted); font-size: .85rem; }
+.agent-planner__guidance, .agent-planner__privacy-note { padding: .65rem .8rem; border-radius: 9px; background: var(--panel); color: var(--muted); line-height: 1.5; font-size: .83rem; }
+.agent-planner__privacy-note { border-left: 3px solid var(--accent); }
+.agent-planner__web-source > label { margin-top: .15rem; }
+.agent-planner__web-source > input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 670px) { .agent-planner__dashboard { grid-template-columns: minmax(0,1fr); } }

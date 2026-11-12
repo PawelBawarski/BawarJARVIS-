@@ -11,6 +11,12 @@
   @if (error()) {
     <p class="jarvis-training__error" role="alert" data-testid="ai-lab-error">{{ error() }}</p>
   }
+  <p class="jarvis-training__polling" data-testid="ai-lab-polling-state" role="status">
+    {{ (isRunning() ? 'aiLab.training.pollingActive' : 'aiLab.training.pollingIdle') | translate }}
+  </p>
+  @if (pollingError() && isRunning()) {
+    <p class="jarvis-training__error" role="alert">{{ 'aiLab.training.pollingFailed' | translate }}</p>
+  }
   <div class="jarvis-training__stats">
     <div><span>{{ 'aiLab.training.status' | translate }}</span><strong data-testid="ai-lab-status">{{ state()?.status || 'IDLE' }}</strong></div>
     <div><span>{{ 'aiLab.training.epochs' | translate }}</span><strong>{{ state()?.epoch || 0 }} / {{ state()?.totalEpochs || 0 }}</strong></div>

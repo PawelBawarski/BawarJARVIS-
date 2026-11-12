@@ -1,6 +1,7 @@
-import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { AiLabApiService, LabModelStatus, LabTrainingState } from '../../../core/services/ai-lab-api';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
+import { LabTrainingMonitor } from '../../../core/services/lab-training-monitor';
 import { AiLabHistoryPanel } from '../history-panel/history-panel';
 import { AiLabDatasetPanel } from '../dataset-panel/dataset-panel';
 
@@ -9,10 +10,13 @@ import { AiLabDatasetPanel } from '../dataset-panel/dataset-panel';
   imports: [TranslatePipe, AiLabHistoryPanel, AiLabDatasetPanel],
   templateUrl: './training-panel.html',
   styleUrl: './training-panel.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AiTrainingPanel implements OnInit, OnDestroy {
   private readonly api = inject(AiLabApiService);
-  readonly state = signal<LabTrainingState | null>(null);
+  private readonly monitor = inject(LabTrainingMonitor);
+  readonly state = this.monitor.state;
+  readonly pollingError = this.monitor.pollingError;
   readonly model = signal<LabModelStatus | null>(null);
   readonly text = signal('ala\nala ma kota');
   readonly epochs = signal(3);
@@ -23,16 +27,38 @@ export class AiTrainingPanel implements OnInit, OnDestroy {
     const x = this.state();
     return x && x.totalEpochs ? Math.round(x.epoch * 100 / x.totalEpochs) : 0;
   });
-  private polling?: ReturnType<typeof setInterval>;
   private refreshing = false;
+  private lastTerminalRun = '';
+  private modelRequest?: Promise<LabModelStatus>;
+
+  constructor() {
+    // A completed job may have changed checkpoint availability. Polling itself
+    // stays read-only; refresh model metadata only once per terminal transition.
+    effect(() => {
+      const state = this.state();
+      if (!state || (state.status !== 'COMPLETED' && state.status !== 'FAILED')) return;
+      const key = `${state.id}:${state.status}`;
+      if (key === this.lastTerminalRun) return;
+      this.lastTerminalRun = key;
+      void this.loadModel().catch(() => undefined);
+    });
+  }
+
+  private loadModel(): Promise<LabModelStatus> {
+    if (this.modelRequest) return this.modelRequest;
+    const request = this.api.model().then(model => {
+      this.model.set(model);
+      return model;
+    });
+    this.modelRequest = request.finally(() => { this.modelRequest = undefined; });
+    return this.modelRequest;
+  }
 
   ngOnInit(): void {
+    this.monitor.acquire();
     void this.refresh();
-    this.polling = setInterval(() => {
-      if (this.state()?.status === 'RUNNING') void this.refresh();
-    }, 1000);
   }
-  ngOnDestroy(): void { if (this.polling) clearInterval(this.polling); }
+  ngOnDestroy(): void { this.monitor.release(); }
 
   onText(event: Event): void { this.text.set((event.target as HTMLTextAreaElement).value); }
   onEpochs(event: Event): void { this.epochs.set(Number((event.target as HTMLInputElement).value)); }
@@ -44,10 +70,9 @@ export class AiTrainingPanel implements OnInit, OnDestroy {
     if (this.refreshing) return;
     this.refreshing = true;
     try {
-      const state = await this.api.state();
-      this.state.set(state);
+      const state = await this.monitor.refresh();
       // Model reads lock the tiny Transformer; do not call on each training poll.
-      if (state.status !== 'RUNNING') this.model.set(await this.api.model());
+      if (state.status !== 'RUNNING') await this.loadModel();
       this.error.set('');
     } catch (e) { this.error.set(this.message(e)); }
     finally { this.refreshing = false; }
@@ -61,7 +86,7 @@ export class AiTrainingPanel implements OnInit, OnDestroy {
       this.error.set('INVALID_TRAINING_INPUT'); return;
     }
     this.pending.set(true); this.error.set('');
-    try { this.state.set(await this.api.start(examples, this.epochs())); }
+    try { this.monitor.report(await this.api.start(examples, this.epochs())); }
     catch (e) { this.error.set(this.message(e)); }
     finally { this.pending.set(false); }
   }

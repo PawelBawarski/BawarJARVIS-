@@ -1,12 +1,15 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { AgentCodeSource, AgentPatchPreview, AgentProposal, AgentProposalApiService } from '../../../core/services/agent-proposal-api';
 import { WorkspaceApiService, WorkspaceEntry, WorkspaceListing, WorkspacePreview } from '../../../core/services/workspace-api';
+import { isAllowedCodePath } from './source-validation';
+import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
+import { BrowserApiError, browserApiErrorKey } from '../../../core/services/browser-api';
 import { AgentSandbox } from '../agent-sandbox/agent-sandbox'; // JARVIS_STAGE16_4_SANDBOX
 
 @Component({
   selector: 'app-agent-planner',
   standalone: true,
-  imports: [AgentSandbox],
+  imports: [AgentSandbox, TranslatePipe],
   templateUrl: './agent-planner.html',
   styleUrl: './agent-planner.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,6 +30,12 @@ export class AgentPlanner implements OnInit {
   readonly diffSource = computed(() => this.sources().find(s => s.relativePath === this.selectedDiffPath()) ?? this.sources()[0] ?? null);
   readonly MAX_EXCERPT = 3600;
   readonly MAX_TOTAL = 8000;
+  readonly sourceCharacterCount = computed(() => this.sources().reduce((total, source) => total + source.content.length, 0));
+  readonly pendingReviewCount = computed(() => this.proposals().filter(item => item.status === 'PENDING').length);
+  /** Browser-first: only manually pasted or explicitly selected code is reviewed. */
+  readonly manualPath = signal('');
+  readonly manualCode = signal('');
+  readonly importBusy = signal(false);
   readonly task = signal('');
   readonly feedback = signal('');
   readonly proposals = signal<AgentProposal[]>([]);
@@ -34,21 +43,60 @@ export class AgentPlanner implements OnInit {
   readonly busy = signal(false);
   readonly error = signal('');
   readonly info = signal('');
+  /** Describes UI work only; it does not claim the model or backend is healthy. */
+  readonly operation = signal<'idle' | 'history' | 'generate' | 'review' | 'revise'>('idle');
+  readonly workflowStep = computed<1 | 2 | 3>(() =>
+    this.selected() ? 3 : (this.sources().length || this.task().trim() ? 2 : 1));
+  readonly activityBusy = computed(() => this.busy() || this.diffBusy() || this.contextBusy() || this.importBusy());
+  readonly activityKey = computed((): string => {
+    if (this.importBusy() || this.contextBusy()) return 'lab.planner.activity.reading';
+    if (this.diffBusy()) return 'lab.planner.activity.diff';
+    if (this.busy()) {
+      switch (this.operation()) {
+        case 'generate': return 'lab.planner.activity.generating';
+        case 'review': return 'lab.planner.activity.deciding';
+        case 'revise': return 'lab.planner.activity.revising';
+        default: return 'lab.planner.activity.history';
+      }
+    }
+    if (this.error() || this.contextError() || this.diffError()) return 'lab.planner.activity.error';
+    const proposal = this.selected();
+    if (proposal?.status === 'PENDING') return 'lab.planner.activity.review';
+    if (proposal?.status === 'APPROVED') return 'lab.planner.activity.approved';
+    if (proposal?.status === 'REJECTED') return 'lab.planner.activity.rejected';
+    if (this.diffPreview()) return 'lab.planner.activity.diffReady';
+    if (this.sources().length) return 'lab.planner.activity.context';
+    return 'lab.planner.activity.ready';
+  });
+  readonly nextActionKey = computed((): string => {
+    if (this.activityBusy()) return 'lab.planner.next.wait';
+    if (this.error() || this.contextError() || this.diffError()) return 'lab.planner.next.retry';
+    if (this.diffPreview()) return 'lab.planner.next.diffReady';
+    if (this.selected()?.status === 'PENDING') return 'lab.planner.next.review';
+    if (this.selected()) return 'lab.planner.next.newTask';
+    if (this.task().trim()) return 'lab.planner.next.generate';
+    return 'lab.planner.next.describe';
+  });
 
   ngOnInit(): void {
     if (this.api.available) void this.refresh();
   }
 
-  private async run(action: () => Promise<void>): Promise<void> {
+  private async run(action: () => Promise<void>, operation: 'history' | 'generate' | 'review' | 'revise' = 'history'): Promise<void> {
     if (this.busy()) return;
     this.busy.set(true);
+    this.operation.set(operation);
     this.error.set('');
     this.info.set('');
     try { await action(); }
     catch (error) {
-      this.error.set(error instanceof Error ? error.message : 'Błąd operacji agenta.');
+      // Mutations must NOT be retried automatically: the backend may have committed them.
+      this.error.set(operation !== 'history' && error instanceof BrowserApiError && error.status === 0
+        ? 'api.error.actionUnconfirmed'
+        : browserApiErrorKey(error) ?? (error instanceof Error ? error.message : 'api.error.general'));
     } finally {
       this.busy.set(false);
+      this.operation.set('idle');
     }
   }
 
@@ -58,7 +106,7 @@ export class AgentPlanner implements OnInit {
       this.proposals.set(items);
       const id = this.selected()?.id;
       this.selected.set(items.find(item => item.id === id) ?? items[0] ?? null);
-    });
+    }, 'history');
   }
 
   async generate(): Promise<void> {
@@ -71,7 +119,7 @@ export class AgentPlanner implements OnInit {
       this.selected.set(created);
       this.task.set('');
       this.info.set(files.length ? `Qwen przeanalizował ${files.length} zatwierdzonych fragmentów i przygotował plan.` : 'Qwen przygotował propozycję. Przejrzyj ją przed decyzją.');
-    });
+    }, 'generate');
   }
 
   /** Existing Electron workspace bridge is strictly read-only. Nothing is read automatically. */
@@ -143,6 +191,63 @@ export class AgentPlanner implements OnInit {
     this.contextError.set('');
   }
 
+  /** A file selection populates a preview; it never sends content to the API. */
+  async loadLocalCodeFile(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.item(0);
+    input.value = '';
+    if (!file || this.importBusy() || this.busy()) return;
+    this.contextError.set('');
+    if (!isAllowedCodePath(file.name)) {
+      this.contextError.set('Niedozwolona nazwa pliku. Wybierz plik źródłowy bez sekretów.');
+      return;
+    }
+    if (file.size > 16_384) {
+      this.contextError.set('Plik jest za duży do podglądu (limit 16 KiB).');
+      return;
+    }
+    this.importBusy.set(true);
+    try {
+      const code = await file.text();
+      if (!code.trim() || code.length > this.MAX_EXCERPT || code.includes('\0')) {
+        this.contextError.set('Fragment musi zawierać od 1 do 3600 znaków i nie może mieć bajtów NUL.');
+        return;
+      }
+      this.manualPath.set(file.name);
+      this.manualCode.set(code);
+    } catch {
+      this.contextError.set('Nie udało się odczytać wskazanego pliku.');
+    } finally {
+      this.importBusy.set(false);
+    }
+  }
+
+  /** Explicit consent step shared by pasted code and browser-selected files. */
+  attachManualSource(): void {
+    if (this.busy() || this.contextBusy() || this.importBusy()) return;
+    const relativePath = this.manualPath().trim();
+    const content = this.manualCode();
+    if (!isAllowedCodePath(relativePath)) {
+      this.contextError.set('Podaj bezpieczną ścieżkę względną, np. frontend/src/app/demo.ts.');
+      return;
+    }
+    if (!content.trim() || content.length > this.MAX_EXCERPT || content.includes('\0')) {
+      this.contextError.set('Fragment musi zawierać od 1 do 3600 znaków i nie może mieć bajtów NUL.');
+      return;
+    }
+    const previous = this.sources().filter(item => item.relativePath !== relativePath);
+    if (previous.length >= 3 || previous.reduce((total, item) => total + item.content.length, content.length) > this.MAX_TOTAL) {
+      this.contextError.set('Limit: 3 fragmenty, 3600 znaków każdy, 8000 znaków łącznie.');
+      return;
+    }
+    this.sources.set([...previous, { relativePath, content }]);
+    this.selectedDiffPath.set(relativePath);
+    this.clearDiff();
+    this.contextError.set('');
+    this.manualCode.set('');
+    this.manualPath.set('');
+  }
+
   removeSource(relativePath: string): void {
     this.sources.update(items => items.filter(item => item.relativePath !== relativePath));
     this.clearDiff();
@@ -168,7 +273,7 @@ export class AgentPlanner implements OnInit {
       }
       this.diffPreview.set(preview);
     } catch (error) {
-      this.diffError.set(error instanceof Error ? error.message : 'Nie udało się wygenerować diffu.');
+      this.diffError.set(browserApiErrorKey(error) ?? (error instanceof Error ? error.message : 'api.error.general'));
     } finally {
       this.diffBusy.set(false);
     }
@@ -199,7 +304,7 @@ export class AgentPlanner implements OnInit {
       this.info.set(decision === 'APPROVED'
         ? 'Plan zaakceptowany do dalszych prac. Nie wykonano żadnych zmian plików.'
         : 'Propozycja odrzucona. Nie wykonano zmian plików.');
-    });
+    }, 'review');
   }
 
   async revise(): Promise<void> {
@@ -211,17 +316,17 @@ export class AgentPlanner implements OnInit {
       this.replace(updated);
       this.feedback.set('');
       this.info.set('Qwen poprawił plan. Wymaga on Twojej ponownej oceny.');
-    });
+    }, 'revise');
   }
 
   choose(item: AgentProposal): void {
     if (!this.busy()) { this.selected.set(item); this.error.set(''); this.info.set(''); }
   }
 
-  statusLabel(status: string): string {
-    if (status === 'PENDING') return 'Do oceny';
-    if (status === 'APPROVED') return 'Zaakceptowany plan';
-    return 'Odrzucony plan';
+  statusKey(status: string): string {
+    if (status === 'PENDING') return 'lab.planner.status.pending';
+    if (status === 'APPROVED') return 'lab.planner.status.approved';
+    return 'lab.planner.status.rejected';
   }
 
   private replace(updated: AgentProposal): void {

@@ -30,6 +30,7 @@ export class ChatStore {
   private readonly api = inject(ChatApiService);
   private readonly chats = signal<ChatConversation[]>([emptyChat()]);
   private readonly selectedId = signal('');
+  private messagesAbort?: AbortController;
   readonly loading = signal(true);
   readonly sending = signal(false);
   readonly busy = signal(false);
@@ -94,24 +95,32 @@ export class ChatStore {
   /** Compatible with existing ChatHistory UI. */
   selectChat(id: string): void {
     if (!this.chats().some((chat) => chat.id === id)) return;
+    this.messagesAbort?.abort();
     this.selectedId.set(id);
     this.clearError();
     if (id) void this.loadMessages(id);
   }
   async loadMessages(id: string): Promise<void> {
     if (!id) return;
+    // Cancel obsolete GETs when a different conversation becomes active.
+    this.messagesAbort?.abort();
+    const controller = new AbortController();
+    this.messagesAbort = controller;
     const previousMessages = this.chats().find((c) => c.id === id)?.messages;
     try {
-      const messages = (await this.api.messages(id))
+      const messages = (await this.api.messages(id, controller.signal))
         .filter((msg) => msg.role !== 'SYSTEM')
         .map(mapMessage);
-      // Ignore stale requests when the user switches between chats quickly.
+      if (controller.signal.aborted || this.selectedId() !== id) return;
       this.chats.update((chats) =>
         chats.map((c) => (c.id === id && c.messages === previousMessages ? { ...c, messages } : c)),
       );
       this.clearError();
     } catch (error) {
-      this.setError(error);
+      // A user switching chats should never see an error from an abandoned request.
+      if (!controller.signal.aborted && this.selectedId() === id) this.setError(error);
+    } finally {
+      if (this.messagesAbort === controller) this.messagesAbort = undefined;
     }
   }
 
@@ -155,6 +164,9 @@ export class ChatStore {
       return true;
     } catch (error) {
       this.setError(error);
+      if (error instanceof ChatApiError && error.status === 0) {
+        this.errorKey.set('chat.deliveryUncertain');
+      }
       return false;
     } finally {
       this.sending.set(false);

@@ -25,7 +25,7 @@
     (change)="selectModule(moduleSelect.value)"
   >
     @for (module of navigation.modules; track module.id) {
-      <option [value]="module.id">
+      <option [value]="module.id" [selected]="module.id === navigation.activeId()">
         {{ module.labelKey | translate }}
       </option>
     }

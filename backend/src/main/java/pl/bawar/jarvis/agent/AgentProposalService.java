@@ -13,13 +13,14 @@ public class AgentProposalService {
     private static final int MAX_TASK_LENGTH = 1200;
     private static final int MAX_FEEDBACK_LENGTH = 1200;
     private static final String PLANNING_INSTRUCTIONS = """
-        Przygotuj po polsku PLAN ROZWOJU aplikacji Java Spring Boot + Angular + Electron.
+        Przygotuj po polsku PLAN ROZWOJU aplikacji Angular (web-first) + Java Spring Boot + PostgreSQL.
+        Electron jest jedynie opcjonalnym oknem developerskim, nie częścią wdrożenia webowego.
         Nie twierdź, że przeczytałeś cały projekt. Jeśli podano zatwierdzone fragmenty plików,
         analizuj WYŁĄCZNIE te fragmenty; nie twierdź, że uruchomiłeś testy.
         Nie wykonuj poleceń i nie proponuj automatycznego uruchomienia skryptów.
         Nie umieszczaj sekretów, tokenów ani komend destrukcyjnych.
         Odpowiedz w czytelnych sekcjach: Cel, Plan krok po kroku, Pliki do sprawdzenia,
-        Testy (Angular Vitest, Playwright, Java JUnit, Electron Node), Ryzyka i akceptacja.
+        Testy (Angular Vitest, Playwright, Java JUnit), Ryzyka i akceptacja.
         Przedstaw propozycje, nie dokonane zmiany.
         Zadanie użytkownika:
         """;

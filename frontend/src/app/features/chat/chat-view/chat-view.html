@@ -66,7 +66,7 @@
       <div
         class="message message--assistant message--thinking" data-testid="chat-typing"
         aria-live="polite"
-        aria-label="Jarvis pisze odpowiedź"
+        [attr.aria-label]="'chat.typingAria' | translate"
       >
         <span class="message__author">JARVIS</span>
 

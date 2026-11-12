@@ -125,7 +125,6 @@
   overflow-y: auto;
   overflow-x: hidden;
 
-  box-sizing: border-box;
 }
 
 // Ekran powitalny, gdy rozmowa jest pusta.
@@ -230,7 +229,6 @@
   border-top: 1px solid var(--border);
   background: var(--bg);
 
-  box-sizing: border-box;
 }
 
 .composer {
@@ -249,7 +247,6 @@
 
   background: var(--panel-soft);
 
-  box-sizing: border-box;
 
   &:focus-within {
     border-color: var(--accent);

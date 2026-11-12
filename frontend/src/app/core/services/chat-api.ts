@@ -48,7 +48,7 @@ export class ChatApiError extends Error {
 
 @Injectable({ providedIn: 'root' })
 export class ChatApiService {
-  private async request<T>(request: ChatApiRequest): Promise<T> {
+  private async request<T>(request: ChatApiRequest, signal?: AbortSignal): Promise<T> {
     const bridge = window.jarvisDesktop?.chatApi;
     if (bridge) {
       let response: ChatApiResult;
@@ -74,7 +74,7 @@ export class ChatApiService {
       case 'rename': method = 'PATCH'; url = `${base}/${id}`; body = { title: request.title }; break;
       case 'delete': method = 'DELETE'; url = `${base}/${id}`; break;
     }
-    try { return await browserApi<T>(method, url, body); }
+    try { return await browserApi<T>(method, url, body, signal ? { signal } : {}); }
     catch (error) {
       if (error instanceof BrowserApiError) throw new ChatApiError(error.status, error.message);
       throw error;
@@ -93,8 +93,8 @@ export class ChatApiService {
   get(id: string): Promise<ApiConversation> {
     return this.request<ApiConversation>({ operation: 'get', id });
   }
-  messages(id: string): Promise<ApiMessage[]> {
-    return this.request<ApiMessage[]>({ operation: 'messages', id });
+  messages(id: string, signal?: AbortSignal): Promise<ApiMessage[]> {
+    return this.request<ApiMessage[]>({ operation: 'messages', id }, signal);
   }
   send(id: string, content: string): Promise<ApiChatTurn> {
     return this.request<ApiChatTurn>({ operation: 'send', id, content });

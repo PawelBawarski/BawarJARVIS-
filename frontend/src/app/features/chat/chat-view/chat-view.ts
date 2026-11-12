@@ -1,13 +1,15 @@
-import { afterEveryRender, Component, ElementRef, inject, signal, viewChild, DestroyRef } from '@angular/core';
+import { afterEveryRender, ChangeDetectionStrategy, Component, ElementRef, inject, signal, viewChild, DestroyRef } from '@angular/core';
 import { ChatStore } from '../../../core/services/chat-store';
 import { ChatApiService } from '../../../core/services/chat-api';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
+import { AnimationFrameCoalescer } from '../../../core/utils/animation-frame-coalescer';
 
 @Component({
   selector: 'app-chat-view',
   templateUrl: './chat-view.html',
   styleUrl: './chat-view.scss',
   imports: [TranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatView {
   readonly store = inject(ChatStore);
@@ -28,15 +30,13 @@ export class ChatView {
   private readonly destroyRef = inject(DestroyRef);
   private observedPane?: HTMLElement;
   private contentObserver?: MutationObserver;
-  private scrollFrameId?: number;
+  private readonly scrollScheduler = new AnimationFrameCoalescer();
 
   constructor() {
     void this.refreshModelStatus();
     this.destroyRef.onDestroy(() => {
       this.contentObserver?.disconnect();
-      if (this.scrollFrameId !== undefined && typeof cancelAnimationFrame === 'function') {
-        cancelAnimationFrame(this.scrollFrameId);
-      }
+      this.scrollScheduler.cancel();
     });
 
     afterEveryRender({
@@ -53,11 +53,13 @@ export class ChatView {
           this.scrollToBottom();
         }
 
+        // O(1) marker even for a very long conversation; DOM changes are
+        // independently observed for streamed/edited message content.
+        const items = this.messages();
+        const last = items.at(-1);
         const marker = [
-          this.store.activeId(),
-          ...this.messages().map(message => message.id),
-          this.pendingText(),
-          String(this.store.sending()),
+          this.store.activeId(), items.length, last?.id,
+          this.pendingText(), this.store.sending(),
         ].join('|');
         if (pane && marker !== this.lastScrollMarker) {
           this.lastScrollMarker = marker;
@@ -89,19 +91,13 @@ export class ChatView {
   private scrollToBottom(): void {
     const pane = this.messageList()?.nativeElement;
     if (!pane) return;
-    pane.scrollTop = pane.scrollHeight;
-    // One extra pass after layout: useful for fonts and delayed content sizing.
-    if (typeof requestAnimationFrame === 'function') {
-      if (this.scrollFrameId !== undefined && typeof cancelAnimationFrame === 'function') {
-        cancelAnimationFrame(this.scrollFrameId);
+    // Angular and MutationObserver can report the same change in one frame.
+    // Batch scrollHeight reads and scrollTop writes to one animation frame.
+    this.scrollScheduler.schedule(() => {
+      if (pane.isConnected && pane === this.messageList()?.nativeElement) {
+        pane.scrollTop = pane.scrollHeight;
       }
-      this.scrollFrameId = requestAnimationFrame(() => {
-        this.scrollFrameId = undefined;
-        if (pane.isConnected && pane === this.messageList()?.nativeElement) {
-          pane.scrollTop = pane.scrollHeight;
-        }
-      });
-    }
+    });
   }
 
   async sendMessage(): Promise<void> {

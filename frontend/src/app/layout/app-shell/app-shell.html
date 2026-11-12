@@ -41,10 +41,20 @@
       <app-module-switcher />
 
       <div class="shell__toolbar-actions">
+        <button type="button" class="backend-status" data-testid="backend-connection"
+          [class.backend-status--reachable]="backend.status() === 'reachable'"
+          [class.backend-status--unavailable]="backend.status() === 'unavailable'"
+          [attr.aria-label]="backendStatusKey() | translate"
+          [title]="'backend.status.retry' | translate"
+          (click)="backend.check()">
+          <span class="backend-status__dot" aria-hidden="true"></span>
+          <span class="backend-status__label">{{ backendStatusKey() | translate }}</span>
+        </button>
         <app-radio-panel />
 
         <button type="button" class="toolbar-action" data-testid="open-module-help"
-          aria-label="Jak działa ten moduł?" title="Jak działa ten moduł?"
+          [attr.aria-label]="'toolbar.moduleHelp' | translate"
+          [title]="'toolbar.moduleHelp' | translate"
           (click)="help.open(navigation.activeId())">
           <span aria-hidden="true">?</span>
         </button>

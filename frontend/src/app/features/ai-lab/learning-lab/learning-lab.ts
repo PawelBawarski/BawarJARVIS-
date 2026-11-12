@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { ModuleHelpService } from '../../../core/services/module-help.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
+import { TranslationService } from '../../../core/services/translation';
 
 type Source = { id: string; title: string; source: string; score: number };
 type Knowledge = { id: string; title: string; source: string; origin: string };
@@ -13,13 +15,14 @@ type Status = { knowledgeDocuments: number; feedbackSamples: number; model: stri
 @Component({
   selector: 'app-learning-lab',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './learning-lab.html',
   styleUrl: './learning-lab.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LearningLab {
   readonly help = inject(ModuleHelpService);
+  private readonly translations = inject(TranslationService);
   readonly token = signal('');
   readonly question = signal('');
   readonly title = signal('');
@@ -40,7 +43,7 @@ export class LearningLab {
 
   private readonly baseUrl = 'http://127.0.0.1:8766/api/ai';
   private async api<T>(path: string, body?: Record<string, string | boolean>): Promise<T> {
-    if (!this.token().trim()) throw new Error('Wklej lokalny token wyświetlony przy uruchomieniu Javy.');
+    if (!this.token().trim()) throw new Error('lab.learning.tokenMissing');
     const response = await fetch(`${this.baseUrl}${path}`, {
       method: body ? 'POST' : 'GET',
       headers: {
@@ -59,7 +62,7 @@ export class LearningLab {
     this.error.set('');
     this.info.set('');
     try { await action(); }
-    catch (error: unknown) { this.error.set(error instanceof Error ? error.message : 'Nieoczekiwany błąd'); }
+    catch (error: unknown) { this.error.set(error instanceof Error ? error.message : 'lab.learning.unexpectedError'); }
     finally { this.busy.set(false); }
   }
   async refresh(): Promise<void> {
@@ -84,7 +87,7 @@ export class LearningLab {
   async addDocument(): Promise<void> {
     return this.run(async () => {
       await this.api<{ id: string }>('/knowledge', { title: this.title(), source: this.source(), content: this.content() });
-      this.info.set('Dodano dokument do lokalnej bazy wiedzy.');
+      this.info.set('lab.learning.documentAdded');
       this.content.set('');
       const docs = await this.api<{ documents: Knowledge[] }>('/knowledge');
       this.documents.set(docs.documents);
@@ -93,19 +96,19 @@ export class LearningLab {
   async sendFeedback(): Promise<void> {
     return this.run(async () => {
       await this.api('/feedback', { question: this.question(), documentId: this.feedbackDocument(), positive: this.positive() });
-      this.info.set('Zapisano ocenę źródła.');
+      this.info.set('lab.learning.feedbackSaved');
     });
   }
   async train(): Promise<void> {
     return this.run(async () => {
       const report = await this.api<{ accepted: boolean; message: string; validationSamples: number }>('/train', { confirm: true });
-      this.info.set(`${report.message} Walidacja: ${report.validationSamples} próbek.`);
+      this.info.set(`${report.message} (${report.validationSamples} ${this.translations.translate('lab.learning.validationSamples')})`);
     });
   }
   async rollback(): Promise<void> {
     return this.run(async () => {
       await this.api('/rollback', { confirm: true });
-      this.info.set('Przywrócono poprzedni model rankera.');
+      this.info.set('lab.learning.rollbackDone');
     });
   }
   async previewUrl(): Promise<void> {
@@ -117,10 +120,10 @@ export class LearningLab {
   async approveUrl(): Promise<void> {
     return this.run(async () => {
       const preview = this.preview();
-      if (!preview) throw new Error('Brak dokumentu do zatwierdzenia.');
+      if (!preview) throw new Error('lab.learning.previewMissing');
       await this.api('/web/approve', { previewId: preview.previewId });
       this.preview.set(null);
-      this.info.set('Dokument internetowy dodany po zatwierdzeniu.');
+      this.info.set('lab.learning.importApproved');
       const docs = await this.api<{ documents: Knowledge[] }>('/knowledge');
       this.documents.set(docs.documents);
     });

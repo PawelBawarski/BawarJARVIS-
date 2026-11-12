@@ -1,28 +1,77 @@
-<section class="agent-planner" data-testid="agent-planner" aria-label="Propozycje rozwoju Jarvisa">
+<section class="agent-planner" data-testid="agent-planner" [attr.aria-label]="'lab.planner.aria' | translate">
   <header class="agent-planner__header">
     <div>
-      <p class="agent-planner__eyebrow">J.A.R.V.I.S. / AGENT 16.0</p>
-      <h3>Propozycje ulepszeń</h3>
-      <p>Opisz zadanie. Lokalny Qwen przygotuje plan, który możesz ocenić, poprawić lub odrzucić.</p>
+      <p class="agent-planner__eyebrow">J.A.R.V.I.S. / AI LAB 18.2</p>
+      <h3>{{ 'lab.planner.title' | translate }}</h3>
+      <p>{{ 'lab.planner.intro' | translate }}</p>
     </div>
     <button type="button" (click)="refresh()" [disabled]="busy() || !api.available" data-testid="agent-refresh">
-      Odśwież historię
+      {{ 'lab.planner.refresh' | translate }}
     </button>
   </header>
 
   @if (!api.available) {
-    <p role="status" class="agent-planner__notice">Planowanie wymaga uruchomienia Jarvisa w Electronie.</p>
+    <p role="status" class="agent-planner__notice">{{ 'lab.planner.unavailable' | translate }}</p>
   }
 
+  <div class="agent-planner__dashboard" data-testid="agent-workflow-status">
+    <div class="agent-planner__metric"><span>{{ 'lab.planner.metricSources' | translate }}</span><strong>{{ sources().length }}/3</strong><small>{{ sourceCharacterCount() }}/8000 {{ 'lab.planner.characters' | translate }}</small></div>
+    <div class="agent-planner__metric"><span>{{ 'lab.planner.metricReviews' | translate }}</span><strong>{{ pendingReviewCount() }}</strong><small>{{ 'lab.planner.reviewHint' | translate }}</small></div>
+    <div class="agent-planner__metric"><span>{{ 'lab.planner.metricBackend' | translate }}</span>
+      <strong>{{ (api.available ? 'lab.planner.apiConfigured' : 'lab.planner.apiUnavailable') | translate }}</strong>
+      <small>{{ 'lab.planner.apiHint' | translate }}</small></div>
+  </div>
+  <section class="agent-planner__workflow" data-testid="agent-activity" aria-labelledby="agent-activity-title"
+    [attr.data-busy]="activityBusy()">
+    <div>
+      <h4 id="agent-activity-title">{{ 'lab.planner.activityTitle' | translate }}</h4>
+      <p class="agent-planner__guidance" data-testid="agent-activity-message" role="status" aria-live="polite" aria-atomic="true">
+        {{ activityKey() | translate }}
+      </p>
+    </div>
+    <p class="agent-planner__guidance" data-testid="agent-next-action">{{ nextActionKey() | translate }}</p>
+    <p class="agent-planner__privacy-note">{{ 'lab.planner.activitySafety' | translate }}</p>
+  </section>
+  <div class="agent-planner__workflow" data-testid="agent-workflow-guide">
+    <h4>{{ 'lab.planner.workflowTitle' | translate }}</h4>
+    <ol>
+      <li [attr.aria-current]="workflowStep() === 1 ? 'step' : null"><strong>{{ 'lab.planner.workflow1Title' | translate }} @if (workflowStep() === 1) { {{ 'lab.planner.currentStep' | translate }} }</strong><span>{{ 'lab.planner.workflow1' | translate }}</span></li>
+      <li [attr.aria-current]="workflowStep() === 2 ? 'step' : null"><strong>{{ 'lab.planner.workflow2Title' | translate }} @if (workflowStep() === 2) { {{ 'lab.planner.currentStep' | translate }} }</strong><span>{{ 'lab.planner.workflow2' | translate }}</span></li>
+      <li [attr.aria-current]="workflowStep() === 3 ? 'step' : null"><strong>{{ 'lab.planner.workflow3Title' | translate }} @if (workflowStep() === 3) { {{ 'lab.planner.currentStep' | translate }} }</strong><span>{{ 'lab.planner.workflow3' | translate }}</span></li>
+    </ol>
+  </div>
   <details class="agent-planner__context" data-testid="agent-context">
-    <summary>Analiza kodu projektu (tylko wybrane pliki, tylko do odczytu)</summary>
-    <p>Wybierz katalog roboczy i przejrzyj plik. Dopiero kliknięcie „Dodaj do kontekstu”
-      przekaże jego fragment do lokalnego Qwen podczas generowania planu. Nie wysyłaj plików z hasłami i kluczami.</p>
+    <summary>{{ 'lab.planner.contextSummary' | translate }}</summary>
+    <p id="agent-context-instructions">{{ 'lab.planner.contextIntro' | translate }}</p>
+    <section class="agent-planner__web-source" [attr.aria-label]="'lab.planner.browserCodeAria' | translate" data-testid="agent-web-source">
+      <h4>{{ 'lab.planner.browserCode' | translate }}</h4>
+      <p>{{ 'lab.planner.browserIntro' | translate }}</p>
+      <label for="jarvis-agent-web-file">{{ 'lab.planner.selectFile' | translate }}</label>
+      <input id="jarvis-agent-web-file" data-testid="agent-web-file" type="file"
+        aria-describedby="agent-context-instructions"
+        accept=".java,.ts,.tsx,.js,.cjs,.html,.scss,.css,.json,.sql,.xml,.md,.yml,.yaml,.properties"
+        [disabled]="busy() || importBusy()" (change)="loadLocalCodeFile($event)" />
+      <label for="jarvis-agent-web-path">{{ 'lab.planner.filePath' | translate }}</label>
+      <input id="jarvis-agent-web-path" data-testid="agent-web-path" type="text" maxlength="240"
+        autocomplete="off" spellcheck="false" [placeholder]="'lab.planner.pathPlaceholder' | translate"
+        [value]="manualPath()" (input)="manualPath.set($any($event.target).value)" />
+      <label for="jarvis-agent-web-code">{{ 'lab.planner.codeSnippet' | translate }}</label>
+      <textarea id="jarvis-agent-web-code" data-testid="agent-web-code" rows="7" maxlength="3600"
+        aria-describedby="agent-context-instructions"
+        spellcheck="false" [value]="manualCode()" (input)="manualCode.set($any($event.target).value)"
+        [placeholder]="'lab.planner.codePlaceholder' | translate"></textarea>
+      <button type="button" data-testid="agent-web-attach"
+        [disabled]="busy() || importBusy() || !manualPath().trim() || !manualCode().trim()"
+        (click)="attachManualSource()">{{ 'lab.planner.attach' | translate }}</button>
+    </section>
+    @if (workspaceApi.available) {
+      <p>{{ 'lab.planner.electronWorkspace' | translate }}</p>
+    }
     <div class="agent-planner__context-actions">
       <button type="button" data-testid="agent-workspace-choose" [disabled]="contextBusy() || busy() || !workspaceApi.available"
-        (click)="chooseWorkspace()">Wybierz katalog</button>
+        (click)="chooseWorkspace()">{{ 'lab.planner.chooseFolder' | translate }}</button>
       <button type="button" data-testid="agent-workspace-refresh" [disabled]="contextBusy() || busy() || !workspaceApi.available"
-        (click)="loadWorkspace()">Otwórz wybrany katalog</button>
+        (click)="loadWorkspace()">{{ 'lab.planner.openFolder' | translate }}</button>
     </div>
     @if (workspaceRoot()) {
       <p class="agent-planner__path" data-testid="agent-workspace-path">{{ workspaceRoot() }}</p>
@@ -31,7 +80,7 @@
       <div class="agent-planner__files" data-testid="agent-workspace-files">
         <div class="agent-planner__context-actions">
           <button type="button" data-testid="agent-workspace-back" [disabled]="contextBusy() || !listing.relativePath"
-            (click)="goWorkspaceBack()">Wstecz</button>
+            (click)="goWorkspaceBack()">{{ 'lab.planner.back' | translate }}</button>
           <span>{{ listing.relativePath || '/' }}</span>
         </div>
         @for (entry of listing.entries; track entry.relativePath) {
@@ -43,37 +92,36 @@
     }
     @if (workspacePreview(); as preview) {
       <div class="agent-planner__preview" data-testid="agent-workspace-preview">
-        <p><strong>{{ preview.relativePath }}</strong> — podgląd maks. {{ MAX_EXCERPT }} znaków</p>
+        <p><strong>{{ preview.relativePath }}</strong> — {{ 'lab.planner.previewLimit' | translate }} {{ MAX_EXCERPT }} {{ 'lab.planner.characters' | translate }}</p>
         <pre>{{ preview.content.slice(0, MAX_EXCERPT) }}</pre>
         @if (preview.content.length > MAX_EXCERPT) {
-          <p>Pokazano tylko początek pliku. Dalsza część NIE zostanie wysłana.</p>
+          <p>{{ 'lab.planner.previewTruncated' | translate }}</p>
         }
         <button type="button" data-testid="agent-attach-source" [disabled]="contextBusy() || busy()"
-          (click)="attachPreview()">Dodaj do kontekstu Qwen</button>
+          (click)="attachPreview()">{{ 'lab.planner.attach' | translate }}</button>
       </div>
     }
     @if (sources().length) {
       <div class="agent-planner__selected" data-testid="agent-selected-sources">
-        <h4>Zatwierdzone fragmenty ({{ sources().length }}/3)</h4>
+        <h4>{{ 'lab.planner.approvedSources' | translate }} ({{ sources().length }}/3)</h4>
         @for (source of sources(); track source.relativePath) {
           <div>
-            <span>{{ source.relativePath }} ({{ source.content.length }} znaków)</span>
-            <button type="button" [disabled]="busy()" [attr.aria-label]="'Usuń z kontekstu ' + source.relativePath"
-              (click)="removeSource(source.relativePath)">Usuń</button>
+            <span>{{ source.relativePath }} ({{ source.content.length }} {{ 'lab.planner.characters' | translate }})</span>
+            <button type="button" [disabled]="busy()" [attr.aria-label]="('lab.planner.remove' | translate) + ' — ' + source.relativePath"
+              (click)="removeSource(source.relativePath)">{{ 'lab.planner.remove' | translate }}</button>
           </div>
         }
       </div>
     }
     @if (contextError()) { <p class="agent-planner__error" role="alert">{{ contextError() }}</p> }
-    @if (!workspaceApi.available) { <p>Odczyt plików wymaga okna Electron.</p> }
+    @if (!workspaceApi.available) { <p>{{ 'lab.planner.browserOnly' | translate }}</p> }
   </details>
 
   <details class="agent-planner__patch" data-testid="agent-diff-section" open>
-    <summary>16.3 — proponowane zmiany kodu (podgląd diff)</summary>
-    <p>Najpierw dodaj plik do kontekstu powyżej. Jarvis użyje tylko wybranego fragmentu
-      i zadania z pola poniżej (lub zadania zaznaczonego planu). Nie zmienia plików na dysku.</p>
+    <summary>{{ 'lab.planner.diffSummary' | translate }}</summary>
+    <p>{{ 'lab.planner.diffIntro' | translate }}</p>
     @if (sources().length) {
-      <label for="jarvis-agent-diff-file">Fragment do zmiany</label>
+      <label for="jarvis-agent-diff-file">{{ 'lab.planner.diffSource' | translate }}</label>
       <select id="jarvis-agent-diff-file" data-testid="agent-diff-file"
         [value]="diffSource()?.relativePath ?? ''"
         (change)="selectDiffSource($any($event.target).value)">
@@ -82,44 +130,49 @@
         }
       </select>
     }
+    @if (!sources().length) {
+      <p class="agent-planner__guidance">{{ 'lab.planner.diffNeedsSource' | translate }}</p>
+    }
     <button type="button" data-testid="agent-generate-diff"
       [disabled]="!api.available || !diffSource() || !(task().trim() || selected()?.task) || busy() || diffBusy()"
-      (click)="generateDiff()">{{ diffBusy() ? 'Qwen przygotowuje zmianę…' : 'Wygeneruj podgląd diff' }}</button>
-    @if (diffError()) { <p role="alert" class="agent-planner__error" data-testid="agent-diff-error">{{ diffError() }}</p> }
+      (click)="generateDiff()">{{ (diffBusy() ? 'lab.planner.diffBusy' : 'lab.planner.generateDiff') | translate }}</button>
+    @if (diffError()) { <p role="alert" class="agent-planner__error" data-testid="agent-diff-error">{{ diffError() | translate }}</p> }
     @if (diffPreview(); as patch) {
       <div class="agent-planner__patch-result" data-testid="agent-diff-result">
         <p class="agent-planner__notice">{{ patch.notice }}</p>
-        <p><strong>Plik:</strong> {{ patch.relativePath }}</p>
+        <p><strong>{{ 'lab.planner.file' | translate }}</strong> {{ patch.relativePath }}</p>
         <div class="agent-planner__patch-columns">
-          <div><h4>Oryginalny fragment</h4><pre data-testid="agent-diff-original">{{ patch.original }}</pre></div>
-          <div><h4>Propozycja Qwen</h4><pre data-testid="agent-diff-proposed">{{ patch.proposed }}</pre></div>
+          <div><h4>{{ 'lab.planner.original' | translate }}</h4><pre data-testid="agent-diff-original">{{ patch.original }}</pre></div>
+          <div><h4>{{ 'lab.planner.proposed' | translate }}</h4><pre data-testid="agent-diff-proposed">{{ patch.proposed }}</pre></div>
         </div>
-        <h4>Porównanie zmian (tylko do podglądu)</h4>
+        <h4>{{ 'lab.planner.compare' | translate }}</h4>
         <pre class="agent-planner__patch-diff" data-testid="agent-diff-text">{{ patch.diff }}</pre>
         <!-- JARVIS_STAGE16_4_SANDBOX -->
         <app-agent-sandbox [preview]="patch" />
-        <p>Żadna zmiana nie została zapisana ani uruchomiona. Zatwierdzenie planu nie wdraża tego diffu.</p>
+        <p>{{ 'lab.planner.diffSafety' | translate }}</p>
       </div>
     }
   </details>
 
-  <div class="agent-planner__form">
-    <label for="jarvis-agent-task">Co Jarvis ma zaplanować?</label>
+  <div class="agent-planner__form" data-testid="agent-request-form">
+    <p id="agent-task-instructions" class="agent-planner__guidance">{{ 'lab.planner.taskHint' | translate }}</p>
+    <label for="jarvis-agent-task">{{ 'lab.planner.taskLabel' | translate }}</label>
     <textarea id="jarvis-agent-task" rows="3" maxlength="1200"
+      aria-describedby="agent-task-instructions"
       data-testid="agent-task" [value]="task()"
       (input)="task.set($any($event.target).value)"
-      placeholder="Np. Dodaj wyszukiwanie w historii rozmów oraz testy Vitest i Playwright"></textarea>
+      [placeholder]="'lab.planner.taskPlaceholder' | translate"></textarea>
     <button type="button" data-testid="agent-generate"
       [disabled]="busy() || !api.available || !task().trim()"
-      (click)="generate()">{{ busy() ? 'Pracuję…' : 'Zaproponuj plan' }}</button>
+      (click)="generate()">{{ (busy() ? 'lab.planner.busy' : 'lab.planner.generate') | translate }}</button>
   </div>
 
-  @if (error()) { <p role="alert" class="agent-planner__error">{{ error() }}</p> }
+  @if (error()) { <p role="alert" class="agent-planner__error">{{ error() | translate }}</p> }
   @if (info()) { <p role="status" class="agent-planner__notice">{{ info() }}</p> }
 
   @if (proposals().length) {
     <div class="agent-planner__history" data-testid="agent-proposals">
-      <h4>Historia propozycji</h4>
+      <h4>{{ 'lab.planner.history' | translate }}</h4>
       <div class="agent-planner__tabs">
         @for (proposal of proposals(); track proposal.id) {
           <button type="button" [disabled]="busy()"
@@ -127,7 +180,7 @@
             [class.agent-planner__tab--active]="selected()?.id === proposal.id"
             (click)="choose(proposal)">
             <span>{{ proposal.task }}</span>
-            <small>{{ statusLabel(proposal.status) }}</small>
+            <small>{{ statusKey(proposal.status) | translate }}</small>
           </button>
         }
       </div>
@@ -137,32 +190,30 @@
   @if (selected(); as proposal) {
     <article class="agent-planner__detail" data-testid="agent-proposal-detail">
       <div class="agent-planner__detail-head">
-        <h4>Plan do przeglądu</h4>
-        <span data-testid="agent-status">{{ statusLabel(proposal.status) }}</span>
+        <h4>{{ 'lab.planner.planReview' | translate }}</h4>
+        <span data-testid="agent-status">{{ statusKey(proposal.status) | translate }}</span>
       </div>
       <h5>{{ proposal.task }}</h5>
       <pre class="agent-planner__plan" data-testid="agent-plan">{{ proposal.plan }}</pre>
       @if (proposal.status === 'PENDING') {
         <div class="agent-planner__review">
-          <button type="button" data-testid="agent-approve" [disabled]="busy()" (click)="approve()">Akceptuj plan</button>
-          <button type="button" data-testid="agent-reject" [disabled]="busy()" (click)="reject()">Odrzuć</button>
+          <button type="button" data-testid="agent-approve" [disabled]="busy()" (click)="approve()">{{ 'lab.planner.approve' | translate }}</button>
+          <button type="button" data-testid="agent-reject" [disabled]="busy()" (click)="reject()">{{ 'lab.planner.reject' | translate }}</button>
         </div>
-        <label for="jarvis-agent-feedback">Uwagi do kolejnej wersji planu</label>
+        <label for="jarvis-agent-feedback">{{ 'lab.planner.feedbackLabel' | translate }}</label>
         <textarea id="jarvis-agent-feedback" rows="2" maxlength="1200"
           data-testid="agent-feedback" [value]="feedback()"
           (input)="feedback.set($any($event.target).value)"
-          placeholder="Np. Dodaj test bezpieczeństwa i nie ruszaj bazy danych"></textarea>
+          [placeholder]="'lab.planner.feedbackPlaceholder' | translate"></textarea>
         <button type="button" data-testid="agent-revise"
-          [disabled]="busy() || !feedback().trim()" (click)="revise()">Popraw plan</button>
+          [disabled]="busy() || !feedback().trim()" (click)="revise()">{{ 'lab.planner.revise' | translate }}</button>
       }
     </article>
   }
 
+  <p class="agent-planner__privacy-note">{{ 'lab.planner.privacy' | translate }}</p>
   <details class="agent-planner__help">
-    <summary>Jak działa planowanie w AI Lab?</summary>
-    <p>Przykład: wpisz „Dodaj eksport czatu do PDF i testy”. Qwen przygotuje plan. Akceptacja
-      zapisuje status w PostgreSQL, ale <strong>nie edytuje kodu ani nie uruchamia poleceń</strong>.
-      Model widzi tylko fragmenty plików zatwierdzone przez Ciebie w sekcji „Analiza kodu projektu”.
-      Podgląd diffu jest dostępny w etapie 16.3; uruchamianie testów i wdrażanie zmian będą osobnymi etapami.</p>
+    <summary>{{ 'lab.planner.help' | translate }}</summary>
+    <p>{{ 'lab.planner.helpDetails' | translate }}</p>
   </details>
 </section>

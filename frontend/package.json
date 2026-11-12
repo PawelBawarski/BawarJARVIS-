@@ -12,7 +12,9 @@
     "test:electron": "node --test electron/*.test.cjs",
     "dev:web:ai": "node scripts/dev-stack.cjs --ai",
     "dev:electron:ai": "node scripts/dev-stack.cjs --electron --ai",
-    "test:model": "node --test scripts/model-runtime.test.cjs"
+    "test:model": "node --test scripts/model-runtime.test.cjs",
+    "check:i18n": "node scripts/check-translations.cjs",
+    "audit:styles": "node scripts/audit-style-budgets.cjs"
   },
   "private": true,
   "packageManager": "npm@11.21.0",

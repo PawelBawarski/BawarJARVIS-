@@ -1,67 +1,5 @@
 :host {
   display: block;
-}
-
-.ai-lab-view {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: 1.5rem;
-
-  &__header {
-    h2 {
-      margin: 0 0 0.5rem;
-    }
-
-    p {
-      margin: 0;
-      opacity: 0.75;
-    }
-  }
-
-  &__panel {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1.5rem;
-    border: 1px solid currentColor;
-    border-radius: 0.75rem;
-  }
-
-  &__status {
-    margin: 0;
-    font-weight: 600;
-  }
-
-  &__actions {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-
-    button {
-      padding: 0.75rem 1.25rem;
-      border-radius: 0.5rem;
-      border: 1px solid currentColor;
-
-      &:disabled {
-        cursor: not-allowed;
-        opacity: 0.5;
-      }
-    }
-  }
-
-  &__approval {
-    margin: 0;
-    opacity: 0.75;
-  }
-}
-
-/* JARVIS AI LAB SCROLL FIX */
-/* The workspace deliberately hides overflow. Only AI Lab scrolls here,
-   so the chat/sidebar layout stays unchanged. */
-:host {
-  display: block;
-  box-sizing: border-box;
   height: 100%;
   min-height: 0;
   min-width: 0;
@@ -70,66 +8,76 @@
   overscroll-behavior-y: contain;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
-  scrollbar-color: #526680 transparent;
 }
-
-/* Leave some room after the last AI Lab panel. */
-:host > :last-child {
-  margin-bottom: 1.5rem;
-}
-
-/* JARVIS_AI_LAB_UX_REPAIR_V1 */
 .jarvis-lab-ux {
-  box-sizing: border-box;
-  width: min(100%, 1040px);
-  max-width: 100%;
+  display: grid;
+  gap: 1.25rem;
+  width: min(100%, 1160px);
   min-width: 0;
   margin: 0 auto;
-  padding: 1rem clamp(.35rem, 1.4vw, 1rem) 2rem;
-  display: grid;
-  gap: 1rem;
-  color: inherit;
+  padding: clamp(.85rem, 2.2vw, 2rem) clamp(.5rem, 1.7vw, 1.5rem) 3rem;
 }
-.jarvis-lab-ux, .jarvis-lab-ux * { box-sizing: border-box; }
 .jarvis-lab-ux__header {
-  padding: .4rem .25rem;
-  h2 { margin: .2rem 0 .5rem; font-size: clamp(1.3rem, 2vw, 1.8rem); }
-  p { margin: 0; line-height: 1.55; opacity: .88; }
+  display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap;
+  gap: .7rem 1.5rem; padding: .5rem 0 .25rem;
 }
-.jarvis-lab-ux__eyebrow { font-size: .75rem; letter-spacing: .12em; font-weight: 700; opacity: .7; }
-.jarvis-lab-ux__overview { display: grid; gap: .8rem; grid-template-columns: repeat(2,minmax(0,1fr)); }
-.jarvis-lab-ux__tile {
-  min-width:0; padding:1rem; display:grid; gap:.45rem;
-  border:1px solid color-mix(in srgb,currentColor 18%,transparent);
-  border-radius:12px; background:color-mix(in srgb,currentColor 5%,transparent);
-  strong { font-size:1rem; }
-  span { font-size:.88rem; line-height:1.45; opacity:.9; }
-  small { font-size:.75rem; opacity:.7; }
-}
-.jarvis-lab-ux__notice { margin:0; line-height:1.5; opacity:.8; font-size:.85rem; }
-.jarvis-lab-ux__section {
-  min-width:0; max-width:100%; border:1px solid color-mix(in srgb,currentColor 22%,transparent);
-  border-radius:12px; background:color-mix(in srgb,currentColor 3%,transparent);
-  > summary { padding:1rem; cursor:pointer; font-weight:650; list-style-position:inside; }
-  > summary:focus-visible { outline:2px solid #75aaff; outline-offset:-4px; }
-  &[open] > summary { border-bottom:1px solid color-mix(in srgb,currentColor 15%,transparent); }
-}
-.jarvis-lab-ux__section-content { padding:1rem; width:100%; max-width:100%; min-width:0; overflow-wrap:anywhere; }
-.jarvis-lab-ux__section-content--offline { max-width:100%; }
-@media(max-width:720px) {
-  .jarvis-lab-ux { padding:.6rem .25rem 1rem; }
-  .jarvis-lab-ux__overview { grid-template-columns:minmax(0,1fr); }
-  .jarvis-lab-ux__section-content { padding:.5rem; }
-}
-
-
-/* JARVIS_CONTEXT_HELP_V1 */
+.jarvis-lab-ux__heading { max-width: 66ch; }
+.jarvis-lab-ux__eyebrow { font-size: .73rem; letter-spacing: .18em; color: var(--accent); font-weight: 800; margin: 0 0 .5rem; }
+.jarvis-lab-ux__heading h2 { font-size: clamp(1.5rem, 3vw, 2.3rem); line-height: 1.15; margin: 0 0 .6rem; letter-spacing: -.03em; }
+.jarvis-lab-ux__heading > p:last-child { color: var(--muted); line-height: 1.55; margin: 0; font-size: .94rem; }
 .jarvis-lab-help-button {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: fit-content; margin: .6rem .2rem .5rem; padding: .52rem .8rem;
-  border: 1px solid var(--border, #435878); border-radius: 10px;
-  background: var(--accent-soft, #1c3558); color: inherit;
-  cursor: pointer; font-size: .86rem;
+  appearance: none; display: inline-flex; align-items: center; justify-content: center;
+  padding: .65rem .9rem; font: inherit; font-size: .85rem; font-weight: 650;
+  background: var(--accent-soft); color: var(--text);
+  border: 1px solid var(--border); border-radius: 10px; cursor: pointer;
 }
-.jarvis-lab-help-button:hover { filter: brightness(1.15); }
-.jarvis-lab-help-button:focus-visible { outline: 2px solid var(--accent, #8bb9fa); outline-offset: 3px; }
+.jarvis-lab-help-button:hover { border-color: var(--accent); }
+.jarvis-lab-help-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.jarvis-lab-ux__overview {
+  display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .75rem;
+}
+.jarvis-lab-ux__tile {
+  display: flex; flex-direction: column; min-width: 0; gap: .55rem;
+  padding: 1.05rem; border: 1px solid var(--border); border-radius: 14px;
+  background: var(--panel); box-shadow: 0 12px 30px rgba(0,0,0,.07);
+}
+.jarvis-lab-ux__tile--primary { border-color: color-mix(in srgb,var(--accent) 40%,var(--border)); background: color-mix(in srgb,var(--accent-soft) 65%,var(--panel)); }
+.jarvis-lab-ux__tile-icon { width: fit-content; color: var(--accent); font-size: .75rem; font-weight: 800; letter-spacing: .1em; }
+.jarvis-lab-ux__tile strong { font-size: .96rem; line-height: 1.3; }
+.jarvis-lab-ux__tile p { margin: 0; font-size: .82rem; line-height: 1.5; color: var(--text); }
+.jarvis-lab-ux__tile small { margin-top: auto; padding-top: .45rem; color: var(--muted); line-height: 1.45; font-size: .76rem; }
+.jarvis-lab-ux__explain {
+  display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.6fr); align-items: center; gap: .75rem 1.5rem;
+  padding: 1rem 1.2rem; border: 1px solid var(--border); border-radius: 14px;
+  background: var(--panel-soft);
+}
+.jarvis-lab-ux__explain h3 { font-size: 1rem; margin: 0 0 .35rem; }
+.jarvis-lab-ux__explain p { color: var(--muted); font-size: .83rem; margin: 0; line-height: 1.5; }
+.jarvis-lab-ux__explain ol { list-style: none; margin: 0; padding: 0; display: grid; gap: .55rem; counter-reset: workflow; }
+.jarvis-lab-ux__explain li { display: flex; gap: .65rem; align-items: baseline; font-size: .85rem; line-height: 1.45; counter-increment: workflow; }
+.jarvis-lab-ux__explain li::before { content: counter(workflow); display: inline-grid; flex: 0 0 1.4rem; place-items: center; background: var(--accent-soft); color: var(--accent); border-radius: 6px; font-weight: 800; }
+.jarvis-lab-ux__primary { display: grid; gap: 1.1rem; min-width: 0; }
+.jarvis-lab-ux__notice { display: flex; flex-wrap: wrap; gap: .4rem; padding: .9rem 1rem; border-left: 3px solid var(--accent); background: var(--panel); border-radius: 6px 10px 10px 6px; line-height: 1.5; font-size: .85rem; }
+.jarvis-lab-ux__notice span { color: var(--muted); }
+.jarvis-lab-ux__section { min-width: 0; max-width: 100%; border: 1px solid var(--border); border-radius: 13px; background: var(--panel); }
+.jarvis-lab-ux__section > summary { padding: 1rem 1.1rem; cursor: pointer; font-weight: 650; line-height: 1.5; }
+.jarvis-lab-ux__section > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+.jarvis-lab-ux__section[open] > summary { border-bottom: 1px solid var(--border); }
+.jarvis-lab-ux__section-content { padding: 1rem; min-width: 0; overflow-wrap: anywhere; }
+.jarvis-lab-ux__section-content--offline { max-width: 100%; }
+.ai-lab-view { display: grid; gap: .8rem; padding: .6rem 0 1.5rem; }
+.ai-lab-view__header h3 { margin: 0 0 .4rem; }
+.ai-lab-view__header p { margin: 0; color: var(--muted); }
+.ai-lab-view__panel { display: grid; gap: .75rem; padding: 1rem; border: 1px solid var(--border); border-radius: 12px; }
+.ai-lab-view__status, .ai-lab-view__approval { margin: 0; }
+.ai-lab-view__actions { display: flex; flex-wrap: wrap; gap: .6rem; }
+.ai-lab-view__actions button { padding: .65rem 1rem; border: 1px solid var(--border); background: var(--panel-soft); color: var(--text); border-radius: 8px; }
+.ai-lab-view__actions button:disabled { opacity: .55; cursor: not-allowed; }
+@media (max-width: 1020px) { .jarvis-lab-ux__overview { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 680px) {
+  .jarvis-lab-ux { padding: .65rem .4rem 2rem; gap: .8rem; }
+  .jarvis-lab-ux__overview, .jarvis-lab-ux__explain { grid-template-columns: minmax(0,1fr); }
+  .jarvis-lab-ux__header > button { width: 100%; }
+  .jarvis-lab-ux__section-content { padding: .65rem; }
+}
+@media (prefers-reduced-motion: reduce) { .jarvis-lab-ux * { scroll-behavior: auto; } }

@@ -40,4 +40,22 @@ describe('ModuleSwitcher', () => {
     expect(select?.value).toBe('chat');
   });
 
+  it('selects deep-linked module before options are rendered and tracks subsequent navigation', () => {
+    const navigation = TestBed.inject(ModuleNavigationService);
+    navigation.select('lab');
+
+    const fixture = TestBed.createComponent(ModuleSwitcher);
+    fixture.detectChanges();
+    const select = fixture.nativeElement.querySelector('#jarvis-module-select') as HTMLSelectElement;
+    expect(select.value).toBe('lab');
+
+    navigation.select('security');
+    fixture.detectChanges();
+    expect(select.value).toBe('security');
+
+    navigation.select('chat');
+    fixture.detectChanges();
+    expect(select.value).toBe('chat');
+  });
+
 });

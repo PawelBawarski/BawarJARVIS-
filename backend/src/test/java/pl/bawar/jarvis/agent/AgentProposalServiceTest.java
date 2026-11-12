@@ -44,6 +44,16 @@ class AgentProposalServiceTest {
             prompt.contains("niezaufana")));
     }
 
+    @Test void webFirstPlanningNeverRequiresElectronOrClaimsAutomatedChanges() {
+        when(llm.reply(eq(List.of()), anyString())).thenReturn("Plan web-first");
+        when(repository.create(eq("Nowa funkcja"), anyString())).thenReturn(proposal("PENDING"));
+        service.generate("Nowa funkcja");
+        verify(llm).reply(eq(List.of()), argThat(prompt ->
+            prompt.contains("web-first") && prompt.contains("Spring Boot") &&
+            prompt.contains("Electron jest jedynie opcjonalnym") &&
+            !prompt.contains("Electron Node")));
+    }
+
     @Test void sourceValidationOccursBeforeInvokingModel() {
         assertThrows(IllegalArgumentException.class, () -> service.generate("Nowa funkcja",
             List.of(new AgentCodeSource("../secrets.env", "SECRET=123"))));

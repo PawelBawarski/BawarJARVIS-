@@ -212,3 +212,25 @@
     flex-basis: 36px;
   }
 }
+
+// Backend reachability is separate from Qwen model readiness.
+.backend-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.65rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
+  color: var(--text);
+  font-size: 0.8rem;
+  cursor: pointer;
+  &__dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: #a1a1aa; flex: 0 0 auto; }
+  &--reachable .backend-status__dot { background: #23a56d; }
+  &--unavailable .backend-status__dot { background: #d45b5b; }
+  &:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+}
+@media (max-width: 600px) {
+  .backend-status { padding: 0.55rem; }
+  .backend-status__label { display: none; }
+}

@@ -9,10 +9,12 @@
 
   <nav class="sidebar__navigation" [attr.aria-label]="'sidebar.menu' | translate">
     <p class="section-title">{{ 'sidebar.menu' | translate }}</p>
-    <div class="nav-item nav-item--active" aria-current="page">
+    <button type="button" class="nav-item" [class.nav-item--active]="navigation.activeId() === 'chat'"
+      [attr.aria-current]="navigation.activeId() === 'chat' ? 'page' : null"
+      (click)="navigation.select('chat')">
       <span aria-hidden="true">✦</span>
       <span>{{ 'sidebar.assistant' | translate }}</span>
-    </div>
+    </button>
     <app-chat-history />
   </nav>
 
@@ -20,7 +22,7 @@
     <app-connectivity-toolbar />
     <div class="sidebar-footer">
       <span class="status-dot" aria-hidden="true"></span>
-      JARVIS Desktop v0.1
+      {{ 'sidebar.webEdition' | translate }}
     </div>
   </div>
 </aside>

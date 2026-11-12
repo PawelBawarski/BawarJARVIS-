@@ -2,12 +2,26 @@
   <app-chat-view />
 </section>
 
-
-
 <section class="workspace-panel" [hidden]="navigation.activeId() !== 'lab'">
-  <app-ai-lab-view />
+  @defer (when navigation.activeId() === 'lab') {
+    <app-ai-lab-view />
+  } @placeholder {
+    <p class="workspace-panel__loader" role="status">{{ 'workspace.loadingLab' | translate }}</p>
+  } @loading {
+    <p class="workspace-panel__loader" role="status">{{ 'workspace.loadingLab' | translate }}</p>
+  } @error {
+    <p class="workspace-panel__loader" role="alert">{{ 'workspace.loadError' | translate }}</p>
+  }
 </section>
 
 <section class="workspace-panel" [hidden]="navigation.activeId() !== 'security'">
-  <app-security-dashboard />
+  @defer (when navigation.activeId() === 'security') {
+    <app-security-dashboard />
+  } @placeholder {
+    <p class="workspace-panel__loader" role="status">{{ 'workspace.loadingSecurity' | translate }}</p>
+  } @loading {
+    <p class="workspace-panel__loader" role="status">{{ 'workspace.loadingSecurity' | translate }}</p>
+  } @error {
+    <p class="workspace-panel__loader" role="alert">{{ 'workspace.loadError' | translate }}</p>
+  }
 </section>

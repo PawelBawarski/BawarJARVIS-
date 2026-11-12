@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 
 import { ModuleNavigationService } from '../../core/services/module-navigation.service';
 
@@ -8,6 +8,7 @@ import { TranslatePipe } from '../../shared/pipes/translate.pipe';
   selector: 'app-module-switcher',
   imports: [TranslatePipe],
   templateUrl: './module-switcher.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './module-switcher.scss',
 })
 export class ModuleSwitcher {

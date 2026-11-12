@@ -22,9 +22,14 @@ export class TranslationService {
   private readonly currentLanguage = signal<Language>(DEFAULT_LANGUAGE);
 
   private readonly dictionary = signal<TranslationDictionary>({});
+  private readonly version = signal(0);
+  private readonly cache = new Map<Language, TranslationDictionary>();
 
   readonly language = this.currentLanguage.asReadonly();
+  /** Changes only when the active dictionary changes; allows pipes to skip repeat lookups. */
+  readonly dictionaryVersion = this.version.asReadonly();
   readonly loading = signal(false);
+  private latestRequestId = 0;
 
   async initialize(): Promise<void> {
     let saved: Language = DEFAULT_LANGUAGE;
@@ -52,31 +57,40 @@ export class TranslationService {
     }
   }
 
+  /** Latest language request wins. Already validated dictionaries are reused without HTTP. */
   async setLanguage(language: Language): Promise<void> {
-    if (this.loading()) {
-      return;
+    if (!SUPPORTED_LANGUAGES.includes(language)) {
+      throw new Error(`Unsupported language: ${language}`);
     }
-
+    const requestId = ++this.latestRequestId;
     this.loading.set(true);
 
     try {
-      const response = await firstValueFrom(this.http.get<unknown>(`i18n/${language}.json`));
-
-      if (!this.isDictionary(response)) {
-        throw new Error(`Invalid translation file: ${language}`);
+      let next = this.cache.get(language);
+      if (!next) {
+        const response = await firstValueFrom(this.http.get<unknown>(`i18n/${language}.json`));
+        if (requestId !== this.latestRequestId) return;
+        if (!this.isDictionary(response)) throw new Error(`Invalid translation file: ${language}`);
+        this.cache.set(language, response);
+        next = response;
       }
-
-      this.dictionary.set(response);
+      if (requestId !== this.latestRequestId) return;
+      if (this.dictionary() !== next) {
+        this.dictionary.set(next);
+        this.version.update((value) => value + 1);
+      }
       this.currentLanguage.set(language);
       this.document.documentElement.lang = language;
 
       try {
         this.document.defaultView?.localStorage.setItem(this.storageKey, language);
       } catch {
-        // Zapisywanie ustawień nie jest wymagane.
+        // Language preference only; chat and project data never go to localStorage.
       }
+    } catch (error) {
+      if (requestId === this.latestRequestId) throw error;
     } finally {
-      this.loading.set(false);
+      if (requestId === this.latestRequestId) this.loading.set(false);
     }
   }
 

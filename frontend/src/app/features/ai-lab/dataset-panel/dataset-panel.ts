@@ -1,17 +1,20 @@
-import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import {
-  AiLabApiService, LabDatasetSummary, LabDatasetVersion, LabDatasetContent, LabTrainingState,
+  AiLabApiService, LabDatasetSummary, LabDatasetVersion, LabDatasetContent,
 } from '../../../core/services/ai-lab-api';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
+import { LabTrainingMonitor } from '../../../core/services/lab-training-monitor';
 
 @Component({
   selector: 'app-ai-lab-dataset',
   imports: [TranslatePipe],
   templateUrl: './dataset-panel.html',
   styleUrl: './dataset-panel.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AiLabDatasetPanel implements OnInit, OnDestroy {
   private readonly api = inject(AiLabApiService);
+  private readonly monitor = inject(LabTrainingMonitor);
   readonly datasets = signal<LabDatasetSummary[]>([]);
   readonly versions = signal<LabDatasetVersion[]>([]);
   readonly selectedDataset = signal('');
@@ -23,11 +26,14 @@ export class AiLabDatasetPanel implements OnInit, OnDestroy {
   readonly busy = signal(false);
   readonly message = signal('');
   readonly error = signal('');
-  readonly job = signal<LabTrainingState | null>(null);
-  private progressTimer?: ReturnType<typeof setInterval>;
+  private readonly trainingStarted = signal(false);
+  readonly job = computed(() => this.trainingStarted() ? this.monitor.state() : null);
 
-  ngOnInit(): void { void this.refresh(); }
-  ngOnDestroy(): void { if (this.progressTimer) clearInterval(this.progressTimer); }
+  ngOnInit(): void {
+    this.monitor.acquire();
+    void this.refresh();
+  }
+  ngOnDestroy(): void { this.monitor.release(); }
 
   onName(event: Event): void { this.name.set((event.target as HTMLInputElement).value); }
   onDraft(event: Event): void { this.draft.set((event.target as HTMLTextAreaElement).value); }
@@ -123,23 +129,13 @@ export class AiLabDatasetPanel implements OnInit, OnDestroy {
     }
     this.busy.set(true); this.error.set(''); this.message.set('');
     try {
-      const current = await this.api.state();
+      const current = await this.monitor.refresh();
       if (current.status === 'RUNNING') throw new Error('TRAINING_ALREADY_RUNNING');
-      this.job.set(await this.api.start([...this.loaded()!.trainingExamples], this.epochs()));
+      this.monitor.report(await this.api.start([...this.loaded()!.trainingExamples], this.epochs()));
+      this.trainingStarted.set(true);
       this.message.set('TRAINING_STARTED');
-      if (this.progressTimer) clearInterval(this.progressTimer);
-      this.progressTimer = setInterval(() => { void this.pollTraining(); }, 1000);
     } catch (error) { this.error.set(this.messageOf(error)); }
     finally { this.busy.set(false); }
-  }
-  private async pollTraining(): Promise<void> {
-    try {
-      const state = await this.api.state();
-      this.job.set(state);
-      if (state.status !== 'RUNNING' && this.progressTimer) {
-        clearInterval(this.progressTimer); this.progressTimer = undefined;
-      }
-    } catch { /* The next poll retries if the backend is temporarily busy. */ }
   }
   async evaluate(): Promise<void> {
     if (this.busy() || !this.loaded()) return;

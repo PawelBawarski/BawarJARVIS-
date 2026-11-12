@@ -25,5 +25,8 @@ test('AI Lab can scroll vertically to the controls below the fold', async ({ pag
 
   await lab.evaluate((element) => { element.scrollTop = element.scrollHeight; });
   await expect.poll(() => lab.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  await expect(page.getByTestId('ai-lab-training')).toHaveCount(0);
+  const advanced = page.getByTestId('jarvis-lab-existing');
+  await advanced.evaluate(el => { (el as HTMLDetailsElement).open = true; el.dispatchEvent(new Event('toggle')); });
   await expect(page.getByTestId('ai-lab-training')).toBeAttached();
 });

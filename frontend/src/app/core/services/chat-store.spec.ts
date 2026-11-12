@@ -71,6 +71,16 @@ describe('ChatStore — PostgreSQL is the source of truth', () => {
     expect(store.errorKey()).toBe('chat.llmUnavailable');
     expect(store.messages()).toHaveLength(0);
   });
+  it('preserves failed POST state and warns about uncertain delivery', async () => {
+    api.list.mockResolvedValue([conversation('chat-1')]);
+    api.send.mockRejectedValue(new ChatApiError(0, 'BACKEND_UNAVAILABLE'));
+    const store = TestBed.inject(ChatStore);
+    await vi.waitFor(() => expect(store.loading()).toBe(false));
+    expect(await store.sendMessage('Do not duplicate')).toBe(false);
+    expect(api.send).toHaveBeenCalledTimes(1);
+    expect(store.messages()).toHaveLength(0);
+    expect(store.errorKey()).toBe('chat.deliveryUncertain');
+  });
   it('deletes a chat only after backend confirmation', async () => {
     api.list.mockResolvedValue([conversation('chat-1')]);
     const store = TestBed.inject(ChatStore);
@@ -85,5 +95,29 @@ describe('ChatStore — PostgreSQL is the source of truth', () => {
     await vi.waitFor(() => expect(store.loading()).toBe(false));
     expect(store.connected()).toBe(false);
     expect(store.errorKey()).toBe('chat.backendUnavailable');
+  });
+});
+
+describe('18.9 — stale chat requests', () => {
+  it('aborts previous message GET when selecting another conversation', async () => {
+    const calls: AbortSignal[] = [];
+    const api = {
+      list: vi.fn().mockResolvedValue([conversation('one'), conversation('two')]),
+      messages: vi.fn().mockImplementation((_id: string, signal: AbortSignal) => {
+        calls.push(signal);
+        return Promise.resolve([]);
+      }),
+      create: vi.fn(), send: vi.fn(), delete: vi.fn(), get: vi.fn(), rename: vi.fn(),
+    };
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [{ provide: ChatApiService, useValue: api }] });
+    const store = TestBed.inject(ChatStore);
+    await vi.waitFor(() => expect(store.loading()).toBe(false));
+    store.selectChat('two');
+    store.selectChat('one');
+    expect(calls).toHaveLength(3);
+    expect(calls[1].aborted).toBe(true);
+    expect(calls[2].aborted).toBe(false);
+    await Promise.resolve();
   });
 });

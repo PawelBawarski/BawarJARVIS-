@@ -5,6 +5,7 @@
   padding: clamp(1rem, 2vw, 1.5rem); background: var(--panel-soft, #101c32);
   &__header {display:flex; justify-content:space-between; align-items:start; gap:1rem;
     h2 {font-size:1.18rem; margin:0 0 .35rem;} p {opacity:.74; margin:0 0 .8rem; font-size:.9rem;}}
+  &__polling {margin:.4rem 0;color:var(--muted);font-size:.8rem;line-height:1.4;}
   &__stats {display:grid; grid-template-columns:repeat(auto-fit,minmax(135px,1fr)); gap:.7rem; margin:1rem 0;
     >div {background:rgba(100,130,180,.07); border:1px solid var(--border,#283650); border-radius:9px; padding:.75rem;}
     span {opacity:.7;display:block;font-size:.76rem; margin-bottom:.4rem;}

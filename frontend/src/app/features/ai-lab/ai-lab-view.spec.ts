@@ -1,5 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { TranslationService } from '../../core/services/translation';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { AiLabView } from './ai-lab-view';
@@ -19,6 +21,7 @@ describe('AiLabView', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AiLabView],
+      providers: [provideHttpClient(), { provide: TranslationService, useValue: { translate: (key: string) => key } }],
     })
       .overrideComponent(AiLabView, {
         remove: { imports: [TranslatePipe] },
@@ -36,14 +39,21 @@ describe('AiLabView', () => {
   it('should display stopped status', () => {
     const fixture = TestBed.createComponent(AiLabView);
     fixture.detectChanges();
+    const advanced = fixture.nativeElement.querySelector('[data-testid="jarvis-lab-existing"]') as HTMLDetailsElement;
+    advanced.open = true;
+    advanced.dispatchEvent(new Event('toggle'));
+    fixture.detectChanges();
 
     const element: HTMLElement = fixture.nativeElement;
-
     expect(element.querySelector('.ai-lab-view__status[role="status"]')?.textContent).toContain('lab.status');
   });
 
   it('should keep agent controls disabled', () => {
     const fixture = TestBed.createComponent(AiLabView);
+    fixture.detectChanges();
+    const advanced = fixture.nativeElement.querySelector('[data-testid="jarvis-lab-existing"]') as HTMLDetailsElement;
+    advanced.open = true;
+    advanced.dispatchEvent(new Event('toggle'));
     fixture.detectChanges();
 
     const buttons = fixture.nativeElement.querySelectorAll(

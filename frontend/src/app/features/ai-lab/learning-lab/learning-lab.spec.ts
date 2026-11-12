@@ -1,11 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LearningLab } from './learning-lab';
+import { TranslationService } from '../../../core/services/translation';
 
 describe('LearningLab — integration with isolated offline service', () => {
   afterEach(() => vi.unstubAllGlobals());
   async function setup() {
-    await TestBed.configureTestingModule({ imports: [LearningLab] }).compileComponents();
+    await TestBed.configureTestingModule({ imports: [LearningLab], providers: [{provide: TranslationService, useValue: { translate: (key:string) => key === 'lab.learning.intro' ? 'Bez Ollama, bez modelu GPT.' : key, dictionaryVersion:()=>0 }}] }).compileComponents();
     const fixture = TestBed.createComponent(LearningLab);
     fixture.detectChanges();
     return { fixture, component: fixture.componentInstance };
@@ -23,7 +24,7 @@ describe('LearningLab — integration with isolated offline service', () => {
     const { component } = await setup();
     component.question.set('2+2');
     await component.ask();
-    expect(component.error()).toContain('token');
+    expect(component.error()).toBe('lab.learning.tokenMissing');
     expect(fetchMock).not.toHaveBeenCalled();
   });
   it('sends a verified reasoning request with a token only in memory', async () => {
