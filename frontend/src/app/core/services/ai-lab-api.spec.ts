@@ -3,12 +3,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AiLabApiService } from './ai-lab-api';
 
 describe('AiLabApiService', () => {
-  afterEach(() => { delete (window as unknown as {jarvisDesktop?: unknown}).jarvisDesktop; });
-  it('does not expose a web fallback', async () => {
+  afterEach(() => { delete (window as unknown as {jarvisDesktop?: unknown}).jarvisDesktop; vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+  it('maps browser requests to secured backend routes', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ok:true,status:200,json:async()=>({status:'IDLE',losses:[]})});
+    vi.stubGlobal('fetch', fetchMock);
     TestBed.configureTestingModule({});
     const api = TestBed.inject(AiLabApiService);
-    expect(api.available).toBe(false);
-    await expect(api.state()).rejects.toThrow('DESKTOP_BRIDGE_UNAVAILABLE');
+    expect(api.available).toBe(true);
+    await expect(api.state()).resolves.toMatchObject({status:'IDLE'});
+    expect(fetchMock).toHaveBeenCalledWith('/api/ai-lab/training', {method:'GET',credentials:'same-origin'});
   });
   it('passes bounded operation object through Electron bridge only', async () => {
     const bridge = vi.fn().mockResolvedValue({ ok: true, status: 200, data: {status:'IDLE',losses:[]} });

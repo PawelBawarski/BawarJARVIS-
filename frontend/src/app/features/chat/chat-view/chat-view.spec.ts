@@ -7,13 +7,14 @@ import { ChatApiService } from '../../../core/services/chat-api';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 
 @Pipe({ name: 'translate' })
-class FakeTranslate implements PipeTransform { transform(value: string): string { return value; } }
+class FakeTranslate implements PipeTransform { transform(value: string): string { return value === 'chat.modelTitle' ? 'Silnik rozmowy: lokalny Qwen3 8B —' : value; } }
 
 describe('ChatView — actual backend messages, unchanged layout', () => {
-  const api = { list: vi.fn(), create: vi.fn(), messages: vi.fn(), send: vi.fn(), delete: vi.fn() };
+  const api = { list: vi.fn(), create: vi.fn(), messages: vi.fn(), send: vi.fn(), delete: vi.fn(), modelStatus: vi.fn() };
   beforeEach(async () => {
     vi.resetAllMocks();
     api.list.mockResolvedValue([]); api.messages.mockResolvedValue([]);
+    api.modelStatus.mockResolvedValue({model:'jarvis-qwen3-8b',ready:true});
     api.create.mockResolvedValue({ id: 'chat1', title: 'Nowa rozmowa',
       createdAt: '2026-11-09T12:00:00Z', updatedAt: '2026-11-09T12:00:00Z' });
     api.send.mockResolvedValue({
@@ -33,6 +34,13 @@ describe('ChatView — actual backend messages, unchanged layout', () => {
     expect(fixture.nativeElement.textContent).toContain('J.A.R.V.I.S.');
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[data-testid="chat-model-mode"]')?.textContent).toContain('Silnik rozmowy: lokalny Qwen3 8B');
+  });
+  it('displays actual model availability from backend', async () => {
+    api.modelStatus.mockResolvedValue({model:'jarvis-qwen3-8b',ready:false});
+    const fixture = TestBed.createComponent(ChatView);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.modelReady()).toBe(false);
   });
   it('shows backend assistant response after send, never fake text', async () => {
     const fixture = TestBed.createComponent(ChatView);

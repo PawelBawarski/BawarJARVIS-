@@ -160,5 +160,10 @@
   "chat.deleteDialog.title": "Delete conversation?",
   "chat.deleteDialog.warning": "This action cannot be undone.",
   "chat.deleteDialog.cancel": "Cancel",
-  "chat.deleteDialog.confirm": "Delete"
+  "chat.deleteDialog.confirm": "Delete",
+  "chat.modelTitle": "Chat engine: local Qwen3 8B —",
+  "chat.modelChecking": "checking...",
+  "chat.modelReady": "ready",
+  "chat.modelOffline": "unavailable",
+  "chat.modelRefresh": "Refresh"
 }

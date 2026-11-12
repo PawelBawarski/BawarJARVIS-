@@ -6,7 +6,13 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "dev:web": "node scripts/dev-stack.cjs",
+    "dev:electron": "node scripts/dev-stack.cjs --electron",
+    "test:electron": "node --test electron/*.test.cjs",
+    "dev:web:ai": "node scripts/dev-stack.cjs --ai",
+    "dev:electron:ai": "node scripts/dev-stack.cjs --electron --ai",
+    "test:model": "node --test scripts/model-runtime.test.cjs"
   },
   "private": true,
   "packageManager": "npm@11.21.0",
@@ -26,6 +32,7 @@
     "@angular/cli": "^22.2.6",
     "@angular/compiler-cli": "^22.2.0",
     "@playwright/test": "^1.65.0",
+    "electron": "^45.2.3",
     "jsdom": "^30.0.0",
     "prettier": "^3.8.1",
     "typescript": "~6.0.2",

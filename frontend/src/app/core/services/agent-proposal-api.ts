@@ -1,3 +1,4 @@
+import { browserApi } from './browser-api';
 import { Injectable } from '@angular/core';
 
 export type AgentProposalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -41,21 +42,33 @@ export class AgentProposalApiService {
     return (window as unknown as { jarvisDesktop?: AgentBridge }).jarvisDesktop;
   }
 
-  get available(): boolean {
-    return typeof this.bridge()?.agentProposalApi === 'function';
-  }
+  get available(): boolean { return true; }
 
   private async request<T>(message: AgentProposalRequest): Promise<T> {
     const call = this.bridge()?.agentProposalApi;
-    if (!call) throw new Error('Otwórz aplikację J.A.R.V.I.S. w Electronie.');
-    let result: Result;
-    try {
-      result = await call(message);
-    } catch {
-      throw new Error('Połączenie z lokalnym backendem nie powiodło się.');
+    if (call) {
+      let result: Result;
+      try { result = await call(message); }
+      catch { throw new Error('Połączenie z lokalnym backendem nie powiodło się.'); }
+      if (!result.ok) throw new Error(`Agent: ${result.error}`);
+      return result.data as T;
     }
-    if (!result.ok) throw new Error(`Agent: ${result.error}`);
-    return result.data as T;
+    const base = '/api/agent';
+    switch (message.operation) {
+      case 'list': return browserApi<T>('GET', `${base}/proposals`);
+      case 'generate': return browserApi<T>('POST', `${base}/proposals`, {
+        task: message.task, sources: message.sources ?? [],
+      });
+      case 'patch-preview': return browserApi<T>('POST', `${base}/patch-preview`, {
+        task: message.task, source: message.source,
+      });
+      case 'decide': return browserApi<T>('POST', `${base}/proposals/${encodeURIComponent(message.id)}/decision`, {
+        decision: message.decision,
+      });
+      case 'revise': return browserApi<T>('POST', `${base}/proposals/${encodeURIComponent(message.id)}/revise`, {
+        feedback: message.feedback,
+      });
+    }
   }
 
   list(): Promise<AgentProposal[]> { return this.request({ operation: 'list' }); }

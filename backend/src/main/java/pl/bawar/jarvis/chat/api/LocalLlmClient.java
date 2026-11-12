@@ -51,6 +51,37 @@ public class LocalLlmClient {
         this.apiKey = apiKey == null ? "" : apiKey.strip();
     }
 
+    /** Read-only status. Verify health, model identity and bearer authentication. */
+    public ModelStatus modelStatus() {
+        if (apiKey.isBlank()) return new ModelStatus("jarvis-qwen3-8b", false);
+        try {
+            HttpRequest healthRequest = HttpRequest.newBuilder(
+                    URI.create("http://127.0.0.1:8765/health"))
+                    .timeout(Duration.ofSeconds(2)).GET().build();
+            HttpResponse<Void> health = http.send(healthRequest, HttpResponse.BodyHandlers.discarding());
+            if (health.statusCode() != 200) return new ModelStatus("jarvis-qwen3-8b", false);
+            HttpRequest modelsRequest = HttpRequest.newBuilder(
+                    URI.create("http://127.0.0.1:8765/v1/models"))
+                    .timeout(Duration.ofSeconds(2))
+                    .header("Authorization", "Bearer " + apiKey)
+                    .GET().build();
+            HttpResponse<String> models = http.send(modelsRequest, HttpResponse.BodyHandlers.ofString());
+            boolean matched = models.statusCode() == 200 &&
+                    "jarvis-qwen3-8b".equals(mapper.readTree(models.body())
+                            .path("data").path(0).path("id").asText());
+            return new ModelStatus("jarvis-qwen3-8b", matched);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return new ModelStatus("jarvis-qwen3-8b", false);
+        } catch (JacksonException e) {
+            return new ModelStatus("jarvis-qwen3-8b", false);
+        } catch (IOException e) {
+            return new ModelStatus("jarvis-qwen3-8b", false);
+        }
+    }
+
+    public record ModelStatus(String model, boolean ready) { }
+
     public String reply(List<ChatMessage> history, String userMessage) {
         if (apiKey.isBlank())
             throw new LocalLlmUnavailableException("Brakuje lokalnej sesji modelu AI.");

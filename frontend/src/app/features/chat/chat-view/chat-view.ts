@@ -1,5 +1,6 @@
 import { afterEveryRender, Component, ElementRef, inject, signal, viewChild, DestroyRef } from '@angular/core';
 import { ChatStore } from '../../../core/services/chat-store';
+import { ChatApiService } from '../../../core/services/chat-api';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 
 @Component({
@@ -10,6 +11,8 @@ import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 })
 export class ChatView {
   readonly store = inject(ChatStore);
+  private readonly chatApi = inject(ChatApiService);
+  readonly modelReady = signal<boolean | null>(null);
   readonly draft = signal('');
   // JARVIS_16A_SAFE_DELETE_MODAL_V1
   readonly deleteDialogOpen = signal(false);
@@ -28,6 +31,7 @@ export class ChatView {
   private scrollFrameId?: number;
 
   constructor() {
+    void this.refreshModelStatus();
     this.destroyRef.onDestroy(() => {
       this.contentObserver?.disconnect();
       if (this.scrollFrameId !== undefined && typeof cancelAnimationFrame === 'function') {
@@ -69,6 +73,16 @@ export class ChatView {
         }
       },
     });
+  }
+
+  async refreshModelStatus(): Promise<void> {
+    this.modelReady.set(null);
+    try {
+      const status = await this.chatApi.modelStatus();
+      this.modelReady.set(status.ready === true);
+    } catch {
+      this.modelReady.set(false);
+    }
   }
 
   /** The message pane scrolls, not the whole desktop window. */

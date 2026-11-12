@@ -60,3 +60,5 @@ desktop/release/
 .env
 .env.*
 !.env.example
+
+.env.model.local

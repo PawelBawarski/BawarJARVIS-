@@ -119,7 +119,18 @@
         {{ store.errorKey() | translate }}
       </p>
     }
-      <p class="chat-status" data-testid="chat-model-mode">Silnik rozmowy: lokalny Qwen3 8B</p>
+      <p class="chat-status" data-testid="chat-model-mode">
+        {{ 'chat.modelTitle' | translate }}
+        @if (modelReady() === null) {
+          <span data-testid="chat-model-status">{{ 'chat.modelChecking' | translate }}</span>
+        } @else if (modelReady()) {
+          <span data-testid="chat-model-status">{{ 'chat.modelReady' | translate }}</span>
+        } @else {
+          <span data-testid="chat-model-status">{{ 'chat.modelOffline' | translate }}</span>
+        }
+        <button type="button" data-testid="chat-model-refresh"
+          (click)="refreshModelStatus()">{{ 'chat.modelRefresh' | translate }}</button>
+      </p>
   </footer>
 
   <!-- JARVIS_16A_SAFE_DELETE_MODAL_V1: confirmation before calling the backend. -->

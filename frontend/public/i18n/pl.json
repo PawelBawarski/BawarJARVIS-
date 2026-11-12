@@ -160,5 +160,10 @@
   "chat.deleteDialog.title": "Usunąć rozmowę?",
   "chat.deleteDialog.warning": "Tej operacji nie można cofnąć.",
   "chat.deleteDialog.cancel": "Anuluj",
-  "chat.deleteDialog.confirm": "Usuń"
+  "chat.deleteDialog.confirm": "Usuń",
+  "chat.modelTitle": "Silnik rozmowy: lokalny Qwen3 8B —",
+  "chat.modelChecking": "sprawdzanie...",
+  "chat.modelReady": "gotowy",
+  "chat.modelOffline": "niedostępny",
+  "chat.modelRefresh": "Sprawdź"
 }

@@ -1,3 +1,4 @@
+import { browserApi } from './browser-api';
 import { Injectable } from '@angular/core';
 
 export type ResearchRequest =
@@ -11,17 +12,30 @@ type Result = {ok:true;data:unknown}|{ok:false;error:string;status:number};
 type BridgeWindow = Window & {jarvisDesktop?: {researchApi?: (request:ResearchRequest)=>Promise<Result>; openResearchSource?: (url:string)=>Promise<boolean>}};
 @Injectable({providedIn:'root'})
 export class ResearchApiService {
-  get available(): boolean { return typeof (window as BridgeWindow).jarvisDesktop?.researchApi === 'function'; }
+  get available(): boolean { return true; }
   private async request<T>(query:ResearchRequest):Promise<T> {
     const bridge=(window as BridgeWindow).jarvisDesktop?.researchApi;
-    if (!bridge) throw new Error('Funkcja wymaga aplikacji desktopowej Jarvis.');
+    if (!bridge) {
+      const base = '/api/research';
+      switch (query.operation) {
+        case 'list': return browserApi<T>('GET', base);
+        case 'search': return browserApi<T>('POST', `${base}/search`, { query: query.query, language: query.language });
+        case 'save': return browserApi<T>('POST', `${base}/save`, { title: query.title, language: query.language });
+        case 'delete': return browserApi<T>('DELETE', `${base}/${encodeURIComponent(query.id)}`);
+      }
+    }
     const result=await bridge(query);
     if (!result.ok) throw new Error('Błąd badań internetu: '+result.error);
     return result.data as T;
   }
   async openSource(url:string):Promise<void> {
     const open=(window as BridgeWindow).jarvisDesktop?.openResearchSource;
-    if (!open) throw new Error('Otwieranie źródeł wymaga aplikacji desktopowej.');
+    if (!open) {
+      const target = new URL(url);
+      if (target.protocol !== 'https:' && target.protocol !== 'http:') throw new Error('INVALID_RESEARCH_URL');
+      window.open(target.href, '_blank', 'noopener,noreferrer');
+      return;
+    }
     await open(url);
   }
   search(query:string,language:'pl'|'en'):Promise<ResearchHit[]> {return this.request({operation:'search',query,language});}

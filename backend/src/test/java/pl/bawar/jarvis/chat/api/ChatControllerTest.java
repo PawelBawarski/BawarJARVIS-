@@ -42,6 +42,16 @@ class ChatControllerTest {
     }
 
     @Test
+    void returnsOnlyModelReadinessWithoutSecrets() throws Exception {
+        when(service.modelStatus()).thenReturn(new LocalLlmClient.ModelStatus("jarvis-qwen3-8b", false));
+        mvc.perform(get("/api/chats/model-status"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ready").value(false))
+                .andExpect(jsonPath("$.model").value("jarvis-qwen3-8b"))
+                .andExpect(jsonPath("$.apiKey").doesNotExist());
+    }
+
+    @Test
     void listsConversations() throws Exception {
         when(service.listConversations()).thenReturn(List.of());
         mvc.perform(get("/api/chats"))

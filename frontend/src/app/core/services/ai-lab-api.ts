@@ -1,3 +1,4 @@
+import { browserApi } from './browser-api';
 import { Injectable } from '@angular/core';
 
 export interface LabTrainingState {
@@ -38,16 +39,37 @@ export type LabApiResult =
 
 @Injectable({ providedIn: 'root' })
 export class AiLabApiService {
-  get available(): boolean { return typeof window.jarvisDesktop?.aiLabApi === 'function'; }
+  get available(): boolean { return true; }
   private async request<T>(request: LabApiRequest): Promise<T> {
     const bridge = window.jarvisDesktop?.aiLabApi;
-    if (!bridge) throw new Error('DESKTOP_BRIDGE_UNAVAILABLE');
-    let result: LabApiResult;
-    try { result = await bridge(request); }
-    catch { throw new Error('BACKEND_UNAVAILABLE'); }
-    if (!result.ok) throw new Error(result.error);
-    return result.data as T;
+    if (bridge) {
+      let result: LabApiResult;
+      try { result = await bridge(request); }
+      catch { throw new Error('BACKEND_UNAVAILABLE'); }
+      if (!result.ok) throw new Error(result.error);
+      return result.data as T;
+    }
+    const base = '/api/ai-lab';
+    const id = 'id' in request ? encodeURIComponent(request.id) : '';
+    switch (request.operation) {
+      case 'state': return browserApi<T>('GET', `${base}/training`);
+      case 'model': return browserApi<T>('GET', `${base}/model`);
+      case 'train': return browserApi<T>('POST', `${base}/training`, { examples: request.examples, epochs: request.epochs });
+      case 'save': return browserApi<T>('POST', `${base}/checkpoint/save`);
+      case 'load': return browserApi<T>('POST', `${base}/checkpoint/load`);
+      case 'evaluate': return browserApi<T>('POST', `${base}/evaluate`, { examples: request.examples });
+      case 'historyRuns': return browserApi<T>('GET', `${base}/history/runs`);
+      case 'historyCheckpoints': return browserApi<T>('GET', `${base}/history/checkpoints`);
+      case 'historyEvaluations': return browserApi<T>('GET', `${base}/history/evaluations`);
+      case 'historyEpochs': return browserApi<T>('GET', `${base}/history/runs/${id}/epochs`);
+      case 'datasetList': return browserApi<T>('GET', `${base}/datasets`);
+      case 'datasetCreate': return browserApi<T>('POST', `${base}/datasets`, { name: request.name, examples: request.examples });
+      case 'datasetVersions': return browserApi<T>('GET', `${base}/datasets/${id}/versions`);
+      case 'datasetRead': return browserApi<T>('GET', `${base}/datasets/versions/${id}`);
+      case 'datasetRevise': return browserApi<T>('POST', `${base}/datasets/${id}/versions`, { examples: request.examples });
+    }
   }
+
   state(): Promise<LabTrainingState> { return this.request({ operation: 'state' }); }
   model(): Promise<LabModelStatus> { return this.request({ operation: 'model' }); }
   start(examples: string[], epochs: number): Promise<LabTrainingState> {

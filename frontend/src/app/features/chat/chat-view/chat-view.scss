@@ -310,6 +310,16 @@
   &--error {
     color: #ef4444;
   }
+
+  button {
+    border: 1px solid currentColor;
+    border-radius: 0.4rem;
+    background: transparent;
+    color: inherit;
+    padding: 0.15rem 0.45rem;
+    margin-left: 0.5rem;
+    cursor: pointer;
+  }
 }
 
 // -------------------------------

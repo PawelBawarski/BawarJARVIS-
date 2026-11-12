@@ -2,14 +2,17 @@ import { TestBed } from '@angular/core/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AgentProposalApiService } from './agent-proposal-api';
 
-describe('AgentProposalApiService uses only desktop IPC', () => {
-  afterEach(() => { delete (window as unknown as { jarvisDesktop?: unknown }).jarvisDesktop; });
+describe('AgentProposalApiService supports web and desktop', () => {
+  afterEach(() => { delete (window as unknown as { jarvisDesktop?: unknown }).jarvisDesktop; vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
-  it('does not use an unauthenticated browser REST fallback', async () => {
+  it('uses same-origin REST for proposals', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ok:true,status:200,json:async()=>[]});
+    vi.stubGlobal('fetch', fetchMock);
     TestBed.configureTestingModule({});
     const api = TestBed.inject(AgentProposalApiService);
-    expect(api.available).toBe(false);
-    await expect(api.list()).rejects.toThrow('Electronie');
+    expect(api.available).toBe(true);
+    await expect(api.list()).resolves.toEqual([]);
+    expect(fetchMock).toHaveBeenCalledWith('/api/agent/proposals', {method:'GET',credentials:'same-origin'});
   });
 
   it('forwards only the fixed approve operation', async () => {

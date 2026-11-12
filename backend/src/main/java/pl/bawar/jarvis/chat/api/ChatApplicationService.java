@@ -39,6 +39,10 @@ public class ChatApplicationService {
         this.knowledge = knowledge;
     }
 
+    public LocalLlmClient.ModelStatus modelStatus() {
+        return llm.modelStatus();
+    }
+
     public ChatConversation createConversation(String title) {
         return persistence.createConversation(title);
     }

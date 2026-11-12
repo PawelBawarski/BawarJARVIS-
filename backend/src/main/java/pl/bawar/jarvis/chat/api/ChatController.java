@@ -28,6 +28,11 @@ public class ChatController {
         this.chats = Objects.requireNonNull(chats);
     }
 
+    @GetMapping("/model-status")
+    public LocalLlmClient.ModelStatus modelStatus() {
+        return chats.modelStatus();
+    }
+
     @PostMapping
     public ResponseEntity<ChatConversation> create(@RequestBody CreateChatRequest request) {
         ChatConversation created = chats.createConversation(request == null ? null : request.title());
