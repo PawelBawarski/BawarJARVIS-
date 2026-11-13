@@ -1,0 +1,18 @@
+:host { display: block; min-width: 0; }
+.semantic-memory {
+  display: grid; gap: .8rem; padding: 1rem; border: 1px solid var(--border, #576075);
+  border-radius: .85rem; margin: 1rem 0;
+  &__head { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: .8rem; }
+  &__head p, &__hint { opacity: .8; font-size: .875rem; }
+  &__status { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+  &__status small { flex-basis: 100%; opacity: .75; }
+  &__form, &__results { display: grid; gap: .5rem; }
+  &__controls { display: flex; flex-wrap: wrap; gap: .5rem; }
+  input { min-width: 0; flex: 1 1 15rem; }
+  button, input { padding: .55rem .75rem; border-radius: .5rem; }
+  button:focus-visible, input:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+  &__results { padding-left: 1.3rem; }
+  &__results li { padding: .65rem 0; }
+  &__results span { margin-left: .6rem; opacity: .75; font-size: .8rem; }
+  &__results p { overflow-wrap: anywhere; white-space: pre-wrap; }
+}

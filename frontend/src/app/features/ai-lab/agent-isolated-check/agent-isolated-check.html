@@ -1,0 +1,30 @@
+<section class="agent-isolated-check" data-testid="agent-isolated-check" [attr.aria-label]="'lab.isolated.title' | translate">
+  <h4>{{ 'lab.isolated.title' | translate }}</h4>
+  <p>{{ 'lab.isolated.description' | translate }}</p>
+  @if (config(); as state) {
+    @if (!state.enabled) {
+      <p role="status" data-testid="isolated-disabled">{{ 'lab.isolated.disabled' | translate }}</p>
+    } @else {
+      <p class="agent-isolated-check__scope">{{ 'lab.isolated.scope' | translate }}</p>
+      <button type="button" data-testid="isolated-run" [disabled]="busy()" (click)="run()">
+        {{ 'lab.isolated.run' | translate }}
+      </button>
+      @if (busy()) { <p role="status" aria-live="polite" data-testid="isolated-running">{{ 'lab.isolated.running' | translate }}</p> }
+    }
+  }
+  @if (currentResult(); as check) {
+    <div class="agent-isolated-check__result" role="status" aria-live="polite" data-testid="isolated-result">
+      <strong>{{ ('lab.isolated.status.' + check.status) | translate }}</strong>
+      <p>{{ check.summary }}</p>
+      <p>{{ 'lab.isolated.mode' | translate }}: {{ check.kind }} · {{ check.elapsedMs }} ms</p>
+      <p>{{ 'lab.isolated.hash' | translate }}: <code>{{ check.proposedSha256.slice(0, 16) }}</code></p>
+      @if (check.output) { <pre data-testid="isolated-output">{{ check.output }}</pre> }
+      <p>{{ 'lab.isolated.limits' | translate }}</p>
+    </div>
+  }
+  @if (error()) {
+    <p role="alert" data-testid="isolated-error">{{ 'lab.isolated.error' | translate }} <code>{{ error() }}</code></p>
+  }
+</section>
+<app-agent-module-check [preview]="preview()" [enabled]="config()?.enabled === true" />
+<app-agent-project-check [preview]="preview()" [enabled]="config()?.enabled === true" />

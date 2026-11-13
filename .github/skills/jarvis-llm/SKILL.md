@@ -37,4 +37,3 @@ Użyj przy zadaniach związanych z `backend/src/main/java/pl/bawar/jarvis/brain/
 - BE-2: PostgreSQL, Flyway i migracje historii, wiadomości, treningów, checkpointów.
 - FE-1: prawdziwy Chat Angular → Electron IPC → Spring Boot → model → PostgreSQL z Playwright E2E.
 - Internet search: narzędzie backendowe z jawnie wskazanymi źródłami i ochroną SSRF, niezależne od treningu.
-

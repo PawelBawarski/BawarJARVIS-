@@ -1,5 +1,7 @@
 package pl.bawar.jarvis.chat.api;
 
+import pl.bawar.jarvis.research.SemanticMemoryService;
+
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import pl.bawar.jarvis.research.KnowledgeMemoryService;
@@ -22,7 +24,9 @@ public class ChatApplicationService {
     private static final int MAX_MESSAGE_LENGTH = 20_000;
     private final ChatPersistenceService persistence;
     private final LocalLlmClient llm;
-    private KnowledgeMemoryService knowledge; // JARVIS_15_RESEARCH_MEMORY
+    private KnowledgeMemoryService knowledge;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private SemanticMemoryService semanticMemory; // JARVIS_15_RESEARCH_MEMORY
     private final ChatExchangeWriter exchangeWriter;
     private final ReentrantLock turnLock = new ReentrantLock(true);
 
@@ -76,7 +80,7 @@ public class ChatApplicationService {
             // turns.
             persistence.getConversation(conversationId);
             List<ChatMessage> history = persistence.listMessages(conversationId);
-            String answer = llm.reply(history, knowledge == null ? message : knowledge.augmentPrompt(message));
+            String answer = llm.reply(history, knowledge == null ? message : (semanticMemory == null ? knowledge.augmentPrompt(message) : semanticMemory.augmentPrompt(message, knowledge)));
             if (answer == null || answer.isBlank())
                 throw new LocalLlmUnavailableException("Pusta odpowiedź AI.");
             return exchangeWriter.appendTurn(conversationId, message, answer);

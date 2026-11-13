@@ -52,6 +52,9 @@
           {{ message.role === 'user' ? ('chat.you' | translate) : 'JARVIS' }}
         </span>
         <p>{{ message.content }}</p>
+        @if (message.role === 'assistant') {
+          <app-chat-speech [messageId]="message.id" [text]="message.content" />
+        }
       </div>
     }
 
@@ -78,8 +81,16 @@
       </div>
     }
   </main>
+  <app-chat-rag-sources />
 
   <footer class="chat-footer">
+    <!-- JARVIS_21_3_VIEW_HTML -->
+    <app-chat-voice-mode
+      [voiceReady]="voiceRecorder()?.configured() === true"
+      [recording]="voiceRecorder()?.state() !== 'idle'"
+      (toggleRequested)="toggleVoiceConversation()"
+      (stopRequested)="stopVoiceConversation()" />
+    <app-chat-voice [autoSend]="voiceConversation.enabled()" (textReady)="onVoiceText($event)" />
     <div class="composer">
       <input
         #messageInput

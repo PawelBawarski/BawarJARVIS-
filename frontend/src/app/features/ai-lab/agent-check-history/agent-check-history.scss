@@ -1,0 +1,16 @@
+:host { display: block; }
+.check-history {
+  border-top: 1px solid var(--color-border, #687481);
+  padding-top: .75rem;
+  display: grid;
+  gap: .6rem;
+  h3 { margin: 0; }
+  p { margin: 0; }
+  button, select { min-height: 2.5rem; max-width: 100%; }
+  &__scroll { overflow-x: auto; max-height: 15rem; overflow-y: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 31rem; text-align: left; }
+  th, td { padding: .4rem; border-bottom: 1px solid var(--color-border, #687481); font-size: .85rem; }
+  &__compare { display: grid; gap: .35rem; }
+  &__disclaimer { font-size: .85rem; opacity: .85; }
+  :focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+}

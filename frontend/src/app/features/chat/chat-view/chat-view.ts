@@ -1,3 +1,9 @@
+// JARVIS_21_3_VIEW
+import { ChatVoiceMode } from '../chat-voice-mode/chat-voice-mode';
+import { VoiceConversationService } from '../../../core/services/voice-conversation';
+import { ChatSpeech } from '../chat-speech/chat-speech';
+import { ChatVoice } from '../chat-voice/chat-voice';
+import { ChatRagSources } from '../chat-rag-sources/chat-rag-sources';
 import { afterEveryRender, ChangeDetectionStrategy, Component, ElementRef, inject, signal, viewChild, DestroyRef } from '@angular/core';
 import { ChatStore } from '../../../core/services/chat-store';
 import { ChatApiService } from '../../../core/services/chat-api';
@@ -8,11 +14,13 @@ import { AnimationFrameCoalescer } from '../../../core/utils/animation-frame-coa
   selector: 'app-chat-view',
   templateUrl: './chat-view.html',
   styleUrl: './chat-view.scss',
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, ChatRagSources, ChatVoice, ChatSpeech, ChatVoiceMode],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatView {
   readonly store = inject(ChatStore);
+  readonly voiceConversation = inject(VoiceConversationService);
+  readonly voiceRecorder = viewChild(ChatVoice);
   private readonly chatApi = inject(ChatApiService);
   readonly modelReady = signal<boolean | null>(null);
   readonly draft = signal('');
@@ -37,6 +45,7 @@ export class ChatView {
     this.destroyRef.onDestroy(() => {
       this.contentObserver?.disconnect();
       this.scrollScheduler.cancel();
+      if (this.voiceConversation.enabled()) this.voiceConversation.disable();
     });
 
     afterEveryRender({
@@ -100,6 +109,46 @@ export class ChatView {
     });
   }
 
+  /** Never send a transcription to Qwen without a separate user click. */
+  addVoiceDraft(text: string): void {
+    if (!text.trim()) return;
+    this.draft.update(current => [current.trim(), text.trim()].filter(Boolean).join(" ").slice(0, 4000));
+  }
+
+  /** Switching modes never automatically starts a microphone. */
+  toggleVoiceConversation(): void {
+    if (this.voiceConversation.enabled()) {
+      this.voiceRecorder()?.cancel();
+      this.voiceConversation.disable();
+      return;
+    }
+    if (this.store.loading() || this.store.sending() || this.store.busy() ||
+        !this.voiceRecorder()?.configured() || this.voiceRecorder()?.state() !== 'idle') return;
+    this.voiceConversation.enable();
+  }
+
+  /** Stop microphone and local audio; server-side Qwen may still finish. */
+  stopVoiceConversation(): void {
+    this.voiceRecorder()?.cancel();
+    this.voiceConversation.stop();
+  }
+
+  async onVoiceText(text: string): Promise<void> {
+    if (!this.voiceConversation.enabled()) {
+      this.addVoiceDraft(text);
+      return;
+    }
+    const clean = text.trim();
+    if (!clean) return;
+    this.pendingText.set(clean);
+    try {
+      const result = await this.voiceConversation.acceptTranscript(clean);
+      if (result === 'failed' && !this.draft()) this.draft.set(clean);
+    } finally {
+      this.pendingText.set('');
+    }
+  }
+
   async sendMessage(): Promise<void> {
     const text = this.draft().trim();
     if (!text || this.store.sending() || this.store.busy() || this.store.loading()) return;
@@ -115,7 +164,10 @@ export class ChatView {
       this.focusAfterReply = true;
     }
   }
-  newChat(): void { this.store.newChat(); }
+  newChat(): void {
+    if (this.voiceConversation.enabled()) this.voiceConversation.disable();
+    this.store.newChat();
+  }
   deleteChat(): void {
     // Never delete directly from an unconfirmed click.
     if (!this.store.activeId() || this.store.busy() || this.store.sending() || this.store.loading()) return;
@@ -136,6 +188,7 @@ export class ChatView {
       return;
     }
     this.cancelDelete();
+    if (this.voiceConversation.enabled()) this.voiceConversation.disable();
     await this.store.removeActiveChat();
   }
 }

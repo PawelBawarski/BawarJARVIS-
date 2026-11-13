@@ -1,0 +1,53 @@
+<details class="agent-module-check" data-testid="agent-module-check">
+  <summary>{{ 'lab.module.title' | translate }}</summary>
+  <div class="agent-module-check__content">
+    <p>{{ 'lab.module.description' | translate }}</p>
+    <p>{{ 'lab.module.safety' | translate }}</p>
+    @if (!enabled()) {
+      <p role="status" data-testid="module-disabled">{{ 'lab.module.disabled' | translate }}</p>
+    } @else if (!supported()) {
+      <p role="status">{{ 'lab.module.unsupported' | translate }}</p>
+    } @else {
+      <label for="jarvis-module-files">{{ 'lab.module.select' | translate }}</label>
+      <input id="jarvis-module-files" data-testid="module-files" type="file" multiple
+        accept=".java,.ts,.js,.cjs" [disabled]="busy() || uploading()" (change)="pickFiles($event)" />
+      <p class="agent-module-check__hint">{{ 'lab.module.sibling' | translate }}</p>
+      @if (relatedFiles().length) {
+        <p data-testid="module-file-count">{{ 'lab.module.count' | translate }}: {{ relatedFiles().length + 1 }}</p>
+        <ul>
+          @for (file of relatedFiles(); track file.name) {
+            <li><code>{{ file.name }}</code></li>
+          }
+        </ul>
+      }
+      @if (testOptions().length && (mode() === 'js' || mode() === 'cjs')) {
+        <label for="jarvis-module-test">{{ 'lab.module.testFile' | translate }}</label>
+        <select id="jarvis-module-test" data-testid="module-test-file" [value]="chosenTest()"
+          (change)="chosenTest.set($any($event.target).value)">
+          <option value="">{{ 'lab.module.syntaxOnly' | translate }}</option>
+          @for (item of testOptions(); track item) {
+            <option [value]="item">{{ item }}</option>
+          }
+        </select>
+      }
+      <button type="button" data-testid="module-run" [disabled]="busy() || uploading()"
+        (click)="run()">{{ 'lab.module.run' | translate }}</button>
+      @if (busy() || uploading()) {
+        <p role="status" aria-live="polite">{{ 'lab.module.running' | translate }}</p>
+      }
+    }
+    @if (currentResult(); as check) {
+      <div role="status" aria-live="polite" data-testid="module-result" class="agent-module-check__result">
+        <strong>{{ ('lab.isolated.status.' + check.status) | translate }}</strong>
+        <p>{{ check.summary }}</p>
+        <p>{{ 'lab.module.mode' | translate }}: {{ check.kind }} · {{ check.elapsedMs }} ms</p>
+        <p>{{ 'lab.module.count' | translate }}: {{ check.fileCount }}</p>
+        <p>SHA-256 ({{ 'lab.module.snapshot' | translate }}): <code>{{ check.snapshotSha256.slice(0, 16) }}</code></p>
+        <p>SHA-256 ({{ 'lab.module.proposal' | translate }}): <code>{{ check.proposedSha256.slice(0, 16) }}</code></p>
+        @if (check.output) { <pre data-testid="module-output">{{ check.output }}</pre> }
+      </div>
+    }
+    @if (error()) { <p role="alert" data-testid="module-error">{{ 'lab.module.error' | translate }} <code>{{ error() }}</code></p> }
+    <p class="agent-module-check__disclaimer">{{ 'lab.module.disclaimer' | translate }}</p>
+  </div>
+</details>

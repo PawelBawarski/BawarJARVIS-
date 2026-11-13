@@ -12,3 +12,9 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:focus
 .research-memory__actions{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap}
 a{color:var(--accent);overflow-wrap:anywhere}.research-memory__error{color:#df6060}
 summary{cursor:pointer;font-weight:600}
+
+/* Personal memory: compact, accessible layout for manual note entry. */
+.research-memory__local {display:grid;gap:.55rem;min-width:0;padding:1rem 0;border-top:1px solid var(--border)}
+.research-memory__local label{font-size:.88rem;font-weight:600}
+.research-memory__local textarea{resize:vertical;width:100%;min-width:0;box-sizing:border-box}
+.research-memory__local small{color:var(--accent)}

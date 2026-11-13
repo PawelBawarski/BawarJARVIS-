@@ -150,6 +150,7 @@
         <pre class="agent-planner__patch-diff" data-testid="agent-diff-text">{{ patch.diff }}</pre>
         <!-- JARVIS_STAGE16_4_SANDBOX -->
         <app-agent-sandbox [preview]="patch" />
+        <app-agent-file-write [preview]="patch" />
         <p>{{ 'lab.planner.diffSafety' | translate }}</p>
       </div>
     }

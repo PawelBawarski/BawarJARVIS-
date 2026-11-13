@@ -1,0 +1,39 @@
+@if (question()) {
+  <section class="rag-sources" aria-label="RAG sources" data-testid="chat-rag-sources">
+    <div class="rag-sources__head">
+      <div>
+        <strong>{{ 'rag.sources.title' | translate }}</strong>
+        <p>{{ 'rag.sources.description' | translate }}</p>
+      </div>
+      <button type="button" data-testid="chat-rag-inspect" [disabled]="loading() || question().length > 500"
+        (click)="inspect()">{{ 'rag.sources.inspect' | translate }}</button>
+    </div>
+    <p class="rag-sources__notice">{{ 'rag.sources.notCitations' | translate }}</p>
+    @if (loading()) {
+      <p role="status">{{ 'rag.sources.loading' | translate }}</p>
+    }
+    @if (error()) {
+      <p role="alert">{{ 'rag.sources.error' | translate }}</p>
+    }
+    @if (visibleResult(); as result) {
+      @if (!result.sources.length) {
+        <p data-testid="chat-rag-empty">{{ 'rag.sources.empty' | translate }}</p>
+      }
+      <ul class="rag-sources__list" data-testid="chat-rag-list">
+        @for (source of result.sources; track source.id) {
+          <li>
+            <div class="rag-sources__source-title">
+              @if (safeExternalUrl(source.externalUrl); as url) {
+                <a [href]="url" target="_blank" rel="noopener noreferrer">{{ source.title }}</a>
+              } @else {
+                <strong>{{ source.title }}</strong>
+              }
+              <small>{{ (source.method === 'semantic' ? 'rag.sources.semantic' : 'rag.sources.text') | translate }}</small>
+            </div>
+            <p>{{ source.excerpt }}</p>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+}

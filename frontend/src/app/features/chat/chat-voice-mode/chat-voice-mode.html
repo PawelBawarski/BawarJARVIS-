@@ -1,0 +1,23 @@
+<section class="voice-conversation" data-testid="voice-conversation">
+  <div class="voice-conversation__actions">
+    <button type="button" data-testid="voice-conversation-toggle"
+      [attr.aria-pressed]="voice.enabled()"
+      [disabled]="!voice.enabled() && (store.sending() || store.busy() || store.loading() || !voiceReady() || recording())"
+      (click)="toggleRequested.emit()">
+      {{ (voice.enabled() ? 'voice.conversation.disable' : 'voice.conversation.enable') | translate }}
+    </button>
+    @if (voice.enabled()) {
+      <button type="button" data-testid="voice-conversation-stop" (click)="stopRequested.emit()">
+        {{ 'voice.conversation.stop' | translate }}
+      </button>
+    }
+    <span role="status" data-testid="voice-conversation-status">
+      {{ voice.statusKey() | translate }}
+    </span>
+  </div>
+  @if (voice.enabled()) {
+    <p class="voice-conversation__notice">{{ 'voice.conversation.notice' | translate }}</p>
+  }
+  <!-- JARVIS_21_4_MODE_HTML -->
+  <app-voice-diagnostics />
+</section>

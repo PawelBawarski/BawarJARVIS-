@@ -1,0 +1,16 @@
+.agent-isolated-check {
+  display: grid;
+  gap: .65rem;
+  margin-block: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border-color, #667085);
+  border-radius: .75rem;
+  overflow-wrap: anywhere;
+  h4, p { margin: 0; }
+  button { padding: .55rem .85rem; cursor: pointer; justify-self: start; }
+  button:disabled { opacity: .55; cursor: not-allowed; }
+  button:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
+  &__scope { font-size: .9rem; }
+  &__result { display: grid; gap: .5rem; padding: .75rem; border: 1px dashed currentColor; border-radius: .5rem; }
+  pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 13rem; overflow: auto; font-size: .82rem; }
+}

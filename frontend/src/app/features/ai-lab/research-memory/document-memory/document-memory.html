@@ -1,0 +1,57 @@
+<section class="document-memory" data-testid="memory-document-import" aria-labelledby="jarvis-document-memory-title">
+  <div class="document-memory__head">
+    <div>
+      <h4 id="jarvis-document-memory-title">{{ 'memory.documents.title' | translate }}</h4>
+      <p>{{ 'memory.documents.description' | translate }}</p>
+    </div>
+    <button type="button" (click)="refresh()" [disabled]="busy()" data-testid="memory-documents-refresh">
+      {{ 'memory.documents.refresh' | translate }}
+    </button>
+  </div>
+
+  <label for="jarvis-document-file">{{ 'memory.documents.choose' | translate }}</label>
+  <input #documentFile id="jarvis-document-file" type="file" accept=".pdf,.txt,.md,text/plain,text/markdown,application/pdf"
+    (change)="onFileChange($event)" data-testid="memory-documents-file" [disabled]="busy()" />
+  <p class="document-memory__hint">{{ 'memory.documents.limit' | translate }}</p>
+  @if (selectedFile(); as file) {
+    <p data-testid="memory-documents-selected">{{ 'memory.documents.selected' | translate }}: {{ file.name }}</p>
+  }
+  <button type="button" (click)="importSelected()" [disabled]="busy() || !selectedFile()" data-testid="memory-documents-import">
+    {{ 'memory.documents.import' | translate }}
+  </button>
+
+  @if (busy()) { <p role="status">{{ 'memory.documents.working' | translate }}</p> }
+  @if (error()) { <p role="alert" data-testid="memory-documents-error">{{ error() | translate }}</p> }
+  @if (info()) { <p role="status" data-testid="memory-documents-info">{{ info() | translate }}</p> }
+
+  @if (loaded()) {
+    <h5>{{ 'memory.documents.listTitle' | translate }} ({{ documents().length }})</h5>
+    @if (!documents().length) {
+      <p>{{ 'memory.documents.empty' | translate }}</p>
+    }
+    <ul class="document-memory__list" data-testid="memory-documents-list">
+      @for (doc of documents(); track doc.id) {
+        <li>
+          <div>
+            <strong>{{ doc.fileName }}</strong>
+            <span>{{ doc.kind.toUpperCase() }} · {{ doc.chunkCount }} {{ 'memory.documents.fragments' | translate }}</span>
+          </div>
+          @if (pendingDelete() === doc.id) {
+            <div class="document-memory__actions">
+              <span>{{ 'memory.documents.confirmDelete' | translate }}</span>
+              <button type="button" (click)="confirmDelete(doc.id)" [disabled]="busy()" data-testid="memory-documents-confirm-delete">
+                {{ 'memory.documents.delete' | translate }}
+              </button>
+              <button type="button" (click)="cancelDelete()" [disabled]="busy()">{{ 'memory.documents.cancel' | translate }}</button>
+            </div>
+          } @else {
+            <button type="button" (click)="requestDelete(doc.id)" [disabled]="busy()" data-testid="memory-documents-request-delete">
+              {{ 'memory.documents.delete' | translate }}
+            </button>
+          }
+        </li>
+      }
+    </ul>
+  }
+  <p class="document-memory__hint">{{ 'memory.documents.privacy' | translate }}</p>
+</section>

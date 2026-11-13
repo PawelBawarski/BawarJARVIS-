@@ -5,13 +5,14 @@ import { isAllowedCodePath } from './source-validation';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { BrowserApiError, browserApiErrorKey } from '../../../core/services/browser-api';
 import { AgentSandbox } from '../agent-sandbox/agent-sandbox'; // JARVIS_STAGE16_4_SANDBOX
+import { AgentFileWrite } from '../agent-file-write/agent-file-write';
 import { AgentChangeReview } from '../agent-change-review/agent-change-review';
 import { checkedPatchPreview } from './patch-review-validation';
 
 @Component({
   selector: 'app-agent-planner',
   standalone: true,
-  imports: [AgentSandbox, AgentChangeReview, TranslatePipe],
+  imports: [AgentSandbox, AgentFileWrite, AgentChangeReview, TranslatePipe],
   templateUrl: './agent-planner.html',
   styleUrl: './agent-planner.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

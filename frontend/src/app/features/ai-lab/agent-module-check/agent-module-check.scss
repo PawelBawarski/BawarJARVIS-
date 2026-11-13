@@ -1,0 +1,19 @@
+.agent-module-check {
+  margin-block: .75rem;
+  border: 1px solid var(--border-color, #667085);
+  border-radius: .65rem;
+  padding: .8rem;
+  overflow-wrap: anywhere;
+  summary { cursor: pointer; font-weight: 600; }
+  summary:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 3px solid currentColor; outline-offset: 2px;
+  }
+  &__content { display: grid; gap: .6rem; padding-top: .65rem; }
+  &__content p { margin: 0; }
+  &__hint, &__disclaimer { font-size: .88rem; opacity: .85; }
+  &__result { display: grid; gap: .4rem; border: 1px dashed currentColor; border-radius: .5rem; padding: .7rem; }
+  button { justify-self: start; padding: .55rem .8rem; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  pre { max-height: 14rem; overflow: auto; white-space: pre-wrap; font-size: .83rem; }
+  code { overflow-wrap: anywhere; }
+}

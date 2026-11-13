@@ -16,7 +16,7 @@ function readLocalDbSettings() {
   const file = path.join(backend, '.env.jarvis');
   if (fs.existsSync(file)) {
     for (const line of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
-      const found = line.match(/^\s*(JARVIS_DB_(?:HOST|PORT|NAME|USER|PASSWORD))=(.*)\s*$/);
+      const found = line.match(/^\s*(JARVIS_(?:DB_(?:HOST|PORT|NAME|USER|PASSWORD)|AGENT_(?:WORKSPACE_ROOT|FILE_WRITES_ENABLED|TESTS_ENABLED)|VOICE_ENABLED|WHISPER_CLI_PATH|WHISPER_MODEL_PATH|PIPER_ENABLED|PIPER_PATH|PIPER_MODEL_PL|PIPER_MODEL_EN))=(.*)\s*$/);
       if (!found) continue;
       let value = found[2].trim();
       if ((value.startsWith('"') && value.endsWith('"')) ||
@@ -25,7 +25,7 @@ function readLocalDbSettings() {
     }
   }
   return { ...result, ...Object.fromEntries(Object.entries(process.env)
-    .filter(([key]) => key.startsWith('JARVIS_DB_'))) };
+    .filter(([key]) => (key.startsWith('JARVIS_DB_') || key.startsWith('JARVIS_AGENT_') || key === 'JARVIS_VOICE_ENABLED' || key === 'JARVIS_WHISPER_CLI_PATH' || key === 'JARVIS_WHISPER_MODEL_PATH' || key === 'JARVIS_PIPER_ENABLED' || key === 'JARVIS_PIPER_PATH' || key === 'JARVIS_PIPER_MODEL_PL' || key === 'JARVIS_PIPER_MODEL_EN'))) };
 }
 
 if (!fs.existsSync(path.join(backend, 'pom.xml'))) {

@@ -1,0 +1,42 @@
+<details class="agent-project-check" data-testid="agent-project-check">
+  <summary>{{ 'lab.project.title' | translate }}</summary>
+  <div class="agent-project-check__body">
+    <p>{{ 'lab.project.description' | translate }}</p>
+    <p>{{ 'lab.project.warning' | translate }}</p>
+    @if (!enabled()) {
+      <p role="status">{{ 'lab.project.disabled' | translate }}</p>
+    } @else {
+      <label for="jarvis-project-kind">{{ 'lab.project.type' | translate }}</label>
+      <select id="jarvis-project-kind" data-testid="project-kind" [value]="kind()" (change)="changeKind($any($event.target).value)" [disabled]="busy() || uploading()">
+        <option value="angular">Angular (npm / Vitest)</option>
+        <option value="spring">Spring Boot (Maven / JUnit)</option>
+      </select>
+      <label for="jarvis-project-dir">{{ 'lab.project.select' | translate }}</label>
+      <input id="jarvis-project-dir" data-testid="project-directory" type="file" webkitdirectory multiple
+        [disabled]="busy() || uploading()" (change)="selectDirectory($event)" />
+      <p>{{ 'lab.project.prepare' | translate }}</p>
+      @if (files().length) {
+        <p data-testid="project-count">{{ 'lab.project.files' | translate }}: {{ files().length }}</p>
+        @if (!validSnapshot()) { <p role="alert">{{ 'lab.project.mismatch' | translate }}</p> }
+      }
+      <button type="button" data-testid="project-run" [disabled]="!validSnapshot() || busy() || uploading()" (click)="run()">
+        {{ 'lab.project.run' | translate }}
+      </button>
+      @if (busy() || uploading()) { <p role="status" aria-live="polite">{{ 'lab.project.running' | translate }}</p> }
+    }
+    @if (currentResult(); as report) {
+      <div role="status" aria-live="polite" data-testid="project-result">
+        <strong>{{ ('lab.isolated.status.' + report.status) | translate }}</strong>
+        <p>{{ report.summary }}</p>
+        <p>{{ 'lab.project.image' | translate }}: <code>{{ report.image }}</code></p>
+        <p>{{ 'lab.project.time' | translate }}: {{ report.elapsedMs }} ms</p>
+        <p>SHA-256 ({{ 'lab.module.snapshot' | translate }}): <code>{{ report.snapshotSha256.slice(0, 16) }}</code></p>
+        <p>SHA-256 ({{ 'lab.module.proposal' | translate }}): <code>{{ report.proposedSha256.slice(0, 16) }}</code></p>
+        @if (report.output) { <pre data-testid="project-log">{{ report.output }}</pre> }
+      </div>
+    }
+    @if (error()) { <p role="alert" data-testid="project-error">{{ 'lab.project.error' | translate }} <code>{{ error() }}</code></p> }
+    <app-agent-check-history />
+    <p>{{ 'lab.project.disclaimer' | translate }}</p>
+  </div>
+</details>

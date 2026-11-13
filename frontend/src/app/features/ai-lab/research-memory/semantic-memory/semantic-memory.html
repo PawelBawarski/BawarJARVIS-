@@ -1,0 +1,49 @@
+<section class="semantic-memory" data-testid="memory-semantic" aria-labelledby="jarvis-semantic-title">
+  <div class="semantic-memory__head">
+    <div>
+      <h4 id="jarvis-semantic-title">{{ 'memory.semantic.title' | translate }}</h4>
+      <p>{{ 'memory.semantic.description' | translate }}</p>
+    </div>
+    <button type="button" data-testid="semantic-status-refresh" (click)="refresh()" [disabled]="busy()">
+      {{ 'memory.semantic.refresh' | translate }}
+    </button>
+  </div>
+  @if (status(); as state) {
+    <div class="semantic-memory__status" role="status" data-testid="semantic-status">
+      <strong>{{ (state.configured ? 'memory.semantic.configured' : 'memory.semantic.disabled') | translate }}</strong>
+      <span>{{ 'memory.semantic.model' | translate }}: {{ state.model }}</span>
+      <span>{{ 'memory.semantic.indexed' | translate }}: {{ state.indexedCount }} / {{ state.knowledgeCount }}</span>
+      <small>{{ 'memory.semantic.statusNotHealth' | translate }}</small>
+    </div>
+    <button type="button" data-testid="semantic-index" [disabled]="busy() || !state.configured"
+      (click)="indexNext()">{{ 'memory.semantic.index' | translate }}</button>
+  } @else {
+    <p class="semantic-memory__hint">{{ 'memory.semantic.checkStatus' | translate }}</p>
+  }
+  <div class="semantic-memory__form">
+    <label for="jarvis-semantic-query">{{ 'memory.semantic.query' | translate }}</label>
+    <div class="semantic-memory__controls">
+      <input id="jarvis-semantic-query" type="search" maxlength="500" data-testid="semantic-query"
+        [value]="query()" (input)="query.set($any($event.target).value)" (keydown.enter)="search()" />
+      <button type="button" data-testid="semantic-search" (click)="search()"
+        [disabled]="busy() || !query().trim()">{{ 'memory.semantic.search' | translate }}</button>
+    </div>
+  </div>
+  @if (busy()) { <p role="status">{{ 'memory.semantic.working' | translate }}</p> }
+  @if (error()) { <p role="alert" data-testid="semantic-error">{{ error() | translate }}</p> }
+  @if (info()) { <p role="status" data-testid="semantic-info">{{ info() | translate }}</p> }
+  @if (searched()) {
+    <h5>{{ 'memory.semantic.results' | translate }} ({{ hits().length }})</h5>
+    <ul data-testid="semantic-hits" class="semantic-memory__results">
+      @for (hit of hits(); track hit.id) {
+        <li>
+          <strong>{{ hit.title }}</strong>
+          <span>{{ (hit.method === 'semantic' ? 'memory.semantic.methodSemantic' : 'memory.semantic.methodText') | translate }}</span>
+          <p>{{ hit.excerpt }}</p>
+        </li>
+      }
+    </ul>
+    @if (!hits().length) { <p>{{ 'memory.semantic.noResults' | translate }}</p> }
+  }
+  <p class="semantic-memory__hint">{{ 'memory.semantic.privacy' | translate }}</p>
+</section>

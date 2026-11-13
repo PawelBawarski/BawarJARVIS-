@@ -1,0 +1,62 @@
+<section class="agent-file-write" data-testid="agent-file-write" aria-label="Kontrolowany zapis pliku">
+  <app-agent-isolated-check [preview]="preview()" />
+  <header>
+    <h4>{{ 'lab.fileWrite.title' | translate }}</h4>
+    <p>{{ 'lab.fileWrite.description' | translate }}</p>
+  </header>
+  <button type="button" data-testid="file-write-refresh" [disabled]="busy()" (click)="refresh()">
+    {{ 'lab.fileWrite.refresh' | translate }}
+  </button>
+  @if (config(); as state) {
+    @if (!state.enabled) {
+      <p role="status" data-testid="file-write-disabled">{{ 'lab.fileWrite.disabled' | translate }}</p>
+    } @else {
+      <p class="agent-file-write__scope" data-testid="file-write-root">
+        {{ 'lab.fileWrite.scope' | translate }}: <code>{{ state.scope }}</code>
+      </p>
+      <p><strong>{{ 'lab.fileWrite.target' | translate }}:</strong> <code>{{ preview().relativePath }}</code></p>
+      <label class="agent-file-write__checkbox">
+        <input type="checkbox" data-testid="file-write-consent" [checked]="consent()"
+          [disabled]="busy()" (change)="consent.set($any($event.target).checked)" />
+        {{ 'lab.fileWrite.consent' | translate }}
+      </label>
+      <button type="button" data-testid="file-write-prepare" [disabled]="busy() || !consent()"
+        (click)="prepare()">{{ 'lab.fileWrite.prepare' | translate }}</button>
+      @if (prepared(); as permit) {
+        <div class="agent-file-write__confirmation" role="group" data-testid="file-write-confirmation">
+          <p>{{ 'lab.fileWrite.confirmDescription' | translate }}</p>
+          <p><code>{{ permit.relativePath }}</code></p>
+          <p>SHA-256 {{ permit.beforeSha256.slice(0, 12) }} → {{ permit.afterSha256.slice(0, 12) }}</p>
+          <p>{{ 'lab.fileWrite.expires' | translate }}: {{ permit.expiresInSeconds }} s</p>
+          <button type="button" data-testid="file-write-apply" [disabled]="!canApply()"
+            (click)="apply()">{{ 'lab.fileWrite.apply' | translate }}</button>
+        </div>
+      }
+    }
+  }
+  @if (history().length) {
+    <details data-testid="file-write-history">
+      <summary>{{ 'lab.fileWrite.history' | translate }} ({{ history().length }})</summary>
+      <label class="agent-file-write__checkbox">
+        <input type="checkbox" data-testid="file-write-rollback-consent" [checked]="rollbackConsent()"
+          (change)="rollbackConsent.set($any($event.target).checked)" />
+        {{ 'lab.fileWrite.rollbackConsent' | translate }}
+      </label>
+      @for (entry of history(); track entry.deploymentId) {
+        <div class="agent-file-write__history-row">
+          <code>{{ entry.relativePath }}</code>
+          <small>{{ entry.status }}</small>
+          @if (entry.status === 'applied') {
+            <button type="button" data-testid="file-write-rollback" [disabled]="busy() || !rollbackConsent()"
+              (click)="rollback(entry.deploymentId)">{{ 'lab.fileWrite.rollback' | translate }}</button>
+          }
+        </div>
+      }
+    </details>
+  }
+  @if (message()) { <p role="status" data-testid="file-write-message">{{ message() }}</p> }
+  @if (error()) {
+    <p role="alert" data-testid="file-write-error">{{ errorKey() | translate }} <code>({{ error() }})</code></p>
+  }
+  <p class="agent-file-write__warning">{{ 'lab.fileWrite.warning' | translate }}</p>
+</section>

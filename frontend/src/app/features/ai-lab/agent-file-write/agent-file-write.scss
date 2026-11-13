@@ -1,0 +1,17 @@
+.agent-file-write {
+  margin-block: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border-color, #667085);
+  border-radius: .8rem;
+  display: grid;
+  gap: .75rem;
+  overflow-wrap: anywhere;
+  h4, p { margin: 0; }
+  button { padding: .5rem .75rem; cursor: pointer; }
+  button:disabled { cursor: not-allowed; opacity: .55; }
+  button:focus-visible, input:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
+  &__scope, &__warning { font-size: .9rem; }
+  &__checkbox { display: flex; align-items: flex-start; gap: .5rem; }
+  &__confirmation { display: grid; gap: .5rem; padding: .75rem; border: 1px dashed currentColor; border-radius: .6rem; }
+  &__history-row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; padding: .5rem 0; }
+}

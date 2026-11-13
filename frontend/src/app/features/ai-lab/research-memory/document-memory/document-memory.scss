@@ -1,0 +1,19 @@
+.document-memory {
+  display: grid;
+  gap: .7rem;
+  min-width: 0;
+  padding: 1rem;
+  margin-block: .75rem;
+  border: 1px solid var(--border);
+  border-radius: .85rem;
+}
+.document-memory__head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .7rem; align-items: start; }
+.document-memory__head h4 { margin: 0; }
+.document-memory__head p { margin: .4rem 0 0; }
+.document-memory input { max-width: 100%; }
+.document-memory__hint, .document-memory__list span { color: var(--text-muted, var(--muted, #888)); font-size: .88rem; }
+.document-memory__list { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; }
+.document-memory__list li { border: 1px solid var(--border); border-radius: .6rem; padding: .7rem; display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; justify-content: space-between; }
+.document-memory__list li > div:first-child { display: grid; gap: .25rem; overflow-wrap: anywhere; }
+.document-memory__actions { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+.document-memory button:focus-visible, .document-memory input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

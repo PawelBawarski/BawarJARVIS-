@@ -7,7 +7,7 @@ Uruchamianie istniejącej integracji Angular Chat → Spring Boot → Qwen3 8B (
 ## Wymagania
 
 1. Działający PostgreSQL z `backend/compose.db.yml` (`127.0.0.1:5433`) oraz niepublikowany `backend/.env.jarvis` z hasłem bazy.
-2. Java 21, Node.js i zależności npm w `frontend/`.
+2. Java 25, Node.js i zależności npm w `frontend/`.
 3. Lokalnie dostępny, zaufany `llama-server.exe` (llama.cpp) oraz plik modelu Qwen3 8B w formacie GGUF. Modelu **nie umieszczaj** w repozytorium.
 4. RAM/VRAM wystarczające dla wybranej kwantyzacji. `JARVIS_GPU_LAYERS=0` działa w trybie CPU; dla odpowiedniego GPU można zwiększyć liczbę warstw.
 

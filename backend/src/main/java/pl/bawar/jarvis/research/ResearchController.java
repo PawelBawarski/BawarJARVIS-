@@ -14,18 +14,35 @@ public class ResearchController {
     public ResearchController(KnowledgeMemoryService memory) { this.memory = memory; }
     public record SearchRequest(String query, String language) { }
     public record SaveRequest(String title, String language) { }
+    public record LocalNoteRequest(String title, String content) { }
+
     @PostMapping("/search")
     public List<WikipediaClient.Hit> search(@RequestBody SearchRequest req) {
         if (req == null) throw new IllegalArgumentException("Missing search");
         return memory.search(req.query(), req.language());
     }
+
     @PostMapping("/save")
     public KnowledgeMemoryService.Note save(@RequestBody SaveRequest req) {
         if (req == null) throw new IllegalArgumentException("Missing article");
         return memory.approve(req.title(), req.language());
     }
+
+    @PostMapping("/notes")
+    public KnowledgeMemoryService.Note saveLocal(@RequestBody LocalNoteRequest req) {
+        if (req == null) throw new IllegalArgumentException("Missing note");
+        return memory.saveLocal(req.title(), req.content());
+    }
+
+    @GetMapping("/matches")
+    public List<KnowledgeMemoryService.Note> matches(@RequestParam("q") String query) {
+        if (query == null || query.length() > 500) throw new IllegalArgumentException("MEMORY_QUERY_TOO_LONG");
+        return memory.matches(query);
+    }
+
     @GetMapping
     public List<KnowledgeMemoryService.Note> list() { return memory.list(); }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         if (memory.remove(id)) return ResponseEntity.noContent().<Void>build();

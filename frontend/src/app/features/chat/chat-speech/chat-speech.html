@@ -1,0 +1,47 @@
+<div class="chat-speech" data-testid="chat-speech">
+  @if (isActive() && (state() === 'playing' || state() === 'loading' || state() === 'paused' || state() === 'ready' || state() === 'error')) {
+    @if (state() === 'playing' || state() === 'loading') {
+      <button type="button" data-testid="tts-pause" (click)="pause()">
+        {{ 'tts.pause' | translate }}
+      </button>
+    } @else if (state() === 'paused') {
+      <button type="button" data-testid="tts-resume" (click)="resume()">
+        {{ 'tts.resume' | translate }}
+      </button>
+    } @else if (state() === 'ready') {
+      <button type="button" data-testid="tts-read" (click)="read()">
+        {{ 'tts.playPrepared' | translate }}
+      </button>
+    }
+    <button type="button" data-testid="tts-stop" (click)="stop()">
+      {{ 'tts.stop' | translate }}
+    </button>
+  } @else {
+    <button type="button" data-testid="tts-read"
+      [disabled]="checking() || !configured() || text().length > maxTextLength || !text().trim()"
+      (click)="read()">
+      {{ 'tts.read' | translate }}
+    </button>
+  }
+  @if (checking()) {
+    <span class="chat-speech__note">{{ 'tts.checking' | translate }}</span>
+  } @else if (!configured()) {
+    <span class="chat-speech__note">{{ 'tts.unavailable' | translate }}</span>
+  }
+  @if (isActive() && player.partTotal() > 1) {
+    <span class="chat-speech__progress" data-testid="tts-progress" aria-live="polite">
+      {{ 'tts.part' | translate }} {{ player.partIndex() + 1 }} / {{ player.partTotal() }}
+    </span>
+  }
+  @if (isActive() && state() === 'loading') {
+    <span role="status" data-testid="tts-status">{{ 'tts.generating' | translate }}</span>
+  } @else if (isActive() && state() === 'playing') {
+    <span role="status" data-testid="tts-status">{{ 'tts.playing' | translate }}</span>
+  } @else if (isActive() && state() === 'paused') {
+    <span role="status" data-testid="tts-status">{{ 'tts.paused' | translate }}</span>
+  } @else if (isActive() && state() === 'error') {
+    <span role="alert" data-testid="tts-error">{{ 'tts.error' | translate }}</span>
+  } @else if (text().length > maxTextLength) {
+    <span class="chat-speech__note">{{ 'tts.tooLong21_2' | translate }}</span>
+  }
+</div>

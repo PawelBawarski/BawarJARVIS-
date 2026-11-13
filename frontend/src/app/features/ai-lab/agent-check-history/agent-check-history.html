@@ -1,0 +1,61 @@
+<section class="check-history" data-testid="project-check-history" aria-labelledby="jarvis-check-history-heading">
+  <h3 id="jarvis-check-history-heading">{{ 'lab.checkHistory.title' | translate }}</h3>
+  <p>{{ 'lab.checkHistory.description' | translate }}</p>
+  <button type="button" data-testid="project-history-refresh" [disabled]="busy()" (click)="refresh()">
+    {{ 'lab.checkHistory.refresh' | translate }}
+  </button>
+  @if (busy()) { <p role="status">{{ 'lab.checkHistory.loading' | translate }}</p> }
+  @if (error()) { <p role="alert">{{ 'lab.checkHistory.error' | translate }}</p> }
+  @if (loaded() && !runs().length) { <p data-testid="project-history-empty">{{ 'lab.checkHistory.empty' | translate }}</p> }
+  @if (runs().length) {
+    <p data-testid="project-history-count">{{ 'lab.checkHistory.count' | translate }}: {{ runs().length }}</p>
+    <div class="check-history__scroll">
+      <table data-testid="project-history-table">
+        <thead><tr>
+          <th scope="col">{{ 'lab.checkHistory.date' | translate }}</th>
+          <th scope="col">{{ 'lab.checkHistory.target' | translate }}</th>
+          <th scope="col">{{ 'lab.checkHistory.status' | translate }}</th>
+          <th scope="col">{{ 'lab.checkHistory.duration' | translate }}</th>
+        </tr></thead>
+        <tbody>
+          @for (run of runs(); track run.checkId) {
+            <tr>
+              <td>{{ run.createdAt }}</td>
+              <td><code>{{ run.relativePath }}</code></td>
+              <td>{{ ('lab.isolated.status.' + run.status) | translate }}</td>
+              <td>{{ run.elapsedMs }} ms</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="check-history__compare" data-testid="project-history-compare">
+      <label for="jarvis-compare-a">{{ 'lab.checkHistory.first' | translate }}</label>
+      <select id="jarvis-compare-a" data-testid="project-history-first" [value]="firstId()" (change)="firstId.set($any($event.target).value)">
+        @for (run of runs(); track run.checkId) {
+          <option [value]="run.checkId">{{ run.relativePath }} · {{ run.createdAt }} · {{ ('lab.isolated.status.' + run.status) | translate }}</option>
+        }
+      </select>
+      <label for="jarvis-compare-b">{{ 'lab.checkHistory.second' | translate }}</label>
+      <select id="jarvis-compare-b" data-testid="project-history-second" [value]="secondId()" (change)="secondId.set($any($event.target).value)">
+        @for (run of runs(); track run.checkId) {
+          <option [value]="run.checkId">{{ run.relativePath }} · {{ run.createdAt }} · {{ ('lab.isolated.status.' + run.status) | translate }}</option>
+        }
+      </select>
+      @if (first() && second()) {
+        @if (comparable()) {
+          <p data-testid="project-history-comparison" role="status">
+            {{ 'lab.checkHistory.compared' | translate }}:
+            {{ ('lab.isolated.status.' + first()!.status) | translate }} → {{ ('lab.isolated.status.' + second()!.status) | translate }}.
+            {{ 'lab.checkHistory.change' | translate }}: {{ differentCode() ? ('lab.checkHistory.yes' | translate) : ('lab.checkHistory.no' | translate) }}.
+            {{ 'lab.checkHistory.timeDiff' | translate }}: {{ elapsedDifference() }} ms.
+          </p>
+        } @else {
+          <p role="status">{{ 'lab.checkHistory.notComparable' | translate }}</p>
+        }
+        <p><code>{{ first()!.proposedSha256.slice(0, 16) }}</code> / <code>{{ second()!.proposedSha256.slice(0, 16) }}</code></p>
+      }
+    </div>
+  }
+  <p class="check-history__disclaimer">{{ 'lab.checkHistory.privacy' | translate }}</p>
+</section>

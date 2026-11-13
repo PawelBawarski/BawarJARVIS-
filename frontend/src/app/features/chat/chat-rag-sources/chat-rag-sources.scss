@@ -1,0 +1,20 @@
+:host { display: block; min-width: 0; }
+.rag-sources {
+  padding: .8rem 1rem;
+  border-top: 1px solid var(--border, #526073);
+  font-size: .88rem;
+  max-height: 20rem;
+  overflow: auto;
+}
+.rag-sources__head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .6rem; }
+.rag-sources__head p { margin: .2rem 0 0; opacity: .8; }
+.rag-sources button { padding: .45rem .7rem; cursor: pointer; }
+.rag-sources button:focus-visible, .rag-sources a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.rag-sources button:disabled { cursor: wait; opacity: .6; }
+.rag-sources__notice { margin: .5rem 0; opacity: .72; font-size: .83rem; }
+.rag-sources__list { list-style: none; padding: 0; margin: .65rem 0 0; display: grid; gap: .6rem; }
+.rag-sources__list li { padding: .65rem; border: 1px solid var(--border, #526073); border-radius: .55rem; }
+.rag-sources__list li p { white-space: pre-wrap; overflow-wrap: anywhere; margin: .3rem 0 0; }
+.rag-sources__source-title { display: flex; gap: .5rem; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.rag-sources__source-title small { opacity: .75; }
+.rag-sources a { color: inherit; }

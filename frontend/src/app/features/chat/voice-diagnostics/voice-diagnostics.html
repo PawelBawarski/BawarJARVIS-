@@ -1,0 +1,23 @@
+<section class="voice-health" data-testid="voice-diagnostics">
+  <button type="button" data-testid="voice-health-refresh"
+    [disabled]="engines.checking()" (click)="openOrRefresh()">
+    {{ (engines.checking() ? 'voice.health.checking' : 'voice.health.refresh') | translate }}
+  </button>
+  @if (expanded()) {
+    <div class="voice-health__summary" role="status" aria-live="polite" data-testid="voice-health-results">
+      <span>{{ 'voice.health.whisper' | translate }}:
+        <strong [attr.data-health]="engines.whisper()">{{ statusKey(engines.whisper()) | translate }}</strong>
+      </span>
+      <span>{{ 'voice.health.qwen' | translate }}:
+        <strong [attr.data-health]="engines.qwen()">{{ statusKey(engines.qwen()) | translate }}</strong>
+      </span>
+      <span>{{ 'voice.health.piperPl' | translate }}:
+        <strong [attr.data-health]="engines.piperPl()">{{ statusKey(engines.piperPl()) | translate }}</strong>
+      </span>
+      <span>{{ 'voice.health.piperEn' | translate }}:
+        <strong [attr.data-health]="engines.piperEn()">{{ statusKey(engines.piperEn()) | translate }}</strong>
+      </span>
+    </div>
+    <p class="voice-health__hint">{{ 'voice.health.notice' | translate }}</p>
+  }
+</section>

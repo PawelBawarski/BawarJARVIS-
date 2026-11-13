@@ -1,0 +1,18 @@
+:host { display: block; margin-top: .4rem; }
+.chat-speech {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;
+  button {
+    border: 1px solid var(--border-color, #7775); background: transparent;
+    border-radius: .6rem; padding: .3rem .65rem; cursor: pointer;
+    color: inherit; font: inherit; font-size: .8rem;
+    &:disabled { opacity: .55; cursor: not-allowed; }
+    &:focus-visible { outline: 2px solid var(--color-primary, #76c9ff); outline-offset: 2px; }
+  }
+  [role="alert"] { color: #eaa29c; }
+  &__note { font-size: .75rem; opacity: .75; }
+}
+.chat-speech__progress {
+  font-size: .75rem;
+  font-variant-numeric: tabular-nums;
+  opacity: .85;
+}

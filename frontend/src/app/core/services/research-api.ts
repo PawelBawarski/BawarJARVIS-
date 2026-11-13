@@ -28,6 +28,13 @@ export class ResearchApiService {
     if (!result.ok) throw new Error('Błąd badań internetu: '+result.error);
     return result.data as T;
   }
+  // Web-first personal notes: explicit writes only, never Electron IPC.
+  saveLocal(title:string,content:string):Promise<ResearchNote> {
+    return browserApi<ResearchNote>('POST','/api/research/notes',{title,content});
+  }
+  matches(query:string):Promise<ResearchNote[]> {
+    return browserApi<ResearchNote[]>('GET',`/api/research/matches?q=${encodeURIComponent(query)}`);
+  }
   async openSource(url:string):Promise<void> {
     const open=(window as BridgeWindow).jarvisDesktop?.openResearchSource;
     if (!open) {

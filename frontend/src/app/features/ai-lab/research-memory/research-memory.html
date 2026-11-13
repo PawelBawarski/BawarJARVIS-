@@ -25,6 +25,56 @@
       </button>
     </div>
   </div>
+  <app-research-semantic-memory />
+  <app-research-document-memory />
+  <section class="research-memory__local" data-testid="memory-local-note">
+    <h4>{{ 'memory.local.title' | translate }}</h4>
+    <p>{{ 'memory.local.intro' | translate }}</p>
+    <label for="jarvis-memory-title">{{ 'memory.local.noteTitle' | translate }}</label>
+    <input id="jarvis-memory-title" data-testid="memory-note-title" maxlength="120"
+      [value]="noteTitle()" (input)="noteTitle.set($any($event.target).value)" />
+    <label for="jarvis-memory-content">{{ 'memory.local.noteContent' | translate }}</label>
+    <textarea id="jarvis-memory-content" data-testid="memory-note-content" rows="4" maxlength="4000"
+      [value]="noteContent()" (input)="noteContent.set($any($event.target).value)"></textarea>
+    <div class="research-memory__actions">
+      <button type="button" data-testid="memory-note-save" (click)="saveLocal()"
+        [disabled]="busy() || !noteTitle().trim() || !noteContent().trim()">
+        {{ 'memory.local.save' | translate }}
+      </button>
+    </div>
+    <p>{{ 'memory.local.privacy' | translate }}</p>
+  </section>
+  <section class="research-memory__local" data-testid="memory-local-search">
+    <h4>{{ 'memory.local.searchTitle' | translate }}</h4>
+    <p>{{ 'memory.local.searchDetails' | translate }}</p>
+    <label for="jarvis-memory-search">{{ 'memory.local.searchLabel' | translate }}</label>
+    <div class="research-memory__controls">
+      <input id="jarvis-memory-search" type="search" data-testid="memory-search-input" maxlength="500"
+        [value]="memoryQuery()" (input)="memoryQuery.set($any($event.target).value)"
+        (keydown.enter)="findLocal()" />
+      <button type="button" data-testid="memory-search-submit" [disabled]="busy() || !memoryQuery().trim()"
+        (click)="findLocal()">{{ 'memory.local.searchButton' | translate }}</button>
+    </div>
+    @if (searchedMemory()) {
+      <div data-testid="memory-search-results" role="status">
+        @if (!matches().length) {
+          <p>{{ 'memory.local.noMatches' | translate }}</p>
+        } @else {
+          <p>{{ 'memory.local.found' | translate }}: {{ matches().length }}</p>
+          @for (note of matches(); track note.id) {
+            <article class="research-memory__card">
+              <h5>{{ note.title }}</h5><p>{{ note.excerpt }}</p>
+              @if (!note.url.startsWith('jarvis://')) {
+                <button type="button" (click)="openSource(note.url)">{{ 'lab.research.openSource' | translate }}</button>
+              } @else {
+                <small>{{ 'memory.local.localLabel' | translate }}</small>
+              }
+            </article>
+          }
+        }
+      </div>
+    }
+  </section>
   @if (error()) { <p role="alert" class="research-memory__error">{{ error() | translate }}</p> }
   @if (info()) { <p role="status">{{ info() | translate }}</p> }
   @if (results().length) {
@@ -50,7 +100,11 @@
         <article class="research-memory__card">
           <h5>{{ note.title }}</h5><p>{{ note.excerpt }}</p>
           <div class="research-memory__actions">
-            <button type="button" (click)="openSource(note.url)">{{ 'lab.research.openSource' | translate }}</button>
+            @if (!note.url.startsWith('jarvis://')) {
+              <button type="button" (click)="openSource(note.url)">{{ 'lab.research.openSource' | translate }}</button>
+            } @else {
+              <small>{{ 'memory.local.localLabel' | translate }}</small>
+            }
             <button type="button" (click)="remove(note)" [disabled]="busy()">{{ 'lab.research.remove' | translate }}</button>
           </div>
         </article>
