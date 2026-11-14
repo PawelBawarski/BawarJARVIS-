@@ -52,8 +52,11 @@ export class ChatApiService {
     const bridge = window.jarvisDesktop?.chatApi;
     if (bridge) {
       let response: ChatApiResult;
-      try { response = await bridge(request); }
-      catch { throw new ChatApiError(0, 'BACKEND_UNAVAILABLE'); }
+      try {
+        response = await bridge(request);
+      } catch {
+        throw new ChatApiError(0, 'BACKEND_UNAVAILABLE');
+      }
       if (!response.ok) throw new ChatApiError(response.status, response.error);
       return response.data as T;
     }
@@ -65,19 +68,57 @@ export class ChatApiService {
     let url: string;
     let body: unknown = undefined;
     switch (request.operation) {
-      case 'modelStatus': method = 'GET'; url = `${base}/model-status`; break;
-      case 'list': method = 'GET'; url = base; break;
-      case 'create': method = 'POST'; url = base; body = { title: request.title }; break;
-      case 'get': method = 'GET'; url = `${base}/${id}`; break;
-      case 'messages': method = 'GET'; url = `${base}/${id}/messages`; break;
-      case 'send': method = 'POST'; url = `${base}/${id}/messages`; body = { content: request.content }; break;
-      case 'rename': method = 'PATCH'; url = `${base}/${id}`; body = { title: request.title }; break;
-      case 'delete': method = 'DELETE'; url = `${base}/${id}`; break;
+      case 'modelStatus':
+        method = 'GET';
+        url = `${base}/model-status`;
+        break;
+      case 'list':
+        method = 'GET';
+        url = base;
+        break;
+      case 'create':
+        method = 'POST';
+        url = base;
+        body = { title: request.title };
+        break;
+      case 'get':
+        method = 'GET';
+        url = `${base}/${id}`;
+        break;
+      case 'messages':
+        method = 'GET';
+        url = `${base}/${id}/messages`;
+        break;
+      case 'send':
+        method = 'POST';
+        url = `${base}/${id}/messages`;
+        body = { content: request.content };
+        break;
+      case 'rename':
+        method = 'PATCH';
+        url = `${base}/${id}`;
+        body = { title: request.title };
+        break;
+      case 'delete':
+        method = 'DELETE';
+        url = `${base}/${id}`;
+        break;
     }
-    try { return await browserApi<T>(method, url, body, signal ? { signal } : {}); }
-    catch (error) {
-      if (error instanceof BrowserApiError) throw new ChatApiError(error.status, error.message);
-      throw error;
+    try {
+      return await browserApi<T>(method, url, body, signal ? { signal } : {});
+    } catch (error) {
+      if (error instanceof BrowserApiError) {
+        throw new ChatApiError(error.status, error.message);
+      }
+
+      // Anulowane GET nie oznacza awarii backendu.
+      // ChatStore ignoruje odpowiedzi z nieaktualnych żądań.
+      if (signal?.aborted) {
+        throw error;
+      }
+
+      // Nie przekazujemy surowych wyjątków do UI.
+      throw new ChatApiError(0, 'BACKEND_UNAVAILABLE');
     }
   }
 
