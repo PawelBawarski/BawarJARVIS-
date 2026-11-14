@@ -30,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class AgentControlledFileService {
     private static final int MAX_BYTES = 16_384;
+    private static final long MAX_BACKUP_METADATA_BYTES = 4_096L;
     private static final long TICKET_TTL_MILLIS = 5 * 60_000L;
     private final String workspaceConfig;
     private final boolean enabled;
@@ -104,13 +105,14 @@ public class AgentControlledFileService {
             throw new IllegalStateException("TICKET_EXPIRED");
         }
         Path file = target(draft.relativePath());
-        if (!sha256(readSmall(file)).equals(draft.originalHash())) throw new IllegalStateException("FILE_CHANGED");
+        // Capture the bytes that will be preserved for rollback.
+        // Reject stale proposals before creating backup records.
+        byte[] original = readSmall(file);
+        if (!sha256(original).equals(draft.originalHash())) throw new IllegalStateException("FILE_CHANGED");
         Path backupDir = safeBackupDir();
         String id = UUID.randomUUID().toString();
         Path copy = backupDir.resolve(id + ".orig");
         Path meta = backupDir.resolve(id + ".properties");
-        byte[] original = readSmall(file);
-        if (!sha256(original).equals(draft.originalHash())) throw new IllegalStateException("FILE_CHANGED");
         Files.write(copy, original);
         privateFile(copy);
         Properties p = new Properties();
@@ -119,8 +121,20 @@ public class AgentControlledFileService {
         p.setProperty("afterSha256", draft.proposedHash());
         p.setProperty("workspaceSha256", sha256(root().toString().getBytes(StandardCharsets.UTF_8)));
         p.setProperty("createdAt", Instant.now().toString());
-        try (var output = Files.newOutputStream(meta)) { p.store(output, "JARVIS local rollback record"); }
-        privateFile(meta);
+        // Publish only complete metadata. Never expose a partially written
+        // .properties record to history() or rollback().
+        Path temporaryMeta = Files.createTempFile(
+            backupDir, ".jarvis-meta-", ".tmp"
+        );
+        try {
+            try (var output = Files.newOutputStream(temporaryMeta)) {
+                p.store(output, "JARVIS local rollback record");
+            }
+            privateFile(temporaryMeta);
+            Files.move(temporaryMeta, meta, StandardCopyOption.ATOMIC_MOVE);
+        } finally {
+            Files.deleteIfExists(temporaryMeta);
+        }
         // No silent fallback when atomic rename is unsupported; preserves backups on failure.
         replaceFile(file, textBytes(draft.proposed()), draft.originalHash());
         return new Result("applied", id, draft.relativePath(), "Zmianę zapisano. Kopia do cofnięcia jest zachowana.");
@@ -134,7 +148,13 @@ public class AgentControlledFileService {
         String id = checkedId(request.deploymentId());
         Properties p = readRecord(id);
         Path file = target(p.getProperty("relativePath"));
-        byte[] backup = readSmall(safeBackupDir().resolve(id + ".orig"));
+        Path backupPath = safeBackupDir().resolve(id + ".orig");
+        // Never follow a symbolic link when restoring a backup.
+        if (!Files.isRegularFile(backupPath, LinkOption.NOFOLLOW_LINKS)
+                || Files.isSymbolicLink(backupPath)) {
+            throw new IllegalStateException("BACKUP_CHANGED");
+        }
+        byte[] backup = readSmall(backupPath);
         if (!sha256(backup).equals(p.getProperty("beforeSha256"))) throw new IllegalStateException("BACKUP_CHANGED");
         if (!sha256(readSmall(file)).equals(p.getProperty("afterSha256"))) throw new IllegalStateException("FILE_CHANGED");
         replaceFile(file, backup, p.getProperty("afterSha256"));
@@ -216,6 +236,14 @@ public class AgentControlledFileService {
         if (backupRoot.startsWith(workspace) || Files.isSymbolicLink(backupRoot)) {
             throw new IllegalArgumentException("BACKUP_DIRECTORY_UNSAFE");
         }
+        // Reject symbolic links in the entire backup path BEFORE creating
+        // directories. Otherwise a linked parent could create a directory
+        // inside the workspace before the real-path check rejects it.
+        for (Path cursor = backupRoot; cursor != null; cursor = cursor.getParent()) {
+            if (Files.isSymbolicLink(cursor)) {
+                throw new IllegalArgumentException("BACKUP_DIRECTORY_UNSAFE");
+            }
+        }
         Files.createDirectories(backupRoot);
         // A symlinked parent could otherwise redirect a backup into the project.
         if (backupRoot.toRealPath().startsWith(workspace)) {
@@ -236,13 +264,43 @@ public class AgentControlledFileService {
         if (!Files.isRegularFile(meta, LinkOption.NOFOLLOW_LINKS) || Files.isSymbolicLink(meta)) {
             throw new IllegalArgumentException("UNKNOWN_DEPLOYMENT");
         }
+        // Reject oversized metadata before parsing untrusted properties.
+        if (Files.size(meta) > MAX_BACKUP_METADATA_BYTES) {
+            throw new IllegalArgumentException("INVALID_BACKUP_RECORD");
+        }
         Properties p = new Properties();
         try (var input = Files.newInputStream(meta)) { p.load(input); }
         String expectedRoot = sha256(root().toString().getBytes(StandardCharsets.UTF_8));
         if (!expectedRoot.equals(p.getProperty("workspaceSha256"))) {
             throw new IllegalArgumentException("WRONG_WORKSPACE");
         }
+        validateBackupRecord(p);
         return p;
+    }
+
+
+    private void validateBackupRecord(Properties p) {
+        String relativePath = p.getProperty("relativePath");
+        String before = p.getProperty("beforeSha256");
+        String after = p.getProperty("afterSha256");
+        String createdAt = p.getProperty("createdAt");
+
+        if (!AgentSourceContext.validPath(relativePath)
+                || !validSha256(before)
+                || !validSha256(after)
+                || createdAt == null) {
+            throw new IllegalArgumentException("INVALID_BACKUP_RECORD");
+        }
+
+        try {
+            Instant.parse(createdAt);
+        } catch (java.time.format.DateTimeParseException ex) {
+            throw new IllegalArgumentException("INVALID_BACKUP_RECORD", ex);
+        }
+    }
+
+    private boolean validSha256(String hash) {
+        return hash != null && hash.matches("[0-9a-f]{64}");
     }
 
     private String checkedId(String id) {

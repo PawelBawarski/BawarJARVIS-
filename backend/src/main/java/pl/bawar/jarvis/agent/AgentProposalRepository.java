@@ -28,11 +28,13 @@ public class AgentProposalRepository {
     public AgentProposal create(String task, String plan) {
         UUID id = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
-        jdbc.update("""
-            INSERT INTO jarvis_agent_proposals (id, task, plan, status, created_at, updated_at)
+        // PostgreSQL returns the complete inserted record in one query.
+        return jdbc.queryForObject("""
+            INSERT INTO jarvis_agent_proposals
+                (id, task, plan, status, created_at, updated_at)
             VALUES (?, ?, ?, 'PENDING', ?, ?)
-            """, id, task, plan, now, now);
-        return find(id);
+            RETURNING id, task, plan, status, created_at, updated_at
+            """, MAPPER, id, task, plan, now, now);
     }
 
     public List<AgentProposal> list() {

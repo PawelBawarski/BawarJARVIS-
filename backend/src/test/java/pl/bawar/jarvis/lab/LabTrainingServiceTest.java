@@ -59,6 +59,47 @@ class LabTrainingServiceTest {
         verify(model, never()).loadCheckpoint();
     }
 
+
+    @Test
+    void rejectsInvalidEvaluationBeforeInvokingModel() {
+        assertThrows(IllegalArgumentException.class,
+            () -> service.evaluate(null));
+
+        assertThrows(IllegalArgumentException.class,
+            () -> service.evaluate(List.of()));
+
+        assertThrows(IllegalArgumentException.class,
+            () -> service.evaluate(List.of("   ")));
+
+        assertThrows(IllegalArgumentException.class,
+            () -> service.evaluate(List.of("x".repeat(257))));
+
+        var withNull = new java.util.ArrayList<String>();
+        withNull.add("Valid example");
+        withNull.add(null);
+
+        assertThrows(IllegalArgumentException.class,
+            () -> service.evaluate(withNull));
+
+        verifyNoInteractions(model);
+    }
+
+    @Test
+    void evaluationAcceptsBoundaryLengthAndCallsModel() {
+        var examples = List.of("x".repeat(256));
+
+        var expected = new pl.bawar.jarvis.brain.training.EvaluationMetrics(
+            0.5, Math.exp(0.5), 1L
+        );
+
+        when(model.evaluate(examples)).thenReturn(expected);
+
+        var actual = service.evaluate(examples);
+
+        assertEquals(expected, actual);
+        verify(model).evaluate(examples);
+    }
+
     private LabTrainingService.TrainingState waitForDone() throws InterruptedException {
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
         while (System.nanoTime() < deadline) {

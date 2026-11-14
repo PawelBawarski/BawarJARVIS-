@@ -47,7 +47,7 @@ class KnowledgeMemoryServiceTest {
         when(wikipedia.article("Angular", "pl")).thenReturn(new WikipediaClient.Article(
                 "Angular", "Framework Angular", "https://pl.wikipedia.org/wiki/Angular"));
         var id = UUID.randomUUID();
-        when(jdbc.queryForObject(anyString(), any(RowMapper.class), anyString())).thenReturn(
+        when(jdbc.queryForObject(anyString(), org.mockito.ArgumentMatchers.<RowMapper<KnowledgeMemoryService.Note>>any(), anyString())).thenReturn(
                 new KnowledgeMemoryService.Note(id, "Angular", "https://pl.wikipedia.org/wiki/Angular",
                         "Framework Angular"));
         var memory = new KnowledgeMemoryService(jdbc, wikipedia);

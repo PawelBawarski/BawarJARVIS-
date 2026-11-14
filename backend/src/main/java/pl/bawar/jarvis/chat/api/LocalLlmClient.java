@@ -68,7 +68,7 @@ public class LocalLlmClient {
             HttpResponse<String> models = http.send(modelsRequest, HttpResponse.BodyHandlers.ofString());
             boolean matched = models.statusCode() == 200 &&
                     "jarvis-qwen3-8b".equals(mapper.readTree(models.body())
-                            .path("data").path(0).path("id").asText());
+                            .path("data").path(0).path("id").asString(""));
             return new ModelStatus("jarvis-qwen3-8b", matched);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -120,9 +120,9 @@ public class LocalLlmClient {
             }
             JsonNode contentNode = mapper.readTree(response.body())
                     .path("choices").path(0).path("message").path("content");
-            if (!contentNode.isTextual())
+            if (!contentNode.isString())
                 throw new LocalLlmUnavailableException("Brak treści odpowiedzi modelu.");
-            String answer = contentNode.asText().replaceAll("(?s)<think>.*?</think>", "").strip();
+            String answer = contentNode.asString().replaceAll("(?s)<think>.*?</think>", "").strip();
             if (answer.isBlank())
                 throw new LocalLlmUnavailableException("Model zwrócił pustą odpowiedź.");
             return answer.length() > 20_000 ? answer.substring(0, 20_000) : answer;

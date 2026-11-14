@@ -19,6 +19,22 @@ class ApiSecurityConfigTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private org.springframework.context.ApplicationContext context;
+
+    @Test
+    void doesNotCreateDefaultSpringSecurityUser() {
+        var services = context.getBeansOfType(
+            org.springframework.security.core.userdetails.UserDetailsService.class
+        );
+
+        org.junit.jupiter.api.Assertions.assertTrue(
+            services.isEmpty(),
+            "J.A.R.V.I.S. must not create a default password-based user"
+        );
+    }
+
+
     @Test
     void shouldAllowBackendHealthCheck() throws Exception {
         mockMvc.perform(

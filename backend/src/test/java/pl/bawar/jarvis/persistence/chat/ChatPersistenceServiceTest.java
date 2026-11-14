@@ -61,6 +61,39 @@ class ChatPersistenceServiceTest {
         assertTrue(chats.listMessages(id).isEmpty());
     }
 
+
+    @Test
+    void insertReturnsPersistedMessageWithDatabaseOrder() {
+        UUID conversationId = chats.createConversation(
+            "PostgreSQL RETURNING"
+        ).id();
+
+        ChatMessage first = chats.appendMessage(
+            conversationId, ChatRole.USER, "Pierwsza wiadomość"
+        );
+
+        ChatMessage second = chats.appendMessage(
+            conversationId, ChatRole.ASSISTANT, "Druga wiadomość"
+        );
+
+        assertNotNull(first.id());
+        assertNotNull(second.id());
+        assertEquals(conversationId, first.conversationId());
+        assertEquals(conversationId, second.conversationId());
+        assertEquals(ChatRole.USER, first.role());
+        assertEquals(ChatRole.ASSISTANT, second.role());
+        assertEquals("Pierwsza wiadomość", first.content());
+        assertEquals("Druga wiadomość", second.content());
+        assertTrue(first.order() > 0);
+        assertTrue(second.order() > first.order());
+
+        List<ChatMessage> stored = chats.listMessages(conversationId);
+
+        assertEquals(2, stored.size());
+        assertEquals(first, stored.get(0));
+        assertEquals(second, stored.get(1));
+    }
+
     @Test
     void rejectsUnknownConversation() {
         UUID id = UUID.randomUUID();

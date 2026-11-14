@@ -51,12 +51,27 @@ public class SemanticMemoryService {
             String currentHash = SemanticVector.sourceHash(row.title(), row.excerpt());
             if (client.model().equals(row.storedModel()) && currentHash.equals(row.storedHash())) continue;
             float[] embedding = client.embedDocument(row.title(), row.excerpt());
-            jdbc.update("INSERT INTO jarvis_knowledge_embeddings(knowledge_id,model_id,source_hash,dimensions,vector) " +
-                "VALUES(?,?,?,?,?) ON CONFLICT(knowledge_id) DO UPDATE SET " +
-                "model_id=EXCLUDED.model_id,source_hash=EXCLUDED.source_hash," +
-                "dimensions=EXCLUDED.dimensions,vector=EXCLUDED.vector,indexed_at=NOW()",
-                row.id(), client.model(), currentHash, embedding.length, SemanticVector.toBytes(embedding));
-            processed++;
+            // Do not persist an embedding if its source changed during
+            // model inference. PostgreSQL evaluates the source predicate
+            // as part of the INSERT ... SELECT statement.
+            int saved = jdbc.update("""
+                INSERT INTO jarvis_knowledge_embeddings
+                    (knowledge_id, model_id, source_hash, dimensions, vector)
+                SELECT k.id, ?, ?, ?, ?
+                FROM jarvis_knowledge k
+                WHERE k.id = ? AND k.title = ? AND k.excerpt = ?
+                ON CONFLICT (knowledge_id) DO UPDATE SET
+                    model_id = EXCLUDED.model_id,
+                    source_hash = EXCLUDED.source_hash,
+                    dimensions = EXCLUDED.dimensions,
+                    vector = EXCLUDED.vector,
+                    indexed_at = NOW()
+                """,
+                client.model(), currentHash, embedding.length,
+                SemanticVector.toBytes(embedding),
+                row.id(), row.title(), row.excerpt());
+
+            if (saved == 1) processed++;
         }
         Status latest = status();
         return new Indexed(processed, latest.indexedCount(), latest.knowledgeCount());

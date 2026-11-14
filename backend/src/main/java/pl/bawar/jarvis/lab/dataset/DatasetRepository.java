@@ -1,6 +1,7 @@
 package pl.bawar.jarvis.lab.dataset;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
@@ -68,10 +69,24 @@ public class DatasetRepository {
                 data.fullSha256(), data.validationSha256());
     }
     private void insertExamples(UUID versionId, String subset, List<String> values) {
-        for (int i = 0; i < values.size(); i++) {
-            jdbc.update("INSERT INTO jarvis_dataset_examples(version_id,subset,position,content) VALUES (?,?,?,?)",
-                    versionId, subset, i, values.get(i));
-        }
+        jdbc.batchUpdate(
+            "INSERT INTO jarvis_dataset_examples(version_id,subset,position,content) VALUES (?,?,?,?)",
+            new BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(java.sql.PreparedStatement ps, int index)
+                        throws java.sql.SQLException {
+                    ps.setObject(1, versionId);
+                    ps.setString(2, subset);
+                    ps.setInt(3, index);
+                    ps.setString(4, values.get(index));
+                }
+
+                @Override
+                public int getBatchSize() {
+                    return values.size();
+                }
+            }
+        );
     }
 
     public List<Summary> listDatasets() {
@@ -92,12 +107,28 @@ public class DatasetRepository {
     }
 
     public List<Version> versions(UUID datasetId) {
-        return jdbc.query("""
+        List<Version> result = jdbc.query("""
             SELECT id, dataset_id, version_number, content_sha256, validation_sha256,
                    training_count, validation_count, created_at
             FROM jarvis_dataset_versions WHERE dataset_id=?
             ORDER BY version_number DESC LIMIT 30
             """, DatasetRepository::mapVersion, datasetId);
+
+        // An empty list does not distinguish a missing dataset from
+        // an existing dataset that currently has no versions.
+        if (result.isEmpty()) {
+            Boolean exists = jdbc.queryForObject(
+                "SELECT EXISTS(SELECT 1 FROM jarvis_datasets WHERE id=?)",
+                Boolean.class,
+                datasetId
+            );
+
+            if (!Boolean.TRUE.equals(exists)) {
+                throw new IllegalArgumentException("Unknown dataset");
+            }
+        }
+
+        return result;
     }
 
     public Samples readVersion(UUID versionId) {

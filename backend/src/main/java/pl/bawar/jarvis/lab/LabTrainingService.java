@@ -108,6 +108,15 @@ public final class LabTrainingService {
         if (examples == null || examples.isEmpty() || examples.size() > 100) {
             throw new IllegalArgumentException("Provide between 1 and 100 examples");
         }
+
+        for (String example : examples) {
+            if (example == null || example.isBlank()
+                    || example.length() > 256) {
+                throw new IllegalArgumentException(
+                    "Invalid evaluation example (max 256 chars)");
+            }
+        }
+
         List<String> checked = List.copyOf(examples);
         EvaluationMetrics result = model.evaluate(checked);
         if (history != null) history.evaluated(result, checked);

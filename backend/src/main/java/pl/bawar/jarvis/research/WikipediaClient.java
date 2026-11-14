@@ -40,9 +40,9 @@ public class WikipediaClient {
         JsonNode json = request(uri);
         List<Hit> hits = new ArrayList<>();
         for (JsonNode page : json.path("pages")) {
-            String title = page.path("title").asText("");
+            String title = page.path("title").asString("");
             if (title.isBlank() || title.length() > 200) continue;
-            String excerpt = clean(page.path("excerpt").asText(""));
+            String excerpt = clean(page.path("excerpt").asString(""));
             hits.add(new Hit(title, excerpt, articleUrl(title, language), language));
         }
         return List.copyOf(hits);
@@ -54,8 +54,8 @@ public class WikipediaClient {
               || title.contains("/") || title.contains("\\")) throw new IllegalArgumentException("Invalid title");
         URI uri = URI.create("https://" + language + ".wikipedia.org/api/rest_v1/page/summary/" + enc(title.strip()));
         JsonNode json = request(uri);
-        String fetchedTitle = clean(json.path("title").asText(""));
-        String excerpt = clean(json.path("extract").asText(""));
+        String fetchedTitle = clean(json.path("title").asString(""));
+        String excerpt = clean(json.path("extract").asString(""));
         if (fetchedTitle.isBlank() || excerpt.isBlank()) throw new IllegalArgumentException("No article content");
         return new Article(fetchedTitle.substring(0, Math.min(fetchedTitle.length(), 250)),
             excerpt.substring(0, Math.min(excerpt.length(), 1500)), articleUrl(title, language));

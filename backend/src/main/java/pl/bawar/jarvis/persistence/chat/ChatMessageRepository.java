@@ -30,15 +30,16 @@ public class ChatMessageRepository {
     public ChatMessage create(UUID conversationId, ChatRole role, String content) {
         UUID id = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
-        jdbc.update("""
-                INSERT INTO jarvis_messages (id, conversation_id, role, content, created_at)
-                VALUES (?, ?, ?, ?, ?)
-                """, id, conversationId, role.databaseValue(), content, now);
-
+        // PostgreSQL returns the inserted row, including message_order,
+        // without requiring a second database query.
         return jdbc.queryForObject("""
-                SELECT id, conversation_id, role, content, created_at, message_order
-                FROM jarvis_messages WHERE id = ?
-                """, MAPPER, id);
+                INSERT INTO jarvis_messages
+                    (id, conversation_id, role, content, created_at)
+                VALUES (?, ?, ?, ?, ?)
+                RETURNING id, conversation_id, role, content,
+                          created_at, message_order
+                """, MAPPER, id, conversationId,
+                role.databaseValue(), content, now);
     }
 
     public List<ChatMessage> findByConversationId(UUID conversationId) {

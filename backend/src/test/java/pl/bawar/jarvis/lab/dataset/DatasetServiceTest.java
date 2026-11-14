@@ -20,6 +20,59 @@ class DatasetServiceTest {
         assertThrows(IllegalArgumentException.class, () -> DatasetService.validateName("x".repeat(81)));
     }
 
+
+    @Test void acceptsBoundaryValuesAndRejectsOversizedDatasets() {
+        assertEquals("Dataset", DatasetService.validateName("  Dataset  "));
+        assertEquals("A".repeat(80),
+            DatasetService.validateName("A".repeat(80)));
+
+        assertThrows(IllegalArgumentException.class,
+            () -> DatasetService.validateName("A".repeat(81)));
+
+        var minimum = List.of("a", "b", "c", "d", "e");
+        var minimumPartition = DatasetService.partition(minimum);
+        assertEquals(4, minimumPartition.training().size());
+        assertEquals(1, minimumPartition.validation().size());
+
+        var maximum = java.util.stream.IntStream.range(0, 100)
+            .mapToObj(i -> "sample-" + i)
+            .toList();
+
+        var maximumPartition = DatasetService.partition(maximum);
+        assertEquals(80, maximumPartition.training().size());
+        assertEquals(20, maximumPartition.validation().size());
+
+        var tooMany = java.util.stream.IntStream.range(0, 101)
+            .mapToObj(i -> "sample-" + i)
+            .toList();
+
+        assertThrows(IllegalArgumentException.class,
+            () -> DatasetService.partition(tooMany));
+
+        assertThrows(IllegalArgumentException.class,
+            () -> DatasetService.partition(
+                List.of("a", "b", "c", "d", "x".repeat(257))
+            ));
+    }
+
+    @Test void invalidInputNeverCallsRepository() {
+        DatasetRepository repository = mock(DatasetRepository.class);
+        DatasetService service = new DatasetService(repository);
+
+        assertThrows(IllegalArgumentException.class,
+            () -> service.create(" ", corpus()));
+
+        assertThrows(IllegalArgumentException.class,
+            () -> service.create("Valid dataset", List.of("one")));
+
+        assertThrows(IllegalArgumentException.class,
+            () -> service.newVersion(
+                UUID.randomUUID(), List.of("one")
+            ));
+
+        verifyNoInteractions(repository);
+    }
+
     @Test void splitIsReproducibleIndependentOfOriginalOrder() {
         var a = DatasetService.partition(corpus());
         var b = DatasetService.partition(corpus().reversed());

@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,6 +31,9 @@ public class LocalTtsController {
     @PostMapping(value = "/synthesize", consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = "audio/wav")
     public ResponseEntity<byte[]> synthesize(@RequestBody Request request) {
+        if (request == null) {
+            throw new IllegalArgumentException("TTS_TEXT_INVALID");
+        }
         byte[] wav = piper.synthesize(request.text(), request.language());
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_TYPE, "audio/wav")
@@ -42,17 +46,33 @@ public class LocalTtsController {
 class LocalTtsErrors {
     @ExceptionHandler(IllegalArgumentException.class)
     ResponseEntity<Map<String, String>> badRequest(IllegalArgumentException error) {
-        return ResponseEntity.badRequest().body(Map.of("code", error.getMessage()));
+        String code = switch (error.getMessage()) {
+            case "TTS_TEXT_INVALID" -> "TTS_TEXT_INVALID";
+            case "TTS_LANGUAGE_INVALID" -> "TTS_LANGUAGE_INVALID";
+            default -> "BAD_REQUEST";
+        };
+        return ResponseEntity.badRequest().body(Map.of("code", code));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ResponseEntity<Map<String, String>> invalidJson() {
+        return ResponseEntity.badRequest().body(Map.of("code", "BAD_REQUEST"));
     }
 
     @ExceptionHandler(LocalPiperService.Busy.class)
     ResponseEntity<Map<String, String>> busy() {
-        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of("code", "TTS_BUSY"));
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+            .body(Map.of("code", "TTS_BUSY"));
     }
 
     @ExceptionHandler(IllegalStateException.class)
     ResponseEntity<Map<String, String>> unavailable(IllegalStateException error) {
+        String code = switch (error.getMessage()) {
+            case "TTS_UNAVAILABLE" -> "TTS_UNAVAILABLE";
+            case "TTS_SYNTHESIS_FAILED" -> "TTS_SYNTHESIS_FAILED";
+            default -> "TTS_UNAVAILABLE";
+        };
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-            .body(Map.of("code", error.getMessage()));
+            .body(Map.of("code", code));
     }
 }
