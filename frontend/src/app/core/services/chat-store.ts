@@ -1,28 +1,8 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { ChatConversation } from '../../features/chat/models/chat-conversation';
 import { ChatMessage } from '../../features/chat/models/chat-message';
-import { ApiConversation, ApiMessage, ChatApiError, ChatApiService } from './chat-api';
-
-function mapMessage(message: ApiMessage): ChatMessage {
-  // Message IDs remain UUIDs; the UI uses them only for Angular tracking.
-  return {
-    id: message.id,
-    role: message.role === 'USER' ? 'user' : 'assistant',
-    content: message.content,
-  };
-}
-function mapConversation(chat: ApiConversation): ChatConversation {
-  return {
-    id: chat.id,
-    title: chat.title,
-    createdAt: Date.parse(chat.createdAt),
-    updatedAt: Date.parse(chat.updatedAt),
-    messages: [],
-  };
-}
-function emptyChat(): ChatConversation {
-  return { id: '', title: '', createdAt: 0, updatedAt: 0, messages: [] };
-}
+import { ChatApiError, ChatApiService } from './chat-api';
+import { emptyChat, mapConversation, mapMessage } from './chat-mappers';
 
 /** Server owns persistence. Do not reintroduce localStorage as a second source of truth. */
 @Injectable({ providedIn: 'root' })

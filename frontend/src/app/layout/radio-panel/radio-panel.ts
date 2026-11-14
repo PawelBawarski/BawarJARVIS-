@@ -1,3 +1,4 @@
+import { ChangeDetectionStrategy } from '@angular/core';
 import { NetworkStatusService } from '../../core/services/network-status';
 import { Component, ElementRef, inject, signal } from '@angular/core';
 
@@ -6,6 +7,7 @@ import { RadioPlayerService } from '../../core/services/radio-player';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-radio-panel',
   imports: [TranslatePipe],
   templateUrl: './radio-panel.html',

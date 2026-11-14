@@ -40,6 +40,7 @@ export class ChatApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    readonly requestId?: string,
   ) {
     super(message);
     this.name = 'ChatApiError';
@@ -108,7 +109,7 @@ export class ChatApiService {
       return await browserApi<T>(method, url, body, signal ? { signal } : {});
     } catch (error) {
       if (error instanceof BrowserApiError) {
-        throw new ChatApiError(error.status, error.message);
+        throw new ChatApiError(error.status, error.message, error.requestId);
       }
 
       // Anulowane GET nie oznacza awarii backendu.

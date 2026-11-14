@@ -1,6 +1,6 @@
 /** Browser transport: same-origin /api only; credentials are supplied by the local dev proxy. */
 export class BrowserApiError extends Error {
-  constructor(readonly status: number, message: string) {
+  constructor(readonly status: number, message: string, readonly requestId?: string) {
     super(message);
     this.name = 'BrowserApiError';
   }
@@ -13,6 +13,16 @@ export interface BrowserApiOptions {
   readonly retries?: number;
   /** Useful in deterministic unit tests; production defaults to bounded backoff. */
   readonly retryDelayMs?: number;
+  /** Optional deadline for one HTTP attempt, in milliseconds. */
+  readonly timeoutMs?: number;
+}
+
+// Accept only UUID-shaped diagnostic identifiers from the backend.
+function safeRequestId(value: unknown): string | undefined {
+  return typeof value === 'string' &&
+    /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(value)
+    ? value
+    : undefined;
 }
 
 const TRANSIENT_STATUSES = new Set([408, 502, 503, 504]);
@@ -74,14 +84,44 @@ export async function browserApi<T>(
     ? Math.min(MAX_GET_RETRIES, Math.max(0, Math.trunc(options.retries ?? MAX_GET_RETRIES)))
     : 0;
 
+  const timeoutMs = options.timeoutMs !== undefined &&
+    Number.isFinite(options.timeoutMs)
+    ? Math.max(0, Math.trunc(options.timeoutMs))
+    : 0;
+
   for (let attempt = 0; ; attempt++) {
     if (options.signal?.aborted) throw cancelled();
     let error: BrowserApiError;
+
+    const timeoutController = timeoutMs > 0
+      ? new AbortController()
+      : undefined;
+
+    let timedOut = false;
+
+    const forwardAbort = () => timeoutController?.abort();
+
+    if (timeoutController && options.signal) {
+      options.signal.addEventListener('abort', forwardAbort, { once: true });
+      if (options.signal.aborted) timeoutController.abort();
+    }
+
+    const timer = timeoutController
+      ? setTimeout(() => {
+          timedOut = true;
+          timeoutController.abort();
+        }, timeoutMs)
+      : undefined;
+
     try {
       const response = await fetch(path, {
         method,
         credentials: 'same-origin',
-        ...(options.signal ? { signal: options.signal } : {}),
+        ...(timeoutController
+          ? { signal: timeoutController.signal }
+          : options.signal
+            ? { signal: options.signal }
+            : {}),
         ...(body !== undefined ? {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
@@ -92,6 +132,10 @@ export async function browserApi<T>(
         try { return await response.json() as T; }
         catch { throw new BrowserApiError(response.status, 'INVALID_API_RESPONSE'); }
       }
+      const headerRequestId = safeRequestId(
+        response.headers?.get('X-Request-Id'),
+      );
+      let requestId = headerRequestId;
       let code = `HTTP_${response.status}`;
       try {
         const payload: unknown = await response.json();
@@ -99,13 +143,22 @@ export async function browserApi<T>(
           const raw = 'code' in payload ? payload.code :
             'error' in payload ? payload.error : undefined;
           if (typeof raw === 'string' && /^[A-Z][A-Z0-9_]{2,80}$/.test(raw)) code = raw;
+          if (!requestId && 'requestId' in payload) {
+            requestId = safeRequestId(payload.requestId);
+          }
         }
       } catch { /* preserve HTTP status when the error payload is not JSON */ }
-      error = new BrowserApiError(response.status, code);
+      error = new BrowserApiError(response.status, code, requestId);
     } catch (caught) {
       if (options.signal?.aborted) throw cancelled();
-      error = caught instanceof BrowserApiError
-        ? caught : new BrowserApiError(0, 'BACKEND_UNAVAILABLE');
+      error = timedOut
+        ? new BrowserApiError(408, 'REQUEST_TIMEOUT')
+        : caught instanceof BrowserApiError
+          ? caught
+          : new BrowserApiError(0, 'BACKEND_UNAVAILABLE');
+    } finally {
+      if (timer !== undefined) clearTimeout(timer);
+      options.signal?.removeEventListener('abort', forwardAbort);
     }
 
     if (attempt >= retries || !retryable(error)) throw error;

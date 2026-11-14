@@ -1,3 +1,4 @@
+import { ChangeDetectionStrategy } from '@angular/core';
 import { Component, ElementRef, viewChild } from '@angular/core';
 
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
@@ -5,6 +6,7 @@ import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { PreferencesControls } from '../../shared/ui/preferences-controls/preferences-controls';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-settings-dialog',
   imports: [TranslatePipe, PreferencesControls],
   templateUrl: './settings-dialog.html',

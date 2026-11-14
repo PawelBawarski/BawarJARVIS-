@@ -8,6 +8,7 @@ import { AgentSandbox } from '../agent-sandbox/agent-sandbox'; // JARVIS_STAGE16
 import { AgentFileWrite } from '../agent-file-write/agent-file-write';
 import { AgentChangeReview } from '../agent-change-review/agent-change-review';
 import { checkedPatchPreview } from './patch-review-validation';
+import { countPendingReviews, countSourceCharacters, findDiffSource, proposalStatusKey } from './agent-planner-selectors';
 
 @Component({
   selector: 'app-agent-planner',
@@ -31,11 +32,11 @@ export class AgentPlanner implements OnInit {
   readonly diffError = signal('');
   readonly diffPreview = signal<AgentPatchPreview | null>(null);
   private diffGeneration = 0;
-  readonly diffSource = computed(() => this.sources().find(s => s.relativePath === this.selectedDiffPath()) ?? this.sources()[0] ?? null);
+  readonly diffSource = computed(() => findDiffSource(this.sources(), this.selectedDiffPath()));
   readonly MAX_EXCERPT = 3600;
   readonly MAX_TOTAL = 8000;
-  readonly sourceCharacterCount = computed(() => this.sources().reduce((total, source) => total + source.content.length, 0));
-  readonly pendingReviewCount = computed(() => this.proposals().filter(item => item.status === 'PENDING').length);
+  readonly sourceCharacterCount = computed(() => countSourceCharacters(this.sources()));
+  readonly pendingReviewCount = computed(() => countPendingReviews(this.proposals()));
   /** Browser-first: only manually pasted or explicitly selected code is reviewed. */
   readonly manualPath = signal('');
   readonly manualCode = signal('');
@@ -339,9 +340,7 @@ export class AgentPlanner implements OnInit {
   }
 
   statusKey(status: string): string {
-    if (status === 'PENDING') return 'lab.planner.status.pending';
-    if (status === 'APPROVED') return 'lab.planner.status.approved';
-    return 'lab.planner.status.rejected';
+    return proposalStatusKey(status);
   }
 
   private replace(updated: AgentProposal): void {
