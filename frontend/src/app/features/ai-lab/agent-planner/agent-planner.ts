@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { focusWorkflowTarget } from './agent-planner-workflow';
 import { AgentCodeSource, AgentPatchPreview, AgentProposal, AgentProposalApiService } from '../../../core/services/agent-proposal-api';
 import { WorkspaceApiService, WorkspaceEntry, WorkspaceListing, WorkspacePreview } from '../../../core/services/workspace-api';
 import { isAllowedCodePath } from './source-validation';
@@ -19,6 +20,15 @@ import { countPendingReviews, countSourceCharacters, findDiffSource, proposalSta
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AgentPlanner implements OnInit {
+  private readonly contextPanel = viewChild<ElementRef<HTMLDetailsElement>>('contextPanel');
+  private readonly taskInput = viewChild<ElementRef<HTMLTextAreaElement>>('taskInput');
+  private readonly reviewPanel = viewChild<ElementRef<HTMLElement>>('reviewPanel');
+
+  /** Navigation is UI-only. It must never trigger agent generation or file writes. */
+  openContextStep(): void { focusWorkflowTarget(this.contextPanel()?.nativeElement ?? null, true); }
+  focusTaskStep(): void { focusWorkflowTarget(this.taskInput()?.nativeElement ?? null); }
+  focusReviewStep(): void { focusWorkflowTarget(this.reviewPanel()?.nativeElement ?? null); }
+
   readonly api = inject(AgentProposalApiService);
   readonly workspaceApi = inject(WorkspaceApiService);
   readonly workspaceRoot = signal<string | null>(null);

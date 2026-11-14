@@ -34,13 +34,27 @@
   </section>
   <div class="agent-planner__workflow" data-testid="agent-workflow-guide">
     <h4>{{ 'lab.planner.workflowTitle' | translate }}</h4>
+    <nav class="agent-planner__context-actions" data-testid="agent-step-navigation"
+      [attr.aria-label]="'lab.planner.workflowTitle' | translate">
+      <button type="button" data-testid="agent-step-context" (click)="openContextStep()">
+        {{ 'lab.planner.workflow1Title' | translate }}
+      </button>
+      <button type="button" data-testid="agent-step-task" (click)="focusTaskStep()">
+        {{ 'lab.planner.workflow2Title' | translate }}
+      </button>
+      @if (selected()) {
+        <button type="button" data-testid="agent-step-review" (click)="focusReviewStep()">
+          {{ 'lab.planner.workflow3Title' | translate }}
+        </button>
+      }
+    </nav>
     <ol>
       <li [attr.aria-current]="workflowStep() === 1 ? 'step' : null"><strong>{{ 'lab.planner.workflow1Title' | translate }} @if (workflowStep() === 1) { {{ 'lab.planner.currentStep' | translate }} }</strong><span>{{ 'lab.planner.workflow1' | translate }}</span></li>
       <li [attr.aria-current]="workflowStep() === 2 ? 'step' : null"><strong>{{ 'lab.planner.workflow2Title' | translate }} @if (workflowStep() === 2) { {{ 'lab.planner.currentStep' | translate }} }</strong><span>{{ 'lab.planner.workflow2' | translate }}</span></li>
       <li [attr.aria-current]="workflowStep() === 3 ? 'step' : null"><strong>{{ 'lab.planner.workflow3Title' | translate }} @if (workflowStep() === 3) { {{ 'lab.planner.currentStep' | translate }} }</strong><span>{{ 'lab.planner.workflow3' | translate }}</span></li>
     </ol>
   </div>
-  <details class="agent-planner__context" data-testid="agent-context">
+  <details #contextPanel tabindex="-1" class="agent-planner__context" data-testid="agent-context">
     <summary>{{ 'lab.planner.contextSummary' | translate }}</summary>
     <p id="agent-context-instructions">{{ 'lab.planner.contextIntro' | translate }}</p>
     <section class="agent-planner__web-source" [attr.aria-label]="'lab.planner.browserCodeAria' | translate" data-testid="agent-web-source">
@@ -159,7 +173,7 @@
   <div class="agent-planner__form" data-testid="agent-request-form">
     <p id="agent-task-instructions" class="agent-planner__guidance">{{ 'lab.planner.taskHint' | translate }}</p>
     <label for="jarvis-agent-task">{{ 'lab.planner.taskLabel' | translate }}</label>
-    <textarea id="jarvis-agent-task" rows="3" maxlength="1200"
+    <textarea #taskInput id="jarvis-agent-task" rows="3" maxlength="1200"
       aria-describedby="agent-task-instructions"
       data-testid="agent-task" [value]="task()"
       (input)="updateTask($any($event.target).value)"
@@ -190,7 +204,7 @@
   }
 
   @if (selected(); as proposal) {
-    <article class="agent-planner__detail" data-testid="agent-proposal-detail">
+    <article #reviewPanel tabindex="-1" class="agent-planner__detail" data-testid="agent-proposal-detail">
       <div class="agent-planner__detail-head">
         <h4>{{ 'lab.planner.planReview' | translate }}</h4>
         <span data-testid="agent-status">{{ statusKey(proposal.status) | translate }}</span>
