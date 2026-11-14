@@ -1,4 +1,24 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator } from '@playwright/test';
+
+async function revealWorkspaceChooser(context: Locator): Promise<void> {
+  await context.evaluate(element => {
+    (element as HTMLDetailsElement).open = true;
+  });
+
+  const choose = context.getByTestId('agent-workspace-choose');
+  await expect(choose).toBeAttached();
+
+  await choose.evaluate(element => {
+    let node: Element | null = element;
+    while (node) {
+      if (node instanceof HTMLDetailsElement) node.open = true;
+      node = node.parentElement;
+    }
+  });
+
+  await expect(choose).toBeVisible();
+}
+
 
 test('only user-reviewed local code reaches the Qwen planning request', async ({ page }) => {
   await page.addInitScript(() => {
@@ -31,29 +51,11 @@ test('only user-reviewed local code reaches the Qwen planning request', async ({
       },
     };
   });
-  await page.goto('/');
+  await page.goto('/lab');
   const panel = page.getByTestId('agent-planner');
-  const switcher = page.locator('app-module-switcher');
-  const nativeSelect = switcher.locator('select').first();
-  if (await nativeSelect.count()) {
-    const labOption = await nativeSelect.locator('option').evaluateAll(options =>
-      options.map(option => ({
-        value: (option as HTMLOptionElement).value,
-        label: option.textContent?.trim() ?? '',
-      })).find(option => option.value === 'lab' || /AI Lab/i.test(option.label)) ?? null,
-    );
-    if (!labOption) throw new Error('AI Lab not available in module select');
-    await nativeSelect.selectOption(labOption.value);
-  } else {
-    const next = switcher.getByRole('button').last();
-    for (let step = 0; step < 12 && !(await panel.isVisible()); step++) await next.click();
-  }
   await expect(panel).toBeVisible();
   const context = panel.getByTestId('agent-context');
-  // This test checks explicit consent for Qwen context, not the native <details> click.
-  // Open the native disclosure directly to avoid an intermittent hidden-summary click.
-  await context.evaluate(element => { (element as HTMLDetailsElement).open = true; });
-  await expect(context.getByTestId('agent-workspace-choose')).toBeVisible();
+  await revealWorkspaceChooser(context);
   await context.getByTestId('agent-workspace-choose').click();
   await context.getByRole('button', { name: 'README.md' }).click();
   await expect(context.getByTestId('agent-workspace-preview')).toContainText('Architektura projektu');

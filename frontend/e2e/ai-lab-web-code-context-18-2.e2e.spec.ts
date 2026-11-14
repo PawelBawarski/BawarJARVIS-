@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('18.2: web file is sent to Qwen only after explicit consent; preview never writes files', async ({ page }) => {
-  const submitted: any[] = [];
+  const submitted: unknown[] = [];
   let previewCalls = 0;
 
   await page.route('**/api/agent/proposals', async route => {
@@ -28,27 +28,14 @@ test('18.2: web file is sent to Qwen only after explicit consent; preview never 
     }) });
   });
 
-  await page.goto('/');
+  // Direct deep link avoids racing the module switcher and tests the real /lab route.
+  await page.goto('/lab');
   const panel = page.getByTestId('agent-planner');
-  const switcher = page.locator('app-module-switcher');
-  const select = switcher.locator('select').first();
-  if (await select.count()) {
-    const option = await select.locator('option').evaluateAll(options =>
-      options.map(option => ({
-        value: (option as HTMLOptionElement).value,
-        label: option.textContent?.trim() ?? '',
-      })).find(option => option.value === 'lab' || /AI Lab/i.test(option.label)) ?? null,
-    );
-    if (!option) throw new Error('AI Lab not found');
-    await select.selectOption(option.value);
-  } else {
-    const next = switcher.getByRole('button').last();
-    for (let step = 0; step < 12 && !(await panel.isVisible()); step++) await next.click();
-  }
   await expect(panel).toBeVisible();
 
   const context = panel.getByTestId('agent-context');
-  await context.evaluate(el => { (el as HTMLDetailsElement).open = true; });
+  await context.locator('summary').click();
+  await expect(context).toHaveJSProperty('open', true);
   await context.getByTestId('agent-web-file').setInputFiles({
     name: 'example.ts', mimeType: 'text/plain', buffer: Buffer.from('export const answer = 42;'),
   });

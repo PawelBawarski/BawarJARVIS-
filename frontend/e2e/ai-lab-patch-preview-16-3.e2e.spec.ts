@@ -1,4 +1,24 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator } from '@playwright/test';
+
+async function revealWorkspaceChooser(context: Locator): Promise<void> {
+  await context.evaluate(element => {
+    (element as HTMLDetailsElement).open = true;
+  });
+
+  const choose = context.getByTestId('agent-workspace-choose');
+  await expect(choose).toBeAttached();
+
+  await choose.evaluate(element => {
+    let node: Element | null = element;
+    while (node) {
+      if (node instanceof HTMLDetailsElement) node.open = true;
+      node = node.parentElement;
+    }
+  });
+
+  await expect(choose).toBeVisible();
+}
+
 
 test('approved snippet produces read-only code diff; no apply operation exists', async ({ page }) => {
   await page.addInitScript(() => {
@@ -30,23 +50,11 @@ test('approved snippet produces read-only code diff; no apply operation exists',
       },
     };
   });
-  await page.goto('/');
+  await page.goto('/lab');
   const panel = page.getByTestId('agent-planner');
-  const switcher = page.locator('app-module-switcher');
-  const nativeSelect = switcher.locator('select').first();
-  if (await nativeSelect.count()) {
-    const option = await nativeSelect.locator('option').evaluateAll(options =>
-      options.map(o => ({ value: (o as HTMLOptionElement).value, label: o.textContent?.trim() ?? '' }))
-        .find(o => o.value === 'lab' || /AI Lab/i.test(o.label)) ?? null);
-    if (!option) throw new Error('AI Lab not found');
-    await nativeSelect.selectOption(option.value);
-  } else {
-    const next = switcher.getByRole('button').last();
-    for (let i = 0; i < 12 && !(await panel.isVisible()); i++) await next.click();
-  }
   await expect(panel).toBeVisible();
   const context = panel.getByTestId('agent-context');
-  await context.locator('summary').click();
+  await revealWorkspaceChooser(context);
   await context.getByTestId('agent-workspace-choose').click();
   await context.getByRole('button', { name: 'sample.ts' }).click();
   await context.getByTestId('agent-attach-source').click();
