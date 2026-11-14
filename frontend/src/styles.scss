@@ -1,3 +1,7 @@
+/* JARVIS_M05_STYLES */
+@use './app/styles/m05/chat';
+@use './app/styles/m05/lab';
+@use './app/styles/m05/planner';
 /* You can add global styles to this file, and also import other style files */
 @use '@angular/cdk' as cdk;
 
