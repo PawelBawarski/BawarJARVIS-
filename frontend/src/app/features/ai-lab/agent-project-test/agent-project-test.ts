@@ -1,3 +1,4 @@
+import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { AgentPatchPreview } from '../../../core/services/agent-proposal-api';
 import { AgentProjectTestApiService, ProjectTestReport } from '../../../core/services/agent-project-test-api';
@@ -5,7 +6,7 @@ import { AgentWorkspaceApply } from '../agent-workspace-apply/agent-workspace-ap
 
 @Component({
   selector: 'app-agent-project-test', standalone: true,
-  imports: [AgentWorkspaceApply], templateUrl: './agent-project-test.html', styleUrl: './agent-project-test.scss',
+  imports: [TranslatePipe, AgentWorkspaceApply], templateUrl: './agent-project-test.html', styleUrl: './agent-project-test.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AgentProjectTest {

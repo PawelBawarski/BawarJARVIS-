@@ -2,12 +2,14 @@ import { DOCUMENT } from '@angular/common';
 import { Component, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { ModuleHelpService } from '../../core/services/module-help.service';
 import { MODULE_HELP } from './module-help.data';
+import { TranslatePipe } from '../pipes/translate.pipe';
 
 @Component({
   selector: 'app-module-help-dialog',
   standalone: true,
   templateUrl: './module-help-dialog.html',
   styleUrl: './module-help-dialog.scss',
+  imports: [TranslatePipe],
   host: { '(document:keydown.escape)': 'close()' },
 })
 export class ModuleHelpDialog {

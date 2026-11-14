@@ -14,7 +14,7 @@ describe('ModuleHelpDialog', () => {
     await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('[role="dialog"]')?.textContent).toMatch(/token/i);
     expect(fixture.nativeElement.querySelector('[role="dialog"]')?.textContent).toContain('tools/offline-brain/start.ps1');
-    fixture.nativeElement.querySelector('[aria-label="Zamknij pomoc"]').click();
+    fixture.nativeElement.querySelector('.jarvis-help__close').click();
     await fixture.whenStable();
     expect(service.topic()).toBeNull();
   });

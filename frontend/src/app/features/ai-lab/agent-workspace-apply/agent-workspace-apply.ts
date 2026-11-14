@@ -1,10 +1,11 @@
+import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { AgentPatchPreview } from '../../../core/services/agent-proposal-api';
 import { ProjectTestReport } from '../../../core/services/agent-project-test-api';
 import { AgentWorkspaceApplyApiService, DeploymentHistory } from '../../../core/services/agent-workspace-apply-api';
 
 @Component({
-  selector: 'app-agent-workspace-apply', standalone: true, imports: [],
+  selector: 'app-agent-workspace-apply', standalone: true, imports: [TranslatePipe, ],
   templateUrl: './agent-workspace-apply.html', styleUrl: './agent-workspace-apply.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

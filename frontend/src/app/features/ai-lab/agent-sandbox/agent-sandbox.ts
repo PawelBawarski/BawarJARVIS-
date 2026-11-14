@@ -1,10 +1,11 @@
+import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { ChangeDetectionStrategy, Component, input, inject, computed, signal } from '@angular/core';
 import { AgentPatchPreview } from '../../../core/services/agent-proposal-api';
 import { AgentSandboxApiService, SandboxReport } from '../../../core/services/agent-sandbox-api';
 import { AgentProjectTest } from '../agent-project-test/agent-project-test'; // JARVIS_STAGE16_5_PROJECT_TEST
 
 @Component({
-  selector: 'app-agent-sandbox', standalone: true, imports: [AgentProjectTest],
+  selector: 'app-agent-sandbox', standalone: true, imports: [TranslatePipe, AgentProjectTest],
   templateUrl: './agent-sandbox.html', styleUrl: './agent-sandbox.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

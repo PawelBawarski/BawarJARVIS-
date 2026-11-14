@@ -27,7 +27,7 @@ describe('AgentProjectTest — explicit consent, never applies code', () => {
     await fixture.whenStable();
     expect(api.run).toHaveBeenCalledTimes(1);
     expect(api.run).toHaveBeenCalledWith(patch);
-    expect(fixture.nativeElement.textContent).toContain('Testy zaliczone');
+    expect(fixture.nativeElement.textContent).toContain('projectTest.passed');
     expect(fixture.componentInstance.confirmed()).toBe(false);
   });
   it('does not present a result for a replaced diff', async () => {

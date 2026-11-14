@@ -51,7 +51,11 @@
         <span class="message__author">
           {{ message.role === 'user' ? ('chat.you' | translate) : 'JARVIS' }}
         </span>
-        <p>{{ message.content }}</p>
+        @if (message.role === 'assistant') {
+          <app-chat-markdown [content]="message.content" />
+        } @else {
+          <p>{{ message.content }}</p>
+        }
         @if (message.role === 'assistant') {
           <app-chat-speech [messageId]="message.id" [text]="message.content" />
         }

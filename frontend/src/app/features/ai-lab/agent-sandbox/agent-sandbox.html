@@ -1,17 +1,17 @@
-<section class="sandbox" data-testid="agent-sandbox" aria-label="Izolowana kontrola składni">
-  <h4>16.4 — Izolowana kontrola składni (Docker)</h4>
-  <p>Sprawdza składnię propozycji poza projektem, bez uruchamiania kodu i bez dostępu do sieci.
-    Obsługuje TS, TSX, JS, CJS, JSON i samodzielne pliki Java.
-    To <strong>nie jest pełny build ani test jednostkowy</strong>.</p>
+<section class="sandbox" data-testid="agent-sandbox" [attr.aria-label]="'sandbox.aria' | translate">
+  <h4>{{ 'sandbox.title' | translate }}</h4>
+  <p>{{ 'sandbox.description' | translate }}
+    {{ 'sandbox.formats' | translate }}
+    {{ 'sandbox.disclaimerStart' | translate }} <strong>{{ 'sandbox.disclaimerStrong' | translate }}</strong>.</p>
   <button type="button" data-testid="agent-sandbox-check" (click)="check()"
     [disabled]="busy() || !sandbox.available || !supported()">
-    {{ busy() ? 'Kontrola trwa…' : 'Sprawdź propozycję w Dockerze' }}
+    {{ (busy() ? 'sandbox.busy' : 'sandbox.run') | translate }}
   </button>
-  @if (!supported()) { <p role="status">Dla tego formatu kontrola składni nie jest jeszcze dostępna.</p> }
-  @if (!sandbox.available) { <p role="status">Uruchom aplikację Electron, aby sprawdzić propozycję.</p> }
+  @if (!supported()) { <p role="status">{{ 'sandbox.unsupported' | translate }}</p> }
+  @if (!sandbox.available) { <p role="status">{{ 'sandbox.electronOnly' | translate }}</p> }
   @if (result(); as report) {
     <div class="sandbox__result" data-testid="agent-sandbox-report" role="status">
-      <strong>Wynik: {{ report.status === 'passed' ? 'Składnia poprawna' : report.status === 'failed' ? 'Błąd składni' : report.status === 'inconclusive' ? 'Wynik niejednoznaczny' : 'Kontrola niedostępna' }}</strong>
+      <strong>{{ 'sandbox.result' | translate }} {{ (report.status === 'passed' ? 'sandbox.passed' : report.status === 'failed' ? 'sandbox.failed' : report.status === 'inconclusive' ? 'common.inconclusive' : 'sandbox.unavailable') | translate }}</strong>
       <p>{{ report.message }}</p>
       @if (report.diagnostics) { <pre data-testid="agent-sandbox-diagnostics">{{ report.diagnostics }}</pre> }
     </div>

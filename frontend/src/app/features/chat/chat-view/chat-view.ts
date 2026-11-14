@@ -6,6 +6,7 @@ import { ChatVoice } from '../chat-voice/chat-voice';
 import { ChatRagSources } from '../chat-rag-sources/chat-rag-sources';
 import { afterEveryRender, ChangeDetectionStrategy, Component, ElementRef, inject, signal, viewChild, DestroyRef } from '@angular/core';
 import { ChatStore } from '../../../core/services/chat-store';
+import { ChatMarkdown } from '../chat-markdown/chat-markdown';
 import { ChatApiService } from '../../../core/services/chat-api';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { AnimationFrameCoalescer } from '../../../core/utils/animation-frame-coalescer';
@@ -14,7 +15,7 @@ import { AnimationFrameCoalescer } from '../../../core/utils/animation-frame-coa
   selector: 'app-chat-view',
   templateUrl: './chat-view.html',
   styleUrl: './chat-view.scss',
-  imports: [TranslatePipe, ChatRagSources, ChatVoice, ChatSpeech, ChatVoiceMode],
+  imports: [TranslatePipe, ChatRagSources, ChatVoice, ChatSpeech, ChatVoiceMode, ChatMarkdown],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatView {
