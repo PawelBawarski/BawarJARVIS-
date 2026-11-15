@@ -1,0 +1,40 @@
+<section class="lora" data-testid="lora-training">
+  <h3>{{ 'lab.lora.title' | translate }}</h3>
+  <p class="lora__hint">{{ 'lab.lora.hint' | translate }}</p>
+  <div class="lora__config">
+    <label>{{ 'lab.lora.steps' | translate }}
+      <input data-testid="lora-steps" type="number" min="1" max="200" step="1" [value]="steps()" (input)="setSteps($event)" [disabled]="running() || busy()" />
+    </label>
+    <label>{{ 'lab.web.dataset' | translate }}
+      <select data-testid="lora-dataset" [value]="datasetId()" (change)="setDataset($event)" [disabled]="running() || busy()">
+        <option value="">{{ 'lab.web.starter' | translate }}</option>
+        @for (data of reviewed(); track data.id) { <option [value]="data.id">{{data.id}} ({{data.examples}})</option> }
+      </select>
+    </label>
+    <button type="button" (click)="loadDatasets()" [disabled]="busy()">{{ 'lab.web.refresh' | translate }}</button>
+    <label>{{ 'lab.lora.seqLen' | translate }}
+      <select data-testid="lora-seq-len" [value]="seqLen()" (change)="setSeqLen($event)" [disabled]="running() || busy()">
+        <option value="64">64</option><option value="128">128</option><option value="256">256</option><option value="512">512</option>
+      </select>
+    </label>
+  </div>
+  <div class="lora__buttons">
+    <button type="button" data-testid="lora-start" (click)="start()" [disabled]="busy() || running()">{{ 'lab.lora.play' | translate }}</button>
+    <button type="button" data-testid="lora-stop" (click)="stop()" [disabled]="busy() || !running()">{{ 'lab.lora.stop' | translate }}</button>
+    <button type="button" data-testid="lora-refresh" (click)="refresh()">{{ 'lab.lora.refresh' | translate }}</button>
+  </div>
+  @if (error()) { <p role="alert">{{ error() | translate }}</p> }
+  <div class="lora__status" data-testid="lora-status" role="status">
+    {{ 'lab.lora.status' | translate }}: {{ current()?.status ?? 'idle' }}
+    · {{ current()?.step ?? 0 }}/{{ current()?.totalSteps ?? 0 }}
+    · Loss: {{ current()?.loss ?? '—' }}
+    · VRAM: {{ current()?.vramMiB ?? '—' }} MiB
+  </div>
+  <progress data-testid="lora-progress" [value]="percent()" max="100"></progress>
+  @if (current()?.error) { <p role="alert">{{ current()?.error }}</p> }
+  <details class="lora__history"><summary>{{ 'lab.lora.history' | translate }}</summary>
+    @for (run of history(); track run.runId) {
+      <div class="lora__history-row">{{ run.runId }} · {{ run.status }} · {{ run.step }}/{{ run.totalSteps }}</div>
+    } @empty { <p>{{ 'lab.lora.noHistory' | translate }}</p> }
+  </details>
+</section>

@@ -14,6 +14,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class LocalLlmClientTest {
+    @Test void outputBudgetIsBoundedAndConfigurable() {
+        assertEquals(256, LocalLlmClient.maxTokens(null));
+        assertEquals(128, LocalLlmClient.maxTokens("128"));
+        assertEquals(256, LocalLlmClient.maxTokens("1000000"));
+        assertEquals(256, LocalLlmClient.maxTokens("invalid"));
+    }
+
     @Test
     @SuppressWarnings("unchecked")
     void successfulReplyUsesLoopbackBearerKeyAndModelAlias() throws Exception {

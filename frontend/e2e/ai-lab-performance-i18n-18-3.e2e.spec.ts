@@ -4,10 +4,10 @@ test('18.3: AI Lab explains its actions, defers advanced tools and follows the c
   await page.goto('/');
   const menu = page.locator('#jarvis-module-select');
   await menu.selectOption('lab');
-  await expect(page.getByTestId('ai-lab-explainer')).toBeVisible();
+  await expect(page.getByTestId('ai-lab-research-section')).toBeVisible();
   await expect(page.getByTestId('agent-workflow-status')).toBeVisible();
   await expect(page.getByTestId('agent-workflow-guide')).toBeVisible();
-  await expect(page.getByTestId('ai-lab-safety-note')).toContainText('nie zapisuje');
+  await expect(page.getByTestId('ai-lab-agent-section')).toBeVisible();
   // Heavy training and offline tools should not start while disclosures are closed.
   await expect(page.getByTestId('ai-lab-training')).toHaveCount(0);
   await expect(page.getByTestId('learning-lab')).toHaveCount(0);

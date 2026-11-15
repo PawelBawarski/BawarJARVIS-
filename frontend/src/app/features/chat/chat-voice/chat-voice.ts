@@ -24,6 +24,7 @@ export class ChatVoice {
   // JARVIS_21_3_VOICE
   readonly textReady = output<string>();
   readonly autoSend = input(false);
+  readonly compact = input(false);
   readonly state = signal<RecordingState>('idle');
   readonly configured = signal(false);
   readonly errorKey = signal<string | null>(null);

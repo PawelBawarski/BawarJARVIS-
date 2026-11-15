@@ -5,7 +5,8 @@ test('AI Lab uses one consistent, contained dashboard and exposes advanced tools
   await page.goto('/lab');
   const dashboard = page.getByTestId('jarvis-lab-ux');
   await expect(dashboard).toBeVisible();
-  await expect(dashboard.locator('.jarvis-lab-ux__overview .jarvis-lab-ux__tile')).toHaveCount(4);
+  await expect(page.getByTestId('ai-lab-research-section')).toHaveAttribute('open', '');
+  await expect(page.getByTestId('ai-lab-agent-section')).toHaveAttribute('open', '');
   await expect(page.getByTestId('research-memory')).toBeVisible();
   await expect(page.getByTestId('agent-planner')).toBeVisible();
 

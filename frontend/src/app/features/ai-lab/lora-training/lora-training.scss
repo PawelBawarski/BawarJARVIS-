@@ -1,0 +1,14 @@
+.lora { display:grid; gap:.8rem; border:1px solid var(--border-color, #5555); border-radius:12px; padding:1rem; }
+.lora h3, .lora p { margin:0; }
+.lora__hint { opacity:.75; font-size:.85rem; }
+.lora__config, .lora__buttons { display:flex; flex-wrap:wrap; align-items:end; gap:.75rem; }
+.lora__config label { display:grid; gap:.35rem; font-size:.85rem; }
+.lora input, .lora select { min-height:36px; max-width:140px; padding:.35rem; color:inherit; background:transparent; border:1px solid currentColor; border-radius:6px; }
+.lora button { min-height:36px; padding:.45rem 1rem; border-radius:6px; cursor:pointer; }
+.lora button:disabled { opacity:.45; cursor:not-allowed; }
+.lora progress { width:100%; height:10px; }
+.lora__status, .lora__history-row { overflow-wrap:anywhere; font-size:.82rem; }
+.lora__history { font-size:.88rem; }
+.lora__history-row { padding:.35rem 0; }
+
+.lora select[data-testid="lora-dataset"] { max-width: 280px; }

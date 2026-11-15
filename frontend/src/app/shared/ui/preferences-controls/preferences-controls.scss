@@ -63,3 +63,76 @@
   color: #e97070;
   font-size: 12px;
 }
+
+/* Collapsible settings categories. Native <details> preserves keyboard access
+   and lets both categories open independently without browser storage. */
+.preferences {
+  gap: 10px;
+  padding: 0 0 6px;
+}
+.preferences__section {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel-soft);
+  overflow: hidden;
+}
+.preferences__section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 16px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 650;
+}
+.preferences__section-heading::-webkit-details-marker { display: none; }
+.preferences__section-heading::marker { content: ''; }
+.preferences__section-heading:hover { color: var(--accent); }
+.preferences__section-heading:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
+  border-radius: 10px;
+}
+.preferences__section-chevron {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 160ms ease;
+  color: var(--muted);
+}
+.preferences__section[open] .preferences__section-chevron {
+  transform: rotate(225deg);
+}
+.preferences__section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+}
+.preferences__section-body .preferences__row { min-height: 32px; }
+@media (prefers-reduced-motion: reduce) {
+  .preferences__section-chevron { transition: none; }
+}
+@media (max-width: 400px) {
+  .preferences__section-heading { padding: 13px; }
+  .preferences__section-body { padding: 13px; }
+}
+
+/* DB-backed local Qwen Chat generation budget. */
+.preferences__chat-budget { display: grid; gap: .55rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+.preferences__chat-budget > label { font-weight: 650; font-size: .85rem; }
+.preferences__hint, .preferences__limits { font-size: .74rem; color: var(--muted); margin: 0; }
+.preferences__budget-input { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+.preferences__budget-input input { width: 100px; min-height: 37px; color: var(--text); background: var(--panel-soft); border: 1px solid var(--border); border-radius: 8px; padding: .4rem .6rem; }
+.preferences__budget-input input:focus-visible { outline: 2px solid var(--accent); }
+.preferences__budget-input input[aria-invalid="true"] { border-color: #e97070; }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { ChatStore } from '../../../core/services/chat-store';
 import { VoiceConversationService } from '../../../core/services/voice-conversation';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
@@ -14,6 +14,8 @@ import { VoiceDiagnostics } from '../voice-diagnostics/voice-diagnostics';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatVoiceMode {
+  readonly compact = input(false);
+  readonly diagnosticsOpen = signal(false);
   readonly voiceReady = input(false);
   readonly recording = input(false);
   readonly toggleRequested = output<void>();

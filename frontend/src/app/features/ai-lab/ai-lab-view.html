@@ -10,54 +10,15 @@
     </button>
   </header>
 
-  <div class="jarvis-lab-ux__overview" [attr.aria-label]="'lab.dashboard.areas' | translate">
-    <article class="jarvis-lab-ux__tile">
-      <span class="jarvis-lab-ux__tile-icon" aria-hidden="true">01</span>
-      <strong>{{ 'lab.dashboard.knowledge' | translate }}</strong>
-      <p>{{ 'lab.dashboard.knowledgeDetails' | translate }}</p>
-      <small>{{ 'lab.dashboard.knowledgeHint' | translate }}</small>
-    </article>
-    <article class="jarvis-lab-ux__tile jarvis-lab-ux__tile--primary">
-      <span class="jarvis-lab-ux__tile-icon" aria-hidden="true">02</span>
-      <strong>{{ 'lab.dashboard.code' | translate }}</strong>
-      <p>{{ 'lab.dashboard.codeDetails' | translate }}</p>
-      <small>{{ 'lab.dashboard.codeHint' | translate }}</small>
-    </article>
-    <article class="jarvis-lab-ux__tile">
-      <span class="jarvis-lab-ux__tile-icon" aria-hidden="true">03</span>
-      <strong>{{ 'lab.dashboard.quality' | translate }}</strong>
-      <p>{{ 'lab.dashboard.qualityDetails' | translate }}</p>
-      <small>{{ 'lab.dashboard.qualityHint' | translate }}</small>
-    </article>
-    <article class="jarvis-lab-ux__tile">
-      <span class="jarvis-lab-ux__tile-icon" aria-hidden="true">04</span>
-      <strong>{{ 'lab.dashboard.approvals' | translate }}</strong>
-      <p>{{ 'lab.dashboard.approvalsDetails' | translate }}</p>
-      <small>{{ 'lab.dashboard.approvalsHint' | translate }}</small>
-    </article>
-  </div>
+  <details class="jarvis-lab-ux__section" data-testid="ai-lab-research-section" open>
+    <summary>{{ 'lab.dashboard.researchSection' | translate }}</summary>
+    <div class="jarvis-lab-ux__section-content"><app-research-memory /></div>
+  </details>
 
-  <div class="jarvis-lab-ux__explain" data-testid="ai-lab-explainer">
-    <div>
-      <h3>{{ 'lab.dashboard.howTitle' | translate }}</h3>
-      <p>{{ 'lab.dashboard.howDescription' | translate }}</p>
-    </div>
-    <ol>
-      <li>{{ 'lab.dashboard.step1' | translate }}</li>
-      <li>{{ 'lab.dashboard.step2' | translate }}</li>
-      <li>{{ 'lab.dashboard.step3' | translate }}</li>
-    </ol>
-  </div>
-
-  <div class="jarvis-lab-ux__primary" data-testid="ai-lab-primary">
-    <app-research-memory />
-    <app-agent-planner />
-  </div>
-
-  <aside class="jarvis-lab-ux__notice" data-testid="ai-lab-safety-note">
-    <strong>{{ 'lab.dashboard.safetyTitle' | translate }}</strong>
-    <span>{{ 'lab.dashboard.safety' | translate }}</span>
-  </aside>
+  <details class="jarvis-lab-ux__section" data-testid="ai-lab-agent-section" open>
+    <summary>{{ 'lab.dashboard.agentsSection' | translate }}</summary>
+    <div class="jarvis-lab-ux__section-content"><app-agent-planner /></div>
+  </details>
 
   <details class="jarvis-lab-ux__section" data-testid="jarvis-lab-existing"
     (toggle)="onAdvancedToggle($event)">
@@ -70,20 +31,9 @@
         <button type="button" class="jarvis-lab-help-button" (click)="help.open('lab-workspace')">
           {{ 'lab.dashboard.helpWorkspace' | translate }}
         </button>
-        <section class="ai-lab-view">
-          <header class="ai-lab-view__header">
-            <h3>{{ 'lab.title' | translate }}</h3>
-            <p>{{ 'lab.description' | translate }}</p>
-          </header>
-          <div class="ai-lab-view__panel">
-            <p class="ai-lab-view__status" role="status">{{ 'lab.status' | translate }}</p>
-            <div class="ai-lab-view__actions">
-              <button type="button" disabled>{{ 'lab.play' | translate }}</button>
-              <button type="button" disabled>{{ 'lab.stop' | translate }}</button>
-            </div>
-            <p class="ai-lab-view__approval">{{ 'lab.approval' | translate }}</p>
-          </div>
-        </section>
+        <p class="jarvis-lab-ux__model-note">{{ 'lab.dashboard.modelLearningNote' | translate }}</p>
+        <app-lora-evidence />
+        <app-lora-training />
         <app-ai-training-panel />
         <app-ai-lab-workspace />
       </div>

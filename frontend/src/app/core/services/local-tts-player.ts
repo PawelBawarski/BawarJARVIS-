@@ -2,6 +2,7 @@ import { effect, inject, Injectable, signal } from '@angular/core';
 import { LocalTtsApi, LocalTtsStatus, TtsLanguage } from './local-tts-api';
 import { ModuleNavigationService } from './module-navigation.service';
 import { splitSpeechText } from '../utils/tts-text-chunks';
+import { speechPlainText } from '../utils/speech-plain-text';
 
 export type TtsPlaybackPhase = 'idle' | 'loading' | 'ready' | 'playing' | 'paused' | 'error';
 
@@ -68,7 +69,7 @@ export class LocalTtsPlayer {
     if (this.activeId() === id && (this.phase() === 'playing' || this.phase() === 'loading')) return;
 
     this.stop();
-    const parts = splitSpeechText(text);
+    const parts = splitSpeechText(speechPlainText(text));
     if (!parts.length) { this.phase.set('error'); return; }
     const version = ++this.version;
     this.parts = parts;

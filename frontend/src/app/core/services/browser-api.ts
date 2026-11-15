@@ -71,7 +71,7 @@ export function browserApiErrorKey(error: unknown): string | null {
 }
 
 export async function browserApi<T>(
-  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   path: string,
   body?: unknown,
   options: BrowserApiOptions = {},

@@ -45,6 +45,7 @@ test('21.0: dictated transcript fills Chat but never sends a message automatical
     return route.fulfill({ json: [] });
   });
   await page.goto('/chat');
+  await page.getByTestId('chat-tools-toggle').click();
   await expect(page.getByTestId('voice-start')).toBeEnabled();
   await page.getByTestId('voice-start').click();
   await expect(page.getByTestId('voice-stop')).toBeVisible();
@@ -62,5 +63,6 @@ test('21.0: unavailable Whisper does not request microphone permission', async (
     enabled: false, configured: false,
   } }));
   await page.goto('/chat');
+  await page.getByTestId('chat-tools-toggle').click();
   await expect(page.getByTestId('voice-start')).toBeDisabled();
 });

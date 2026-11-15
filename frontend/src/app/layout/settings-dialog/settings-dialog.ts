@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy } from '@angular/core';
-import { Component, ElementRef, viewChild } from '@angular/core';
+import { Component, ElementRef, inject, viewChild } from '@angular/core';
+import { InternetPreferenceService } from '../../core/services/internet-preference';
 
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 
@@ -15,7 +16,10 @@ import { PreferencesControls } from '../../shared/ui/preferences-controls/prefer
 export class SettingsDialog {
   private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('dialogElement');
 
+  private readonly internet = inject(InternetPreferenceService);
+
   open(): void {
+    void this.internet.load();
     const element = this.dialog()?.nativeElement;
 
     if (element && !element.open) {

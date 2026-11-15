@@ -2,15 +2,21 @@
   <div class="voice-dictation__actions">
     @if (state() === 'recording') {
       <button type="button" class="voice-dictation__recording" data-testid="voice-stop"
-        (click)="stop()">{{ 'voice.stop' | translate }}</button>
-      <button type="button" data-testid="voice-cancel" (click)="cancel()">{{ 'voice.cancel' | translate }}</button>
+        [title]="'voice.stop' | translate" [attr.aria-label]="'voice.stop' | translate"
+        (click)="stop()">{{ compact() ? '■' : ('voice.stop' | translate) }}</button>
+      @if (!compact()) {
+        <button type="button" data-testid="voice-cancel" (click)="cancel()">{{ 'voice.cancel' | translate }}</button>
+      }
     } @else {
       <button type="button" data-testid="voice-start" [disabled]="!configured() || state() !== 'idle'"
-        (click)="start()">🎙 {{ 'voice.start' | translate }}</button>
+        [title]="'voice.start' | translate" [attr.aria-label]="'voice.start' | translate"
+        (click)="start()">{{ compact() ? '🎙' : ('voice.start' | translate) }}</button>
     }
-    <button type="button" class="voice-dictation__refresh" data-testid="voice-refresh"
-      [disabled]="state() !== 'idle'" (click)="refreshStatus()"
-      [attr.aria-label]="'voice.refresh' | translate">↻</button>
+    @if (!compact()) {
+      <button type="button" class="voice-dictation__refresh" data-testid="voice-refresh"
+        [disabled]="state() !== 'idle'" (click)="refreshStatus()"
+        [attr.aria-label]="'voice.refresh' | translate">↻</button>
+    }
     <span class="voice-dictation__status" role="status" data-testid="voice-status">
       @if (state() === 'permission') { {{ 'voice.permission' | translate }} }
       @else if (state() === 'recording') { {{ 'voice.recording' | translate }} }
@@ -19,10 +25,11 @@
       @else { {{ 'voice.offline' | translate }} }
     </span>
   </div>
-  <!-- JARVIS_21_3_VOICE_HTML -->
-  <p class="voice-dictation__notice">
-    {{ (autoSend() ? 'voice.conversation.privacy' : 'voice.privacy') | translate }}
-  </p>
+  @if (!compact()) {
+    <p class="voice-dictation__notice">
+      {{ (autoSend() ? 'voice.conversation.privacy' : 'voice.privacy') | translate }}
+    </p>
+  }
   @if (errorKey()) {
     <p class="voice-dictation__error" role="alert" data-testid="voice-error">{{ errorKey()! | translate }}</p>
   }

@@ -1,0 +1,29 @@
+<section class="evidence" data-testid="lora-web-evidence">
+ <h3>{{ 'lab.web.title' | translate }}</h3>
+ <p>{{ 'lab.web.disclaimer' | translate }}</p>
+ <div class="evidence__search">
+  <input data-testid="lora-web-query" [placeholder]="'lab.web.query' | translate" [value]="query()" maxlength="180" (input)="query.set($any($event.target).value)" />
+  <button type="button" data-testid="lora-web-search" [disabled]="busy() || !query().trim()" (click)="search()">{{ 'lab.web.search' | translate }}</button>
+  <button type="button" [disabled]="busy()" (click)="reload()">{{ 'lab.web.refresh' | translate }}</button>
+ </div>
+ @if(error()){<p role="alert">{{error() | translate}}</p>}
+ <div class="evidence__list">
+  @for(item of items();track item.id){
+    <article class="evidence__entry" [attr.data-testid]="'lora-source-'+item.id">
+     <a [href]="item.url" target="_blank" rel="noopener noreferrer">{{item.title}}</a>
+     <small>{{item.url}}</small><p>{{item.excerpt}}</p>
+     <label>{{'lab.web.instruction' | translate}}<textarea rows="2" maxlength="800" [value]="instruction()[item.id]??''" (input)="setInstruction(item.id,$any($event.target).value)"></textarea></label>
+     <label>{{'lab.web.response' | translate}}<textarea rows="3" maxlength="1200" [value]="response()[item.id]??''" (input)="setResponse(item.id,$any($event.target).value)"></textarea></label>
+     <div class="evidence__actions">
+      <button type="button" [disabled]="busy()" (click)="review(item.id,true)">{{'lab.web.approve' | translate}}</button>
+      <button type="button" [disabled]="busy()" (click)="review(item.id,false)">{{'lab.web.reject' | translate}}</button>
+      <span>{{item.approved ? ('lab.web.approved' | translate):('lab.web.pending' | translate)}}</span>
+     </div>
+    </article>
+  }@empty{<p>{{'lab.web.empty' | translate}}</p>}
+ </div>
+ <div class="evidence__footer">
+   <button type="button" data-testid="lora-export" [disabled]="busy() || items().filter(x=>x.approved).length < 2" (click)="export()">{{'lab.web.export' | translate}}</button>
+   @if(dataset()){<strong data-testid="lora-dataset-ready">{{'lab.web.ready' | translate}}: {{dataset()?.id}} ({{dataset()?.examples}})</strong>}
+ </div>
+</section>

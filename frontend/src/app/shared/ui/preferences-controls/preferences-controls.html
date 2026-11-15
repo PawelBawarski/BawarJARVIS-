@@ -1,37 +1,77 @@
-<section class="preferences">
-  <div class="preferences__row">
-    <span>{{ 'settings.theme' | translate }}</span>
-
-    <button type="button" class="theme-button" (click)="theme.toggleTheme()">
-      @if (theme.theme() === 'dark') {
-        ☾ {{ 'settings.dark' | translate }}
-      } @else {
-        ☀ {{ 'settings.light' | translate }}
-      }
-    </button>
-  </div>
-
-  <div class="preferences__row">
-    <span>{{ 'settings.language' | translate }}</span>
-
-    <div class="language-options" role="group" [attr.aria-label]="'settings.language' | translate">
-      @for (language of languages; track language) {
-        <button
-          type="button"
-          [attr.lang]="language"
-          [attr.aria-pressed]="translation.language() === language"
-          [disabled]="translation.loading()"
-          (click)="selectLanguage(language)"
-        >
-          {{ language.toUpperCase() }}
+<section class="preferences" aria-label="{{ 'settings.title' | translate }}">
+  <details class="preferences__section" data-testid="settings-general-section" open>
+    <summary class="preferences__section-heading" data-testid="settings-general-heading">
+      <span class="preferences__section-title">{{ 'settings.general' | translate }}</span>
+      <span class="preferences__section-chevron" aria-hidden="true"></span>
+    </summary>
+    <div class="preferences__section-body">
+      <div class="preferences__row">
+        <span>{{ 'settings.theme' | translate }}</span>
+        <button type="button" class="theme-button" (click)="theme.toggleTheme()">
+          @if (theme.theme() === 'dark') {
+            ☾ {{ 'settings.dark' | translate }}
+          } @else {
+            ☀ {{ 'settings.light' | translate }}
+          }
         </button>
+      </div>
+      <div class="preferences__row">
+        <span>{{ 'settings.language' | translate }}</span>
+        <div class="language-options" role="group" [attr.aria-label]="'settings.language' | translate">
+          @for (language of languages; track language) {
+            <button type="button" [attr.lang]="language"
+              [attr.aria-pressed]="translation.language() === language"
+              [disabled]="translation.loading()"
+              (click)="selectLanguage(language)">
+              {{ language.toUpperCase() }}
+            </button>
+          }
+        </div>
+      </div>
+      @if (languageError()) {
+        <p class="preferences__error" role="alert">{{ 'settings.languageLoadError' | translate }}</p>
       }
     </div>
-  </div>
+  </details>
 
-  @if (languageError()) {
-    <p class="preferences__error" role="alert">
-      {{ 'settings.languageLoadError' | translate }}
-    </p>
-  }
+  <details class="preferences__section" data-testid="settings-chat-ai-section">
+    <summary class="preferences__section-heading" data-testid="settings-chat-ai-heading">
+      <span class="preferences__section-title">{{ 'settings.chatAi' | translate }}</span>
+      <span class="preferences__section-chevron" aria-hidden="true"></span>
+    </summary>
+    <div class="preferences__section-body">
+      <div class="preferences__row">
+        <span>{{ 'settings.internetAccess' | translate }}</span>
+        <button type="button" class="theme-button"
+          data-testid="settings-internet-enabled"
+          [attr.aria-label]="'settings.internetAccess' | translate"
+          [attr.aria-pressed]="internet.enabled()"
+          [disabled]="internet.loading() || internet.saving()"
+          (click)="toggleInternet()">
+          {{ (internet.enabled() ? 'settings.enabled' : 'settings.disabled') | translate }}
+        </button>
+      </div>
+      @if (internet.error()) {
+        <p role="alert" class="preferences__error">{{ 'settings.internetSaveError' | translate }}</p>
+      }
+      <div class="preferences__chat-budget" data-testid="settings-chat-token-budget">
+        <label for="chat-max-tokens">{{ 'settings.chatMaxTokens' | translate }}</label>
+        <p class="preferences__hint">{{ 'settings.chatMaxTokensHint' | translate }}</p>
+        <div class="preferences__budget-input">
+          <input id="chat-max-tokens" data-testid="settings-chat-max-tokens"
+            type="number" step="1" [min]="chatGeneration.min()" [max]="chatGeneration.max()"
+            [value]="chatMaxTokensDraft()" [disabled]="chatGeneration.loading() || chatGeneration.saving()"
+            [attr.aria-invalid]="chatMaxTokensInvalid()"
+            (input)="onChatMaxTokensChange($event)" />
+          <button type="button" class="theme-button" data-testid="settings-chat-token-save"
+            [disabled]="chatMaxTokensInvalid() || chatGeneration.loading() || chatGeneration.saving() || chatMaxTokensDraft() === chatGeneration.value()"
+            (click)="saveChatMaxTokens()">{{ 'settings.chatMaxTokensSave' | translate }}</button>
+        </div>
+        <span class="preferences__limits">{{ 'settings.chatMin' | translate }}: {{ chatGeneration.min() }} · {{ 'settings.chatMax' | translate }}: {{ chatGeneration.max() }}</span>
+        @if (chatMaxTokensInvalid()) { <p role="alert" class="preferences__error">{{ 'settings.chatMaxTokensInvalid' | translate }}</p> }
+        @if (chatGeneration.error()) { <p role="alert" class="preferences__error">{{ 'settings.chatMaxTokensError' | translate }}</p> }
+      </div>
+
+    </div>
+  </details>
 </section>

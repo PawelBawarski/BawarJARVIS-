@@ -7,7 +7,7 @@ test.describe('18.4: SPA routing and in-memory form state', () => {
     await expect(page.locator('app-chat-view')).toBeVisible();
 
     await page.goto('/lab');
-    await expect(page.getByTestId('ai-lab-explainer')).toBeVisible();
+    await expect(page.getByTestId('ai-lab-research-section')).toBeVisible();
     await expect(page.locator('#jarvis-module-select')).toHaveValue('lab');
 
     await page.goto('/security');

@@ -1,21 +1,22 @@
 // JARVIS_21_3_VIEW
 import { ChatVoiceMode } from '../chat-voice-mode/chat-voice-mode';
 import { VoiceConversationService } from '../../../core/services/voice-conversation';
-import { ChatSpeech } from '../chat-speech/chat-speech';
 import { ChatVoice } from '../chat-voice/chat-voice';
-import { ChatRagSources } from '../chat-rag-sources/chat-rag-sources';
 import { afterEveryRender, ChangeDetectionStrategy, Component, ElementRef, inject, signal, viewChild, DestroyRef } from '@angular/core';
 import { ChatStore } from '../../../core/services/chat-store';
 import { ChatMarkdown } from '../chat-markdown/chat-markdown';
 import { ChatApiService } from '../../../core/services/chat-api';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { AnimationFrameCoalescer } from '../../../core/utils/animation-frame-coalescer';
+import { LocalTtsPlayer } from '../../../core/services/local-tts-player';
+import { TranslationService } from '../../../core/services/translation';
+import { selectNewAssistantReply } from './chat-auto-read';
 
 @Component({
   selector: 'app-chat-view',
   templateUrl: './chat-view.html',
   styleUrl: './chat-view.scss',
-  imports: [TranslatePipe, ChatRagSources, ChatVoice, ChatSpeech, ChatVoiceMode, ChatMarkdown],
+  imports: [TranslatePipe, ChatVoice, ChatVoiceMode, ChatMarkdown],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatView {
@@ -23,6 +24,38 @@ export class ChatView {
   readonly voiceConversation = inject(VoiceConversationService);
   readonly voiceRecorder = viewChild(ChatVoice);
   private readonly chatApi = inject(ChatApiService);
+  private readonly ttsPlayer = inject(LocalTtsPlayer);
+  private readonly translation = inject(TranslationService);
+  readonly toolsOpen = signal(false);
+
+  toggleTools(): void { this.toolsOpen.update(value => !value); }
+  closeTools(): void { this.toolsOpen.set(false); }
+
+  /** Opt-in per app session. No localStorage; never narrates loaded conversation history. */
+  readonly autoRead = signal(false);
+  private voiceGeneration = 0;
+
+  toggleAutoRead(): void {
+    this.autoRead.update(value => !value);
+    this.voiceGeneration++;
+    if (!this.autoRead()) this.ttsPlayer.stop();
+  }
+
+  private async speakNewReply(beforeIds: ReadonlySet<string>, question: string, conversation: string | null): Promise<void> {
+    const generation = this.voiceGeneration;
+    if (!this.autoRead() || this.voiceConversation.enabled()) return;
+    const answer = selectNewAssistantReply(this.messages(), beforeIds, question);
+    if (!answer) return;
+    await this.ttsPlayer.checkAvailability(true);
+    if (!this.autoRead() || generation !== this.voiceGeneration || this.voiceConversation.enabled() ||
+        this.store.activeId() !== conversation ||
+        selectNewAssistantReply(this.messages(), beforeIds, question)?.id !== answer.id) return;
+    const language = this.translation.language() === 'en' ? 'en' : 'pl';
+    const status = this.ttsPlayer.available();
+    if (!status?.enabled || !(language === 'pl' ? status.configuredPl : status.configuredEn)) return;
+    void this.ttsPlayer.read(answer.id, answer.content, language).catch(() => undefined);
+  }
+
   readonly modelReady = signal<boolean | null>(null);
   readonly draft = signal('');
   // JARVIS_16A_SAFE_DELETE_MODAL_V1
@@ -46,6 +79,8 @@ export class ChatView {
     this.destroyRef.onDestroy(() => {
       this.contentObserver?.disconnect();
       this.scrollScheduler.cancel();
+      this.voiceGeneration++;
+      this.ttsPlayer.stop();
       if (this.voiceConversation.enabled()) this.voiceConversation.disable();
     });
 
@@ -155,8 +190,10 @@ export class ChatView {
     if (!text || this.store.sending() || this.store.busy() || this.store.loading()) return;
     this.draft.set('');
     this.pendingText.set(text);
+    const previousIds = new Set(this.messages().map(message => message.id));
     try {
       const success = await this.store.sendMessage(text);
+      if (success) void this.speakNewReply(previousIds, text, this.store.activeId());
       if (!success && !this.draft()) this.draft.set(text);
     } catch {
       if (!this.draft()) this.draft.set(text);
@@ -166,10 +203,14 @@ export class ChatView {
     }
   }
   newChat(): void {
+    this.voiceGeneration++;
+    this.ttsPlayer.stop();
+    this.closeTools();
     if (this.voiceConversation.enabled()) this.voiceConversation.disable();
     this.store.newChat();
   }
   deleteChat(): void {
+    this.closeTools();
     // Never delete directly from an unconfirmed click.
     if (!this.store.activeId() || this.store.busy() || this.store.sending() || this.store.loading()) return;
     this.deleteTargetId = this.store.activeId();
@@ -189,6 +230,8 @@ export class ChatView {
       return;
     }
     this.cancelDelete();
+    this.voiceGeneration++;
+    this.ttsPlayer.stop();
     if (this.voiceConversation.enabled()) this.voiceConversation.disable();
     await this.store.removeActiveChat();
   }

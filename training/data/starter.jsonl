@@ -1,0 +1,6 @@
+{"instruction": "Czym jest interfejs API?", "response": "API to uzgodniony sposób komunikacji między programami. Określa dostępne operacje, format żądań i odpowiedzi."}
+{"instruction": "Co oznacza REST w aplikacji internetowej?", "response": "REST jest stylem architektonicznym usług sieciowych. Typowo korzysta z zasobów, adresów URI i metod HTTP."}
+{"instruction": "Co robi Angular Signal?", "response": "Signal przechowuje wartość reaktywną. Odczyt wartości umożliwia Angularowi śledzenie zależności w komponentach."}
+{"instruction": "Co oznacza status HTTP 404?", "response": "HTTP 404 oznacza, że serwer nie znalazł wskazanego zasobu."}
+{"instruction": "Co to jest PostgreSQL?", "response": "PostgreSQL to relacyjny system zarządzania bazą danych wspierający między innymi transakcje SQL."}
+{"instruction": "Dlaczego warto pisać testy?", "response": "Testy pomagają wykryć regresje i potwierdzić oczekiwane zachowanie kodu po zmianach."}

@@ -46,7 +46,7 @@ test('18.7: browser Chat scroll stays correct for a long history and a delayed H
 test('18.7: AI Lab overview and source review remain usable on narrow screens', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/lab');
-  await expect(page.getByTestId('ai-lab-explainer')).toBeVisible();
+  await expect(page.getByTestId('ai-lab-research-section')).toBeVisible();
   await expect(page.getByTestId('agent-workflow-guide')).toBeVisible();
   const viewportWidth = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(viewportWidth).toBeLessThanOrEqual(2);

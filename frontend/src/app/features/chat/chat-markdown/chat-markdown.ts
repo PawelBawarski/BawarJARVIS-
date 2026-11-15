@@ -25,7 +25,8 @@ export function renderChatMarkdown(content: string): string {
       <div class="jarvis-markdown__body" [innerHTML]="html()"></div>
       <div class="jarvis-markdown__actions">
         <button type="button" class="jarvis-markdown__copy" data-testid="chat-copy-answer"
-          (click)="copyAnswer()">{{ 'chat.copyAnswer' | translate }}</button>
+          [title]="'chat.copyAnswer' | translate" [attr.aria-label]="'chat.copyAnswer' | translate"
+          (click)="copyAnswer()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button>
         @if (copyError()) { <span role="status">{{ 'chat.copyFailed' | translate }}</span> }
       </div>
     </div>

@@ -9,27 +9,48 @@
     </div>
 
     <div class="chat-header__actions">
-      <button
-        type="button"
-        class="chat-action"
-        [disabled]="store.busy() || store.sending() || store.loading()"
-        [title]="'chat.new' | translate"
-        [attr.aria-label]="'chat.new' | translate"
-        (click)="newChat()"
-      >
-        <span aria-hidden="true">+</span>
+      <button type="button" class="chat-action" data-testid="chat-header-new"
+          [disabled]="store.busy() || store.sending() || store.loading()"
+          [title]="'chat.new' | translate" [attr.aria-label]="'chat.new' | translate" (click)="newChat()">
+          <span aria-hidden="true">+</span>
+        </button>
+      <button type="button" class="chat-action" data-testid="chat-header-delete"
+          [disabled]="!store.activeId() || store.busy() || store.sending() || store.loading()"
+          [title]="'chat.delete' | translate" [attr.aria-label]="'chat.delete' | translate" (click)="deleteChat()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v7M14 11v7"/></svg>
+        </button>
+      <button type="button" class="chat-action chat-tools-trigger" data-testid="chat-tools-toggle"
+        [attr.aria-label]="'chat.toolsMenu' | translate" [title]="'chat.toolsMenu' | translate"
+        [attr.aria-expanded]="toolsOpen()" aria-controls="jarvis-chat-tools"
+        (click)="toggleTools()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M4 7h16M4 12h16M4 17h16"/>
+        </svg>
       </button>
-
-      <button
-        type="button"
-        class="chat-action"
-        [disabled]="!store.activeId() || store.busy() || store.sending() || store.loading()"
-        [title]="'chat.delete' | translate"
-        [attr.aria-label]="'chat.delete' | translate"
-        (click)="deleteChat()"
-      >
-        <span aria-hidden="true">🗑</span>
-      </button>
+      @if (toolsOpen()) {
+        <button type="button" class="chat-tools-backdrop" data-testid="chat-tools-backdrop"
+          [attr.aria-label]="'chat.toolsClose' | translate" (click)="closeTools()"></button>
+      }
+      <div id="jarvis-chat-tools" class="chat-tools-menu" data-testid="chat-tools-menu"
+        role="group" [attr.aria-label]="'chat.toolsMenu' | translate" [hidden]="!toolsOpen()">
+      <button type="button" class="chat-action" data-testid="chat-auto-read"
+          [attr.aria-pressed]="autoRead()"
+          [attr.aria-label]="(autoRead() ? 'chat.autoReadOn' : 'chat.autoReadOff') | translate"
+          [title]="(autoRead() ? 'chat.autoReadOn' : 'chat.autoReadOff') | translate"
+          (click)="toggleAutoRead()">
+          @if (autoRead()) {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zM17 9a5 5 0 0 1 0 6M19 6a9 9 0 0 1 0 12"/></svg>
+          } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zM17 9l5 6m0-6-5 6"/></svg>
+          }
+        </button>
+        <app-chat-voice-mode [compact]="true"
+          [voiceReady]="voiceRecorder()?.configured() === true"
+          [recording]="voiceRecorder()?.state() !== 'idle'"
+          (toggleRequested)="toggleVoiceConversation()" (stopRequested)="stopVoiceConversation()" />
+        <app-chat-voice [compact]="true" [autoSend]="voiceConversation.enabled()"
+          (textReady)="onVoiceText($event)" />
+      </div>
     </div>
   </header>
 
@@ -55,9 +76,6 @@
           <app-chat-markdown [content]="message.content" />
         } @else {
           <p>{{ message.content }}</p>
-        }
-        @if (message.role === 'assistant') {
-          <app-chat-speech [messageId]="message.id" [text]="message.content" />
         }
       </div>
     }
@@ -85,16 +103,7 @@
       </div>
     }
   </main>
-  <app-chat-rag-sources />
-
-  <footer class="chat-footer">
-    <!-- JARVIS_21_3_VIEW_HTML -->
-    <app-chat-voice-mode
-      [voiceReady]="voiceRecorder()?.configured() === true"
-      [recording]="voiceRecorder()?.state() !== 'idle'"
-      (toggleRequested)="toggleVoiceConversation()"
-      (stopRequested)="stopVoiceConversation()" />
-    <app-chat-voice [autoSend]="voiceConversation.enabled()" (textReady)="onVoiceText($event)" />
+<footer class="chat-footer">
     <div class="composer">
       <input
         #messageInput

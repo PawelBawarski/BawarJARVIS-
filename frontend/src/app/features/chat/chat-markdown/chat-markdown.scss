@@ -13,3 +13,5 @@
 .jarvis-markdown__actions { display: flex; justify-content: flex-end; margin-top: .35rem; }
 .jarvis-markdown__copy { cursor: pointer; border: 1px solid currentColor; border-radius: .35rem; background: transparent; color: inherit; padding: .25rem .5rem; font: inherit; }
 .jarvis-markdown__copy:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+.jarvis-markdown__copy { min-width: 32px; height: 30px; padding: .2rem; }

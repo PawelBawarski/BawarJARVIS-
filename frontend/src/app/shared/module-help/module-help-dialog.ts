@@ -1,7 +1,8 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { ModuleHelpService } from '../../core/services/module-help.service';
-import { MODULE_HELP } from './module-help.data';
+import { CHAT_HELP_EN, MODULE_HELP } from './module-help.data';
+import { TranslationService } from '../../core/services/translation';
 import { TranslatePipe } from '../pipes/translate.pipe';
 
 @Component({
@@ -14,7 +15,10 @@ import { TranslatePipe } from '../pipes/translate.pipe';
 })
 export class ModuleHelpDialog {
   readonly help = inject(ModuleHelpService);
-  readonly guides = MODULE_HELP;
+  private readonly language = inject(TranslationService);
+  get guides(): typeof MODULE_HELP {
+    return this.language.language() === 'en' ? { ...MODULE_HELP, chat: CHAT_HELP_EN } : MODULE_HELP;
+  }
   readonly copied = signal('');
   private readonly document = inject(DOCUMENT);
   private readonly closeButton = viewChild<ElementRef<HTMLButtonElement>>('closeButton');

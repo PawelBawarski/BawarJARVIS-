@@ -49,6 +49,7 @@ test('21.4 Whisper result survives failed Qwen POST and Piper is never started',
     return route.fulfill({ status: 503 });
   });
   await page.goto('/chat');
+  await page.getByTestId('chat-tools-toggle').click();
   await page.getByTestId('voice-conversation-toggle').click();
   await page.getByTestId('voice-start').click();
   await page.evaluate(() => (window as any).__errorVoiceNode.onaudioprocess({

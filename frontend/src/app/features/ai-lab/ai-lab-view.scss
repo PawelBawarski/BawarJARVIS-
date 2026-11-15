@@ -61,3 +61,12 @@
   .jarvis-lab-ux__section-content { padding: .65rem; }
 }
 @media (prefers-reduced-motion: reduce) { .jarvis-lab-ux * { scroll-behavior: auto; } }
+
+/* Compact, consistently collapsible AI Lab sections. */
+.jarvis-lab-ux { gap: .75rem; }
+.jarvis-lab-ux__section > summary { list-style: none; display:flex; justify-content:space-between; align-items:center; gap:1rem; }
+.jarvis-lab-ux__section > summary::-webkit-details-marker { display:none; }
+.jarvis-lab-ux__section > summary::after { content: ''; width: .52rem; height: .52rem; border-right:2px solid var(--muted); border-bottom:2px solid var(--muted); transform:rotate(45deg); transition:transform .18s; flex:0 0 .52rem; }
+.jarvis-lab-ux__section[open] > summary::after { transform:rotate(225deg); }
+.jarvis-lab-ux__model-note { color:var(--muted); font-size:.82rem; margin:0 0 .7rem; }
+@media (prefers-reduced-motion:reduce) { .jarvis-lab-ux__section > summary::after { transition:none; } }

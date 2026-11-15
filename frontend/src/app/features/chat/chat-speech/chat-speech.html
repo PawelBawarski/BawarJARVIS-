@@ -1,26 +1,26 @@
 <div class="chat-speech" data-testid="chat-speech">
   @if (isActive() && (state() === 'playing' || state() === 'loading' || state() === 'paused' || state() === 'ready' || state() === 'error')) {
     @if (state() === 'playing' || state() === 'loading') {
-      <button type="button" data-testid="tts-pause" (click)="pause()">
-        {{ 'tts.pause' | translate }}
+      <button type="button" data-testid="tts-pause" [title]="'tts.pause' | translate" [attr.aria-label]="'tts.pause' | translate" (click)="pause()">
+        <span aria-hidden="true">Ⅱ</span>
       </button>
     } @else if (state() === 'paused') {
-      <button type="button" data-testid="tts-resume" (click)="resume()">
-        {{ 'tts.resume' | translate }}
+      <button type="button" data-testid="tts-resume" [title]="'tts.resume' | translate" [attr.aria-label]="'tts.resume' | translate" (click)="resume()">
+        <span aria-hidden="true">▶</span>
       </button>
     } @else if (state() === 'ready') {
-      <button type="button" data-testid="tts-read" (click)="read()">
-        {{ 'tts.playPrepared' | translate }}
+      <button type="button" data-testid="tts-read" [title]="'tts.read' | translate" [attr.aria-label]="'tts.read' | translate" (click)="read()">
+        <span aria-hidden="true">▶</span>
       </button>
     }
-    <button type="button" data-testid="tts-stop" (click)="stop()">
-      {{ 'tts.stop' | translate }}
+    <button type="button" data-testid="tts-stop" [title]="'tts.stop' | translate" [attr.aria-label]="'tts.stop' | translate" (click)="stop()">
+      <span aria-hidden="true">■</span>
     </button>
   } @else {
-    <button type="button" data-testid="tts-read"
+    <button type="button" data-testid="tts-read" [title]="'tts.read' | translate" [attr.aria-label]="'tts.read' | translate"
       [disabled]="checking() || !configured() || text().length > maxTextLength || !text().trim()"
       (click)="read()">
-      {{ 'tts.read' | translate }}
+      <span aria-hidden="true">🔊</span>
     </button>
   }
   @if (checking()) {

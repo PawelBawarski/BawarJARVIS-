@@ -14,24 +14,27 @@ export interface HelpGuide {
 
 export const MODULE_HELP: Record<HelpTopic, HelpGuide> = {
   chat: {
-    title: 'Czat AI — lokalny model Qwen3 8B',
-    summary: 'Rozmowa w zwykłym czacie. Historia rozmów pozostaje w backendzie Spring Boot i bazie PostgreSQL.',
-    status: 'Wymaga przygotowania zasobów modelu (~5 GB) przed zbudowaniem pełnej aplikacji desktopowej.',
+    title: 'Czat — lokalny Qwen3 8B',
+    summary: 'Rozmowy są zapisywane przez Spring Boot w PostgreSQL. Odpowiedzi generuje Qwen3 uruchamiany lokalnie przez llama.cpp. Przygotowywanie odpowiedzi może zależeć od CPU, GPU i wielkości modelu.',
+    status: 'Spring Boot może działać bez Qwena. Do generowania odpowiedzi potrzebne są llama-server i GGUF. Odczyt głosowy wymaga osobno skonfigurowanego Pipera. Opcjonalne wyszukiwanie internetowe działa przez darmową, lokalną instancję SearXNG w Dockerze i przełącznik w Settings.',
     steps: [
-      'W trybie programistycznym najpierw uruchom model i Spring Boot skryptem run_dev.ps1.',
-      'Uruchom Angular w drugim terminalu i otwórz Czat.',
-      'W gotowym instalatorze Electron uruchamia model i backend automatycznie, jeśli zasoby zostały do niego dołączone.',
-      'Jeżeli model nie startuje, sprawdź wynik weryfikacji plików i wolny VRAM.'
+      'Uruchom Docker Desktop i skonfigurowaną bazę PostgreSQL.',
+      'W frontend/.env.model.local podaj pełne ścieżki JARVIS_LLAMA_SERVER_PATH oraz JARVIS_GGUF_PATH. Przyspieszenie GPU skonfiguruj przez JARVIS_GPU_LAYERS, jeśli Twoja wersja llama.cpp je obsługuje.',
+      'W katalogu frontend uruchom npm run dev:electron:ai. Startuje lokalny model, Spring Boot, Angular i Electron.',
+      'Bez modelu uruchom npm run dev:electron; możesz przeglądać historię, ale Qwen nie wygeneruje odpowiedzi.',
+      'W menu u góry Chatu włącz lub wyłącz automatyczne czytanie nowych odpowiedzi. Mikrofon wymaga osobnego kliknięcia.',
+      'W katalogu głównym uruchom docker compose -f docker-compose.searxng.yml up -d. Następnie w Settings włącz Dostęp do internetu. Ustawienie zapisuje się w PostgreSQL; bez niego internet jest wyłączony.',
+      'Niektóre pytania mogą wymagać weryfikacji źródeł; Jarvis nie powinien uznawać tekstów stron za polecenia.'
     ],
-    examples: ['Wyjaśnij Angular Signals i pokaż przykład.', 'Napisz test JUnit dla kontrolera Spring Boot.', 'Czym różni się Kafka od RabbitMQ?'],
+    examples: ['Wyjaśnij Angular Signals.', 'Napisz test JUnit dla Spring Boot.', 'Sprawdź w internecie aktualne informacje o Spring Boot.'],
     commands: [
-      { label: 'Jednorazowe przygotowanie modelu (w katalogu BawarJARVIS-)', value: 'python tools/local-ai/prepare_assets.py' },
-      { label: 'Sprawdzenie zasobów modelu', value: 'python tools/local-ai/prepare_assets.py --verify' },
-      { label: 'Start lokalnego modelu i Spring Boot w trybie DEV', value: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/local-ai/run_dev.ps1' },
-      { label: 'Uruchom frontend w drugim terminalu', value: 'cd frontend && npm start' },
-      { label: 'Sprawdzenie GPU', value: 'nvidia-smi' },
+      { label: 'Start SearXNG (Docker)', value: 'docker compose -f docker-compose.searxng.yml up -d' },
+      { label: 'Start desktopu i lokalnego Qwena', value: 'cd frontend && npm run dev:electron:ai' },
+      { label: 'Start desktopu bez Qwena', value: 'cd frontend && npm run dev:electron' },
+      { label: 'Test konfiguracji modelu', value: 'cd frontend && npm run test:model' },
+      { label: 'Sprawdź NVIDIA GPU', value: 'nvidia-smi' }
     ],
-    caution: 'To nie jest model wytrenowany przez nas od zera. Qwen działa lokalnie; przeglądanie internetu i autonomiczne programowanie zostaną dodane w kolejnych etapach.'
+    caution: 'Wyniki internetu mogą być błędne. Włączenie internetu wysyła pytanie do wyszukiwarek przez SearXNG. Nigdy nie przesyłaj haseł ani sekretów w treści zapytań.'
   },
   lab: {
     title: 'AI Lab — centrum rozwoju Jarvisa',
@@ -52,7 +55,7 @@ export const MODULE_HELP: Record<HelpTopic, HelpGuide> = {
   },
   'lab-training': {
     title: 'AI Lab — trening i historia modeli',
-    summary: 'Eksperymentalny, mały Transformer napisany w Javie; jego metryki są użyteczne do nauki działania sieci.',
+    summary: 'Eksperymentalny, mały Transformer w Javie (nie Qwen3). Dalszy trening Qwen3 wymaga pobierania danych, weryfikacji licencji i jakości, fine-tuningu LoRA/QLoRA, ewaluacji oraz zatwierdzonej zamiany checkpointu. Sam import stron nie zmienia wag modelu.',
     status: 'Działa niezależnie od modelu konwersacyjnego Qwen3 8B.',
     steps: ['Podaj kilka krótkich przykładów, każdy w osobnej linii.', 'Ustaw 3 epoki i rozpocznij trening.', 'Obserwuj funkcję straty (loss).', 'Zapisz checkpoint i przetestuj ewaluację na osobnym zbiorze danych.'],
     examples: ['ala', 'ala ma kota', 'kot pije mleko'],
@@ -133,4 +136,29 @@ export const MODULE_HELP: Record<HelpTopic, HelpGuide> = {
     steps: ['Kliknij ikonę radia w prawym górnym rogu.', 'Wybierz stację i uruchom odtwarzanie.', 'Reguluj głośność w panelu.', 'Gdy strumień jest niedostępny, wybierz inną stację.'],
     examples: ['Wybierz stację z listy.', 'Wyłącz radio po zakończeniu słuchania.'], commands: []
   }
+};
+
+/** Localized Chat guide. Other module guides are migrated separately. */
+export const CHAT_HELP_EN: HelpGuide = {
+  title: 'Chat — local Qwen3 8B',
+  summary: 'Spring Boot stores conversations in PostgreSQL. llama.cpp runs Qwen3 locally. Response latency depends on CPU, GPU and model size.',
+  status: 'Spring Boot can run without Qwen. Replies require llama-server and GGUF; speech requires Piper. Optional search uses a free local Docker SearXNG instance and a persistent Settings toggle.',
+  steps: [
+    'Start Docker Desktop and the configured PostgreSQL instance.',
+    'Set absolute JARVIS_LLAMA_SERVER_PATH and JARVIS_GGUF_PATH paths in frontend/.env.model.local. Configure JARVIS_GPU_LAYERS for compatible GPU acceleration.',
+    'From frontend run npm run dev:electron:ai to start the model, Spring Boot, Angular and Electron.',
+    'Without the model use npm run dev:electron to access existing conversations, not Qwen replies.',
+    'Use the Chat header menu to toggle automatic narration of new replies; microphone use always requires a separate click.',
+    'Run docker compose -f docker-compose.searxng.yml up -d from the repository root, then enable Internet access in Settings. The preference is stored in PostgreSQL.',
+    'Verify web sources independently. Website content is untrusted data, not application instructions.'
+  ],
+  examples: ['Explain Angular Signals.', 'Write a Spring Boot JUnit test.', 'Search the web for current Spring Boot changes.'],
+  commands: [
+    { label: 'Start SearXNG (Docker)', value: 'docker compose -f docker-compose.searxng.yml up -d' },
+    { label: 'Start desktop with local Qwen', value: 'cd frontend && npm run dev:electron:ai' },
+    { label: 'Start desktop without model', value: 'cd frontend && npm run dev:electron' },
+    { label: 'Test local model configuration', value: 'cd frontend && npm run test:model' },
+    { label: 'Check NVIDIA GPU', value: 'nvidia-smi' }
+  ],
+  caution: 'Web sources may be inaccurate. Enabling internet sends search terms to external engines via SearXNG. Never search for passwords or secrets.'
 };

@@ -36,6 +36,9 @@ public class LocalLlmClient {
     private final HttpClient http;
     private final JsonMapper mapper;
     private final String apiKey;
+    // Optional field injection preserves existing test constructors and loopback restrictions.
+    @Autowired(required = false)
+    private ChatGenerationPreferenceRepository chatPreferences;
 
     @Autowired
     public LocalLlmClient(@Value("${JARVIS_LLM_API_KEY:}") String apiKey, JsonMapper mapper) {
@@ -91,7 +94,11 @@ public class LocalLlmClient {
         request.put("model", "jarvis-qwen3-8b");
         request.put("stream", false);
         request.put("temperature", 0.6);
-        request.put("max_tokens", 512);
+        // Smaller default lowers worst-case generation time, without altering model weights.
+        // Override with JARVIS_LLM_MAX_TOKENS=64..1024 for longer replies.
+        request.put("max_tokens", chatPreferences == null
+                ? maxTokens(System.getenv("JARVIS_LLM_MAX_TOKENS"))
+                : chatPreferences.maxTokens());
         ObjectNode templateArgs = request.putObject("chat_template_kwargs");
         templateArgs.put("enable_thinking", false);
         ArrayNode messages = request.putArray("messages");
@@ -133,6 +140,16 @@ public class LocalLlmClient {
             throw new LocalLlmUnavailableException("Przerwano oczekiwanie na lokalny model.", e);
         } catch (IOException e) {
             throw new LocalLlmUnavailableException("Lokalny model jest niedostępny lub przekroczył limit czasu.", e);
+        }
+    }
+
+    static int maxTokens(String raw) {
+        if (raw == null || raw.isBlank()) return 256;
+        try {
+            int number = Integer.parseInt(raw.trim());
+            return number >= 64 && number <= 1024 ? number : 256;
+        } catch (NumberFormatException ignored) {
+            return 256;
         }
     }
 

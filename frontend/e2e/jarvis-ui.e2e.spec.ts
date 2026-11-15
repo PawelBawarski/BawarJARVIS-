@@ -31,18 +31,16 @@ test('should open custom confirmation dialog when deleting chat', async ({ page 
   await page.goto('/');
 
   // JARVIS_16A_DELETE_CHAT_PREP_V1 — najpierw aktywna rozmowa, potem dialog
-  const jarvisAuditDeleteButton = page.getByRole('button', { name: 'Usuń czat' });
+  // Actions moved into the header menu; the deletion contract stays unchanged.
+  const jarvisAuditDeleteButton = page.getByTestId('chat-header-delete');
   if (!(await jarvisAuditDeleteButton.isEnabled())) {
+    // Close the menu so the backdrop does not intercept sidebar controls.
     const newConversation = page.locator('.chat-history__new');
     await expect(newConversation).toBeVisible();
     await newConversation.click();
   }
   await expect(jarvisAuditDeleteButton).toBeEnabled();
-  await page
-    .getByRole('button', {
-      name: 'Usuń czat',
-    })
-    .click();
+  await jarvisAuditDeleteButton.click();
 
   const dialog = page.getByRole('alertdialog', {
     name: 'Usunąć rozmowę?',

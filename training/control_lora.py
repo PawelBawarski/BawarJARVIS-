@@ -1,0 +1,163 @@
+#!/usr/bin/env python3
+"""Control the *existing* train_lora.py as a separate GPU process.
+
+start --steps N: launches one run; status: shows persisted progress; stop: requests
+cooperative stop by writing STOP file. No arbitrary command execution.
+"""
+from __future__ import annotations
+import argparse
+import re
+from datetime import datetime, timezone
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import time
+import uuid
+
+ROOT = Path(__file__).resolve().parent
+RUNS = ROOT / 'runs'
+TRAINER = ROOT / 'train_lora.py'
+CURRENT = RUNS / 'active-run.json'
+
+
+def atomic_json(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp = path.with_suffix(path.suffix + '.tmp')
+    temp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+    os.replace(temp, path)
+
+
+def read_json(path: Path) -> dict | None:
+    try:
+        value = json.loads(path.read_text(encoding='utf-8'))
+        return value if isinstance(value, dict) else None
+    except (OSError, ValueError):
+        return None
+
+
+def alive(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    if os.name == 'nt':
+        # Query process existence without shell commands or optional packages.
+        import ctypes
+        from ctypes import wintypes
+        kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
+        kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+        kernel32.OpenProcess.restype = wintypes.HANDLE
+        kernel32.GetExitCodeProcess.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+        kernel32.GetExitCodeProcess.restype = wintypes.BOOL
+        kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+        handle = kernel32.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
+        if not handle:
+            return False
+        try:
+            code = wintypes.DWORD()
+            return bool(kernel32.GetExitCodeProcess(handle, ctypes.byref(code))) and code.value == 259
+        finally:
+            kernel32.CloseHandle(handle)
+    try:
+        os.kill(pid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+
+
+def state() -> dict | None:
+    meta = read_json(CURRENT)
+    if not meta:
+        return None
+    output = RUNS / meta['runId']
+    progress = read_json(output / 'progress.json') or {}
+    is_alive = alive(int(meta['pid']))
+    status = progress.get('status', 'starting' if is_alive else 'failed')
+    if not is_alive and status in ('running', 'starting'):
+        status = 'interrupted'
+    error = progress.get('error')
+    if not is_alive and not progress:
+        error = 'Proces zakończony przed zapisaniem postępu. Sprawdź train.log.'
+    return dict(meta, status=status, processAlive=is_alive,
+                step=progress.get('step', 0), totalSteps=progress.get('totalSteps', meta['steps']),
+                loss=progress.get('loss'), vramMiB=progress.get('allocatedVramMiB'),
+                error=error)
+
+
+def start(steps: int, seq_len: int, data_id: str | None = None) -> int:
+    if not 1 <= steps <= 200 or not 64 <= seq_len <= 512:
+        raise ValueError('steps: 1..200; seq-len: 64..512')
+    previous = state()
+    if previous and previous['processAlive']:
+        raise RuntimeError('Trening już działa (PID %s). Najpierw stop.' % previous['pid'])
+    if not TRAINER.is_file():
+        raise RuntimeError('Brak training/train_lora.py — zastosuj poprzednią paczkę')
+    if data_id is not None:
+        if not re.fullmatch(r'reviewed-[a-f0-9-]{36}', data_id):
+            raise ValueError('INVALID_REVIEWED_DATASET_ID')
+        data_path = ROOT / 'data' / (data_id + '.jsonl')
+        if not data_path.is_file():
+            raise ValueError('DATASET_NOT_FOUND')
+    # Previous trainer defaults to six steps. Every new run gets an isolated directory.
+    run_id = 'lora-' + datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S-') + uuid.uuid4().hex[:8]
+    output = RUNS / run_id
+    output.mkdir(parents=True, exist_ok=False)
+    log_path = output / 'train.log'
+    command = [sys.executable, '-u', str(TRAINER), '--train', '--steps', str(steps),
+               '--seq-len', str(seq_len), '--output', str(output)]
+    if data_id is not None:
+        command.extend(['--data', str(data_path)])
+    flags = (subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS) if os.name == 'nt' else 0
+    with log_path.open('ab', buffering=0) as log:
+        child = subprocess.Popen(command, cwd=ROOT, stdin=subprocess.DEVNULL,
+                                 stdout=log, stderr=subprocess.STDOUT,
+                                 close_fds=True, creationflags=flags,
+                                 start_new_session=(os.name != 'nt'))
+    atomic_json(CURRENT, dict(runId=run_id, pid=child.pid, steps=steps,
+                              startedAt=datetime.now(timezone.utc).isoformat()))
+    print(json.dumps(state(), ensure_ascii=False, indent=2))
+    print('Log:', log_path)
+    return 0
+
+
+def stop() -> int:
+    current = state()
+    if not current:
+        print('Brak uruchomionego treningu.')
+        return 0
+    if not current['processAlive']:
+        print('Proces już nie działa. Status:', current['status'])
+        return 0
+    stop_path = RUNS / current['runId'] / 'STOP'
+    stop_path.touch(exist_ok=True)
+    print('STOP zapisany:', stop_path)
+    print('Trener zatrzyma się po bieżącym kroku i zapisze adapter.')
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description='JARVIS LoRA process controller')
+    subs = parser.add_subparsers(dest='action', required=True)
+    sp = subs.add_parser('start')
+    sp.add_argument('--steps', type=int, default=6)
+    sp.add_argument('--seq-len', type=int, default=128)
+    sp.add_argument('--data')
+    subs.add_parser('stop')
+    subs.add_parser('status')
+    args = parser.parse_args()
+    try:
+        if args.action == 'start':
+            return start(args.steps, args.seq_len, args.data)
+        if args.action == 'stop':
+            return stop()
+        print(json.dumps(state() or {'status': 'idle'}, ensure_ascii=False, indent=2))
+        return 0
+    except (RuntimeError, ValueError, OSError) as exc:
+        print('ERROR:', exc, file=sys.stderr)
+        return 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())

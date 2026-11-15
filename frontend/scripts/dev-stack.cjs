@@ -3,9 +3,10 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const http = require('node:http');
 const { spawn, spawnSync } = require('node:child_process');
 const { modelConfig, llamaArgs, ensurePortFree, waitForModelReady } = require('./model-runtime.cjs');
+const { frontendChildEnv } = require('./web-secret-env.cjs');
+const { waitForReady } = require('./dev-readiness.cjs');
 const frontend = path.resolve(__dirname, '..');
 const backend = path.resolve(frontend, '..', 'backend');
 const useElectron = process.argv.includes('--electron');
@@ -76,7 +77,7 @@ async function boot() {
     const key = crypto.randomBytes(32).toString('hex');
     env.JARVIS_LLM_API_KEY = key;
     start(config.binary, llamaArgs(config), frontend, 'Qwen3 (llama.cpp)', {
-      ...process.env, LLAMA_API_KEY: key,
+      ...frontendChildEnv(process.env), LLAMA_API_KEY: key,
     });
     console.log('Uruchamianie lokalnego Qwen3; oczekiwanie na /health...');
     await waitForModelReady({ apiKey: key, isStopped: () => stopping });
@@ -87,24 +88,29 @@ async function boot() {
   const win = process.platform === 'win32';
   start(win ? 'cmd.exe' : path.join(backend, 'mvnw'),
     win ? ['/d', '/c', 'mvnw.cmd', 'spring-boot:run'] : ['spring-boot:run'], backend, 'Spring Boot');
+  console.log('Czekam na Spring Boot /api/security/health (8080)...');
+  await waitForReady('http://127.0.0.1:8080/api/security/health', {
+    jsonStatusUp: true, isStopped: () => stopping,
+  });
+  if (stopping) return;
+  console.log('Spring Boot gotowy. Uruchamiam Angular.');
   start(process.execPath, [path.join(frontend, 'node_modules', '@angular', 'cli', 'bin', 'ng.js'),
     'serve', '--host', '127.0.0.1', '--port', '4200', '--proxy-config', 'proxy.conf.cjs'], frontend, 'Angular',
-    { ...process.env, JARVIS_SESSION_TOKEN: env.JARVIS_SESSION_TOKEN });
+    { ...frontendChildEnv(process.env), JARVIS_SESSION_TOKEN: env.JARVIS_SESSION_TOKEN });
 
   if (useElectron) {
-    function probe() {
-      if (stopping) return;
-      http.get('http://127.0.0.1:4200/', response => {
-        response.resume();
-        if (response.statusCode !== 200) return setTimeout(probe, 500);
-        let executable;
-        try { executable = require('electron'); }
-        catch { console.error('Zainstaluj Electron: npm install -D electron'); return stop(1); }
-        start(executable, [path.join(frontend, 'electron', 'main.cjs')], frontend, 'Electron',
-          { ...process.env });
-      }).on('error', () => { if (!stopping) setTimeout(probe, 500); });
-    }
-    probe();
+    console.log('Czekam na Angular i proxy /api/security/health (4200)...');
+    await waitForReady('http://127.0.0.1:4200/', { isStopped: () => stopping });
+    await waitForReady('http://127.0.0.1:4200/api/security/health', {
+      jsonStatusUp: true, isStopped: () => stopping,
+    });
+    if (stopping) return;
+    let executable;
+    try { executable = require('electron'); }
+    catch { throw new Error('Zainstaluj Electron: npm install -D electron'); }
+    console.log('Angular + API gotowe. Uruchamiam Electron.');
+    start(executable, [path.join(frontend, 'electron', 'main.cjs')], frontend, 'Electron',
+      frontendChildEnv(process.env));
   }
 }
 boot().catch(error => { console.error('JARVIS DEV:', error.message); stop(1); });

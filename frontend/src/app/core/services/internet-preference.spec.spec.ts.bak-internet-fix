@@ -1,0 +1,31 @@
+import { TestBed } from '@angular/core/testing';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { InternetPreferenceService } from './internet-preference';
+
+const api = vi.hoisted(() => ({ request: vi.fn() }));
+vi.mock('./browser-api', () => ({ browserApi: api.request }));
+
+describe('InternetPreferenceService (PostgreSQL-backed)', () => {
+  beforeEach(() => { TestBed.resetTestingModule(); api.request.mockReset(); });
+  it('loads saved state from backend and does not use browser storage', async () => {
+    api.request.mockResolvedValue({ internetEnabled: true });
+    const service = TestBed.inject(InternetPreferenceService);
+    await service.load();
+    expect(service.enabled()).toBe(true);
+    expect(api.request).toHaveBeenCalledWith('GET', '/api/chats/web-settings');
+  });
+  it('does not claim a failed save succeeded', async () => {
+    api.request.mockRejectedValue(new Error('Offline'));
+    const service = TestBed.inject(InternetPreferenceService);
+    await service.update(true);
+    expect(service.enabled()).toBe(false);
+    expect(service.error()).toBe(true);
+  });
+  it('saves to database endpoint', async () => {
+    api.request.mockResolvedValue({ internetEnabled: true });
+    const service = TestBed.inject(InternetPreferenceService);
+    await service.update(true);
+    expect(service.enabled()).toBe(true);
+    expect(api.request).toHaveBeenCalledWith('PUT', '/api/chats/web-settings', { internetEnabled: true });
+  });
+});

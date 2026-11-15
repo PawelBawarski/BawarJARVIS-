@@ -34,6 +34,8 @@ test('21.4 manual health check detects offline Piper and recovers on refresh', a
     return route.fulfill({ status: 503 });
   });
   await page.goto('/chat');
+  await page.getByTestId('chat-tools-toggle').click();
+  await page.getByTestId('chat-voice-diagnostics-toggle').click();
   const button = page.getByTestId('voice-health-refresh');
   await expect(button).toBeVisible();
   // The ChatVoice component may check Whisper status automatically; diagnostics must not check Piper.

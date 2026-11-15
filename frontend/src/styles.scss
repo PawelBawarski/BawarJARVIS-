@@ -61,3 +61,138 @@ input {
 
 /* Keyboard focus remains visible for native disclosure controls in AI Lab and elsewhere. */
 summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Chat UX toolbar — global selectors keep component styles under Angular budgets. */
+.chat-header__actions { flex-wrap: wrap; justify-content: flex-end; }
+.chat-header__actions .chat-action, .chat-header__actions .chat-tool {
+  width: 40px; height: 40px; min-width: 40px; padding: 0;
+  border: 1px solid var(--border); border-radius: 11px; background: var(--panel-soft);
+  color: var(--text); display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.chat-header__actions svg, .jarvis-markdown__copy svg { width: 19px; height: 19px; }
+.chat-header__actions button[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.chat-header__actions button:focus-visible, .chat-popover button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.chat-header__actions button:disabled { opacity: .4; cursor: not-allowed; }
+.chat { position: relative; }
+.chat-popover { position: absolute; z-index: 12; top: 100px; right: 1.2rem;
+  width: min(540px, calc(100% - 2.4rem)); max-height: min(65vh, 550px); overflow: auto;
+  border: 1px solid var(--border); border-radius: 12px; background: var(--panel-soft);
+  box-shadow: 0 12px 45px rgba(0,0,0,.28); }
+.chat-header__actions .voice-conversation, .chat-header__actions .voice-dictation {
+  background: transparent; border: none; padding: 0; display: flex; gap: .35rem; }
+.chat-header__actions .voice-conversation__actions, .chat-header__actions .voice-dictation__actions { gap: .35rem; }
+.chat-header__actions .voice-conversation__actions button, .chat-header__actions .voice-dictation__actions button {
+  width: 40px; height: 40px; min-height: 40px; padding: 0; border-radius: 11px; }
+.chat-header__actions .voice-conversation__diagnostics { position: absolute; top: calc(100% - .3rem);
+  right: 1rem; z-index: 13; width: min(440px, calc(100% - 2rem)); border: 1px solid var(--border);
+  border-radius: 12px; padding: .8rem; background: var(--panel-soft); box-shadow: 0 12px 45px rgba(0,0,0,.28); }
+.chat-header__actions .voice-dictation__status { position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.chat-header__actions .voice-dictation__error { position: absolute; top: 100%; right: 1rem; z-index: 14;
+  color: #ff9b9b; background: var(--panel-soft); padding: .5rem; border-radius: 8px; }
+.chat-speech button, .jarvis-markdown__copy { display: inline-flex; align-items: center; justify-content: center; }
+.chat-speech button { min-width: 32px; min-height: 32px; }
+@media (max-width: 760px) { .chat-header__actions { gap: .35rem; } .chat-header__actions .chat-action,
+  .chat-header__actions .chat-tool, .chat-header__actions .voice-conversation__actions button,
+  .chat-header__actions .voice-dictation__actions button { width: 34px; height: 34px; min-width: 34px; min-height: 34px; }
+  .chat-popover { top: 110px; right: .5rem; width: calc(100% - 1rem); } }
+
+/* Chat header v2: one consistently aligned menu instead of stacked toolbar rows. */
+.chat-header { position: relative; z-index: 16; }
+.chat-header__actions { flex-wrap: nowrap; justify-content: flex-end; align-self: center; }
+.chat-header__actions .chat-tools-trigger { position: relative; z-index: 21; width: 42px; height: 42px; flex: 0 0 42px; }
+.chat-header__actions .chat-tools-backdrop { position: fixed; inset: 0; z-index: 19;
+  background: transparent; border: 0; cursor: default; }
+.chat-header__actions .chat-tools-menu { position: absolute; z-index: 20;
+  top: calc(100% - .4rem); right: 1.5rem; display: grid;
+  grid-template-columns: repeat(4, 40px); align-items: start; gap: .5rem;
+  width: max-content; max-width: calc(100vw - 2rem); padding: .75rem;
+  border: 1px solid var(--border); border-radius: 12px; background: var(--panel-soft);
+  box-shadow: 0 14px 48px rgba(0,0,0,.38); }
+.chat-header__actions .chat-tools-menu[hidden] { display: none !important; }
+.chat-tools-menu > app-chat-voice-mode { grid-column: span 3; min-width: 0; }
+.chat-tools-menu > app-chat-voice { grid-column: span 1; min-width: 0; }
+.chat-tools-menu .voice-conversation { display: block; padding: 0; background: transparent; border: 0; }
+.chat-tools-menu .voice-conversation__actions { display: flex; flex-wrap: nowrap; gap: .5rem; }
+.chat-tools-menu .voice-dictation { display: block; }
+.chat-tools-menu .voice-dictation__actions { gap: 0; }
+.chat-tools-menu .voice-conversation__actions button,
+.chat-tools-menu .voice-dictation__actions button,
+.chat-tools-menu > button.chat-action { width: 40px; height: 40px; min-width: 40px; min-height: 40px; }
+.chat-tools-menu .voice-conversation__diagnostics { top: calc(100% + .25rem); right: 0;
+  width: min(430px, calc(100vw - 2rem)); }
+.chat-tools-menu .voice-dictation__error { top: calc(100% + .25rem); }
+@media (max-width: 760px) {
+  .chat-header__actions .chat-tools-menu { top: calc(100% - .2rem); right: .5rem; }
+  .chat-header__actions .chat-tools-trigger { width: 38px; height: 38px; flex-basis: 38px; }
+}
+
+/* JARVIS_CHAT_FINAL_MENU_V3 — unframed, equal action buttons. */
+.chat-header__actions {
+  display: flex !important; flex-flow: row nowrap !important;
+  align-items: center !important; justify-content: flex-end !important;
+  gap: .5rem !important;
+}
+.chat-header__actions > button.chat-action {
+  position: relative; z-index: 21; flex: 0 0 40px;
+  width: 40px; height: 40px;
+}
+.chat-header__actions > .chat-tools-trigger { z-index: 23 !important; }
+.chat-header__actions .chat-tools-backdrop { z-index: 19 !important; }
+.chat-header__actions .chat-tools-menu {
+  z-index: 22 !important; display: grid;
+  grid-template-columns: repeat(3, 40px) !important;
+  grid-auto-rows: 40px; align-items: center; justify-items: center;
+  gap: .5rem !important; width: max-content !important;
+  top: calc(100% - .3rem);
+}
+.chat-header__actions .chat-tools-menu[hidden] { display: none !important; }
+/* Flatten BOTH voice subcomponents and their wrappers: no separate black group. */
+.chat-header__actions .chat-tools-menu > app-chat-voice-mode,
+.chat-header__actions .chat-tools-menu > app-chat-voice,
+.chat-header__actions .chat-tools-menu .voice-conversation,
+.chat-header__actions .chat-tools-menu .voice-conversation__actions,
+.chat-header__actions .chat-tools-menu .voice-dictation,
+.chat-header__actions .chat-tools-menu .voice-dictation__actions {
+  display: contents !important;
+  border: none !important; box-shadow: none !important;
+  background: transparent !important; padding: 0 !important; margin: 0 !important;
+}
+.chat-header__actions .chat-tools-menu > button.chat-action,
+.chat-header__actions .chat-tools-menu .voice-conversation__actions > button,
+.chat-header__actions .chat-tools-menu .voice-dictation__actions > button {
+  display: inline-flex !important; align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  width: 40px !important; min-width: 40px !important;
+  height: 40px !important; min-height: 40px !important;
+  margin: 0 !important; padding: 0 !important;
+  color: var(--text) !important;
+  background: var(--panel-soft) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 11px !important; box-shadow: none !important;
+  font: inherit !important; cursor: pointer;
+}
+.chat-header__actions .chat-tools-menu button:hover:not(:disabled) {
+  border-color: var(--accent) !important;
+  background: var(--accent-soft) !important;
+}
+.chat-header__actions .chat-tools-menu button[aria-pressed="true"] {
+  color: var(--accent) !important;
+  border-color: var(--accent) !important;
+  background: var(--accent-soft) !important;
+}
+.chat-header__actions .chat-tools-menu button:focus-visible {
+  outline: 2px solid var(--accent) !important; outline-offset: 2px;
+}
+.chat-header__actions .chat-tools-menu button:disabled { opacity: .4; cursor: not-allowed; }
+.chat-header__actions .chat-tools-menu .voice-conversation__diagnostics,
+.chat-header__actions .chat-tools-menu .voice-dictation__error {
+  display: block !important; position: absolute !important; z-index: 25;
+  top: calc(100% + .3rem); right: 0;
+  width: min(430px, calc(100vw - 2rem));
+}
+@media (max-width:760px) {
+  .chat-header__actions { gap: .35rem !important; }
+  .chat-header__actions > button.chat-action { width: 38px; height: 38px; flex-basis: 38px; }
+}

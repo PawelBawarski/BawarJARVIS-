@@ -69,6 +69,7 @@ test('21.3: manual default, opt-in Whisper -> Chat POST -> Piper, then stop', as
     return route.fulfill({ contentType: 'audio/wav', body: audio });
   });
   await page.goto('/chat');
+  await page.getByTestId('chat-tools-toggle').click();
   await expect(page.getByTestId('voice-conversation-toggle')).toBeEnabled();
   await expect(page.getByTestId('voice-conversation-toggle')).toHaveAttribute('aria-pressed', 'false');
   expect(await page.evaluate(() => (window as any).__sendCount)).toBe(0);

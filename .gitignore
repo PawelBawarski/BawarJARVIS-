@@ -46,3 +46,12 @@ desktop/ai-runtime/
 # Private runtime configuration must never enter Git.
 backend.env
 credentials.json
+/searxng/settings.yml
+
+# Local AI training artifacts (do not commit adapters or downloaded models)
+training/runs/
+training/data/private/
+.venv-training/
+
+# Human-reviewed training datasets and local model artifacts
+training/data/reviewed-*.jsonl
