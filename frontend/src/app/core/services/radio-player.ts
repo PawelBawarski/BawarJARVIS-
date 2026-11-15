@@ -55,6 +55,88 @@ export class RadioPlayerService {
     if (this.audio) this.audio.volume = next / 100;
   }
 
+  // JARVIS RADIO 4C.3 — bounded automatic failover
+  // Only unexpected media errors/ends trigger failover; manual Stop/Pause never do.
+  readonly failoverCount = signal(0);
+  private readonly attemptedIds = new Set<string>();
+  private readonly maxStationAttempts = 3; // Initial station + up to two fallbacks.
+
+  private playableStream(station: RadioStation | null): string | null {
+    if (!station?.streamUrl) return null;
+    try {
+      const url = new URL(station.streamUrl);
+      return url.protocol === 'https:' && !!url.hostname && !url.username && !url.password ? url.href : null;
+    } catch { return null; }
+  }
+
+  private releaseAudio(): void {
+    const previous = this.audio;
+    this.audio = null; // Invalidate old pending play() and event handlers before cleanup.
+    if (previous) {
+      previous.pause();
+      previous.removeAttribute('src');
+      previous.load();
+    }
+    this.isPlaying.set(false);
+    this.isPaused.set(false);
+    this.isLoading.set(false);
+  }
+
+  private async failedStream(audio: HTMLAudioElement): Promise<boolean> {
+    if (this.audio !== audio) return false;
+    const previousId = this.stationIdState();
+    if (previousId) this.attemptedIds.add(previousId);
+    this.releaseAudio();
+    if (this.attemptedIds.size >= this.maxStationAttempts) {
+      this.errorKey.set('radio.allStreamsFailed');
+      return false;
+    }
+    const stations = this.stations();
+    const previousIndex = stations.findIndex(s => s.id === previousId);
+    // Circular order is deterministic; never retry a failed station within one chain.
+    for (let offset = 1; offset <= stations.length; offset++) {
+      const candidate = stations[(Math.max(0, previousIndex) + offset) % stations.length];
+      if (!candidate || this.attemptedIds.has(candidate.id) || !this.playableStream(candidate)) continue;
+      this.stationIdState.set(candidate.id);
+      this.failoverCount.update(n => n + 1);
+      this.errorKey.set('radio.switchingStation');
+      return this.attemptStation(candidate);
+    }
+    this.errorKey.set('radio.allStreamsFailed');
+    return false;
+  }
+
+  private async attemptStation(station: RadioStation): Promise<boolean> {
+    const stream = this.playableStream(station);
+    if (!stream) { this.errorKey.set('radio.invalidStream'); return false; }
+    this.attemptedIds.add(station.id);
+    const audio = new Audio();
+    audio.preload = 'none';
+    audio.volume = this.volumePercent() / 100;
+    audio.src = stream;
+    this.audio = audio;
+    this.isLoading.set(true);
+    audio.addEventListener('error', () => {
+      if (this.audio === audio && !this.isPaused()) void this.failedStream(audio);
+    });
+    // Live streams ending unexpectedly should also attempt a different station.
+    audio.addEventListener('ended', () => {
+      if (this.audio === audio && !this.isPaused()) void this.failedStream(audio);
+    });
+    try {
+      await audio.play();
+      if (this.audio !== audio) { audio.pause(); return false; }
+      this.isPlaying.set(true);
+      this.isPaused.set(false);
+      this.errorKey.set(null);
+      return true;
+    } catch {
+      return this.failedStream(audio);
+    } finally {
+      if (this.audio === audio) this.isLoading.set(false);
+    }
+  }
+
   async play(): Promise<boolean> {
     if (this.audio && this.isPaused()) {
       const existing = this.audio;
@@ -64,47 +146,15 @@ export class RadioPlayerService {
         if (this.audio !== existing) return false;
         this.isPaused.set(false);
         this.isPlaying.set(true);
+        this.errorKey.set(null);
         return true;
-      } catch {
-        this.errorKey.set('radio.playbackFailed');
-        return false;
-      } finally { this.isLoading.set(false); }
+      } catch { return this.failedStream(existing); }
+      finally { if (this.audio === existing) this.isLoading.set(false); }
     }
-
-    const stream = this.selectedStation()?.streamUrl;
-    if (!stream) { this.errorKey.set('radio.streamUnavailable'); return false; }
-    let url: URL;
-    try { url = new URL(stream); } catch { this.errorKey.set('radio.invalidStream'); return false; }
-    if (url.protocol !== 'https:' || !url.hostname || url.username || url.password) {
-      this.errorKey.set('radio.invalidStream'); return false;
-    }
-    this.stop();
-    const audio = new Audio();
-    audio.preload = 'none';
-    audio.volume = this.volumePercent() / 100;
-    audio.src = url.href;
-    this.audio = audio;
-    this.isLoading.set(true);
-    audio.addEventListener('error', () => {
-      if (this.audio === audio) {
-        this.stop();
-        this.errorKey.set('radio.playbackFailed');
-      }
-    });
-    audio.addEventListener('ended', () => { if (this.audio === audio) this.stop(); });
-    try {
-      await audio.play();
-      if (this.audio !== audio) { audio.pause(); return false; }
-      this.isPlaying.set(true);
-      this.isPaused.set(false);
-      return true;
-    } catch {
-      if (this.audio === audio) {
-        this.stop();
-        this.errorKey.set('radio.playbackFailed');
-      }
-      return false;
-    } finally { this.isLoading.set(false); }
+    const station = this.selectedStation();
+    if (!station?.streamUrl) { this.errorKey.set('radio.streamUnavailable'); return false; }
+    this.stop(); // A new manual Play begins a fresh bounded retry chain.
+    return this.attemptStation(station);
   }
 
   pause(): void {
@@ -115,16 +165,9 @@ export class RadioPlayerService {
   }
 
   stop(): void {
-    const previous = this.audio;
-    this.audio = null;
-    if (previous) {
-      previous.pause();
-      previous.removeAttribute('src');
-      previous.load();
-    }
-    this.isPlaying.set(false);
-    this.isPaused.set(false);
-    this.isLoading.set(false);
+    this.releaseAudio();
+    this.attemptedIds.clear();
+    this.failoverCount.set(0);
     this.errorKey.set(null);
   }
 }

@@ -57,6 +57,8 @@
   "radio.catalogPreview": "Stations from Radio Browser directory.",
   "radio.streamUnavailable": "This station has no audio source yet.",
   "radio.invalidStream": "Invalid or disallowed stream URL.",
+  "radio.switchingStation": "Switching to another station…",
+  "radio.allStreamsFailed": "None of the three attempted stations could play.",
   "radio.playbackFailed": "Unable to play this station.",
   "radio.country.pl": "Poland",
   "radio.country.gb": "United Kingdom",
@@ -735,5 +737,11 @@
   "radio.noStations": "No playable HTTPS stations",
   "radio.catalogFailed": "Station directory unavailable — please retry.",
   "radio.offline": "Internet connection unavailable",
-  "radio.refresh": "Refresh stations"
+  "radio.refresh": "Refresh stations",
+  "radio.search": "Search stations",
+  "radio.favoritesOnly": "Favorites only",
+  "radio.addFavorite": "Add to favorites",
+  "radio.removeFavorite": "Remove from favorites",
+  "radio.favoriteError": "Could not save favorites. Please retry.",
+  "radio.chooseStation": "Choose station from results"
 }

@@ -90,8 +90,12 @@ describe('RadioPanel', () => {
     fixture.componentInstance.toggle();
     fixture.detectChanges();
     const buttons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('.radio-panel__controls button'));
-    expect(buttons).toHaveLength(3);
-    expect(buttons.map(button => button.getAttribute('aria-label'))).toEqual(['radio.play', 'radio.pause', 'radio.stop']);
+    expect(buttons).toHaveLength(4);
+    expect(buttons.slice(0, 3).map(button => button.getAttribute('aria-label')))
+      .toEqual(['radio.play', 'radio.pause', 'radio.stop']);
+    expect(buttons[3].getAttribute('data-testid')).toBe('radio-favorite-toggle');
+    expect(['radio.addFavorite', 'radio.removeFavorite'])
+      .toContain(buttons[3].getAttribute('aria-label'));
     expect(buttons.every(button => button.textContent?.trim().length && button.textContent.trim().length <= 2)).toBe(true);
   });
 

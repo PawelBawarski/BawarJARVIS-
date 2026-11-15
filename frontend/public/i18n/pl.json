@@ -57,6 +57,8 @@
   "radio.catalogPreview": "Stacje z katalogu Radio Browser.",
   "radio.streamUnavailable": "Ta stacja nie ma jeszcze źródła audio.",
   "radio.invalidStream": "Nieprawidłowy lub niedozwolony adres strumienia.",
+  "radio.switchingStation": "Przełączanie na kolejną stację…",
+  "radio.allStreamsFailed": "Żadna z trzech sprawdzonych stacji nie działa.",
   "radio.playbackFailed": "Nie udało się odtworzyć stacji.",
   "radio.country.pl": "Polska",
   "radio.country.gb": "Wielka Brytania",
@@ -735,5 +737,11 @@
   "radio.noStations": "Brak dostępnych stacji HTTPS",
   "radio.catalogFailed": "Katalog stacji niedostępny — spróbuj ponownie.",
   "radio.offline": "Brak połączenia z internetem",
-  "radio.refresh": "Odśwież stacje"
+  "radio.refresh": "Odśwież stacje",
+  "radio.search": "Szukaj stacji",
+  "radio.favoritesOnly": "Tylko ulubione",
+  "radio.addFavorite": "Dodaj do ulubionych",
+  "radio.removeFavorite": "Usuń z ulubionych",
+  "radio.favoriteError": "Nie udało się zapisać ulubionych. Spróbuj ponownie.",
+  "radio.chooseStation": "Wybierz stację z wyników"
 }

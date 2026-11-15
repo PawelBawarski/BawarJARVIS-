@@ -44,7 +44,8 @@ public class ApiSecurityConfig {
                                 "/api/chats", "/api/chats/**",
                                 "/api/ai-lab", "/api/ai-lab/**",
                                 "/api/research", "/api/research/**",
-                                "/api/agent", "/api/agent/**"));
+                                "/api/agent", "/api/agent/**",
+                        "/api/radio", "/api/radio/**"));
                 http.formLogin(AbstractHttpConfigurer::disable);
                 http.httpBasic(AbstractHttpConfigurer::disable);
                 // Keep CSRF protection enabled; do not open arbitrary POST endpoints yet.

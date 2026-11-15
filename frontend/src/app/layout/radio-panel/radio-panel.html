@@ -20,14 +20,37 @@
           }
         </select>
       </div>
-      <div class="radio-panel__field">
-        <label for="radio-station">{{ 'radio.station' | translate }}</label>
-        <select #stationSelect id="radio-station" [value]="player.stationId()" [disabled]="player.catalogLoading()"
-          (change)="onStationChange(stationSelect.value)">
-          @for (station of player.stations(); track station.id) {
-            <option [value]="station.id">{{ station.name }}</option>
-          }
-        </select>
+      <div class="radio-panel__field radio-panel__station-field">
+        <label id="radio-station-label" for="radio-station">{{ 'radio.station' | translate }}</label>
+        <button type="button" id="radio-station" class="radio-panel__station-trigger"
+          data-testid="radio-station-trigger" aria-haspopup="listbox"
+          [attr.aria-expanded]="stationDropdownOpen()" [attr.aria-controls]="stationDropdownOpen() ? 'radio-station-options' : null"
+          [disabled]="player.catalogLoading()" (click)="toggleStationDropdown()">
+          <span>{{ player.selectedStation()?.name || ('radio.chooseStation' | translate) }}</span>
+          <span aria-hidden="true">⌄</span>
+        </button>
+        @if (stationDropdownOpen()) {
+          <div class="radio-panel__station-popup" data-testid="radio-station-popup">
+            <input #stationSearch id="radio-search" type="search" autocomplete="off" data-testid="radio-search"
+              [attr.aria-label]="'radio.search' | translate" [placeholder]="'radio.search' | translate"
+              [value]="search()" (input)="onSearch(stationSearch.value)"
+              (keydown)="onStationSearchKeydown($event)" />
+            <div id="radio-station-options" role="listbox" [attr.aria-label]="'radio.station' | translate">
+              @for (station of filteredStations(); track station.id) {
+                <button type="button" role="option" class="radio-panel__station-option"
+                  [attr.aria-selected]="station.id === player.stationId()"
+                  (click)="chooseStation(station.id)">{{ station.name }}</button>
+              } @empty {
+                <p class="radio-panel__station-empty">{{ 'radio.noStations' | translate }}</p>
+              }
+            </div>
+          </div>
+        }
+        <label class="radio-panel__favorite-filter">
+          <input #favoritesCheck type="checkbox" data-testid="radio-favorites-only"
+            [checked]="favoritesOnly()" (change)="onFavoritesOnly(favoritesCheck.checked)" />
+          {{ 'radio.favoritesOnly' | translate }}
+        </label>
       </div>
       <div class="radio-panel__player">
         <div class="radio-panel__station">
@@ -35,6 +58,10 @@
           <div><strong>{{ player.selectedStation()?.name || ('radio.noStations' | translate) }}</strong>
             <p>{{ 'radio.internetRadio' | translate }}</p></div>
         </div>
+
+        @if (favorites.error()) {
+          <p class="radio-panel__favorite-error" role="alert">{{ 'radio.favoriteError' | translate }}</p>
+        }
         <div class="radio-panel__controls">
           <button data-testid="radio-play" type="button" class="radio-panel__primary"
             [attr.aria-label]="(player.isPaused() ? 'radio.resume' : 'radio.play') | translate"
@@ -47,6 +74,11 @@
           <button data-testid="radio-stop" type="button" [attr.aria-label]="'radio.stop' | translate"
             [attr.title]="'radio.stop' | translate" [disabled]="!player.isPlaying() && !player.isPaused()"
             (click)="player.stop()"><span aria-hidden="true">■</span></button>
+        <button type="button" class="radio-panel__favorite-button" data-testid="radio-favorite-toggle"
+          [disabled]="!player.selectedStation()?.streamUrl || !!favorites.busyId()"
+          [attr.aria-label]="(favorites.has(player.stationId() || '') ? 'radio.removeFavorite' : 'radio.addFavorite') | translate"
+          [attr.aria-pressed]="favorites.has(player.stationId() || '')"
+          (click)="toggleFavorite()">{{ favorites.has(player.stationId() || '') ? '★' : '☆' }}</button>
         </div>
         <p class="radio-panel__status" role="status" data-testid="radio-status">
           @if (player.catalogLoading()) { {{ 'radio.loading' | translate }} }

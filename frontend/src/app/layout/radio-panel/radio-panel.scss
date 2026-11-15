@@ -229,3 +229,42 @@
 .radio-panel__controls .radio-panel__primary { background: var(--accent-soft); color: var(--text); }
 .radio-panel__refresh { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: .6rem; background: var(--panel-soft); color: var(--text); cursor: pointer; }
 .radio-panel__refresh:disabled { opacity: .5; cursor: not-allowed; }
+
+/* JARVIS RADIO 4C.2: search and PostgreSQL favourites */
+.radio-panel__field input[type='search'] { width:100%; min-height:42px; border:1px solid var(--border); border-radius:10px; padding:.5rem .7rem; background:var(--bg); color:var(--text); }
+.radio-panel__favorite-filter { display:flex; flex-direction:row; gap:.5rem; align-items:center; font-weight:normal !important; }
+.radio-panel__favorite-button { align-self:flex-start; border:1px solid var(--border); border-radius:9px; padding:.3rem .75rem; background:var(--panel-soft); color:var(--accent); font-size:1.4rem; cursor:pointer; }
+.radio-panel__favorite-button:disabled { opacity:.5; cursor:not-allowed; }
+.radio-panel__favorite-error { color:var(--text); font-size:.8rem; margin:0; }
+
+/* JARVIS RADIO 4C.2 UI — searchable station popup and single-row toolbar */
+.radio-panel__station-field { position: relative; }
+.radio-panel__station-trigger {
+  display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+  width: 100%; min-width: 0; min-height: 42px; padding: .55rem .7rem;
+  border: 1px solid var(--border); border-radius: 10px;
+  background: var(--bg); color: var(--text); cursor: pointer; text-align: left;
+}
+.radio-panel__station-trigger span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.radio-panel__station-popup {
+  position: absolute; z-index: 150; top: calc(42px + 1.85rem); left: 0; right: 0;
+  padding: .45rem; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--panel); box-shadow: 0 12px 28px rgba(0,0,0,.4);
+}
+.radio-panel__station-popup input[type='search'] { width: 100%; min-height: 40px; margin: 0 0 .4rem; }
+.radio-panel__station-popup [role='listbox'] { max-height: min(240px, 36dvh); overflow-y: auto; }
+.radio-panel__station-option {
+  display: block; width: 100%; padding: .55rem .65rem; text-align: left;
+  border: 0; border-radius: 7px; background: transparent; color: var(--text); cursor: pointer;
+}
+.radio-panel__station-option:hover,
+.radio-panel__station-option[aria-selected='true'] { background: var(--accent-soft); }
+.radio-panel__station-empty { margin: .65rem; color: var(--muted); font-size: .8rem; }
+.radio-panel__favorite-filter { margin-top: .1rem; }
+.radio-panel__controls { display: flex; flex-wrap: nowrap !important; justify-content: flex-start !important;
+  align-items: center; gap: .5rem; }
+.radio-panel__controls > button { flex: 0 0 42px; width: 42px; height: 42px; padding: 0; }
+.radio-panel__controls > .radio-panel__favorite-button { display: inline-grid; place-items: center;
+  align-self: auto; font-size: 1.4rem; line-height: 1; }
+.radio-panel__station-trigger:focus-visible,
+.radio-panel__station-option:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
