@@ -95,11 +95,14 @@
       >
         <span class="message__author">JARVIS</span>
 
-        <div class="typing-indicator" aria-hidden="true">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
+        <!-- JARVIS_CHAT_NATIVE_SSE_4C_V1 -->
+        @if (store.streamedText()) {
+          <app-chat-markdown [content]="store.streamedText()" />
+        } @else {
+          <div class="typing-indicator" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+        }
       </div>
     }
   </main>
@@ -126,6 +129,11 @@
       >
         {{ 'chat.send' | translate }}
       </button>
+      @if (store.sending()) {
+        <button type="button" class="chat-stream-stop" data-testid="chat-stream-stop"
+          title="Zatrzymaj generowanie" aria-label="Zatrzymaj generowanie"
+          (click)="store.stopStreaming()">■ Stop</button>
+      }
     </div>
 
     @if (store.loading()) {

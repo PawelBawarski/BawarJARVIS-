@@ -37,21 +37,27 @@ export const MODULE_HELP: Record<HelpTopic, HelpGuide> = {
     caution: 'Wyniki internetu mogą być błędne. Włączenie internetu wysyła pytanie do wyszukiwarek przez SearXNG. Nigdy nie przesyłaj haseł ani sekretów w treści zapytań.'
   },
   lab: {
-    title: 'AI Lab — centrum rozwoju Jarvisa',
-    summary: 'Miejsce badań, testowania jakości AI, gromadzenia wiedzy i przyszłego doskonalenia kodu.',
-    status: 'Obecnie są tu narzędzia eksperymentalne. Samoczynne modyfikowanie kodu i trening wag Qwen nie są jeszcze aktywne.',
+    title: 'AI Lab — wiedza, trening i agent',
+    summary: 'Trzy obszary: pamięć i źródła, dostrajanie Qwen3-0.6B (LoRA) oraz analiza kodu.',
+    status: 'Trening LoRA na GPU działa po włączeniu JARVIS_LORA_TRAINING_ENABLED. Qwen3 8B używany w Czacie pozostaje osobnym modelem.',
     steps: [
-      'Rozwiń „Trening, historia i dostęp do katalogu”, aby przetestować małą sieć Transformer.',
-      'Rozwiń „Offline Brain”, aby uruchomić osobną bazę wiedzy i ranking źródeł.',
-      'Token pola Offline Brain jest wyświetlany w terminalu usługi Java 21 na porcie 8766.',
-      'W przyszłości agent będzie proponować zmiany kodu, testować je w izolacji i prosić Cię o akceptację.'
+      'Wiedza i źródła: wyszukaj źródła, zatwierdź wpisy, importuj dokumenty albo zapisz notatkę do PostgreSQL.',
+      'Trening modeli AI: uruchom SearXNG, wyszukaj propozycje, sprawdź pytania i odpowiedzi oraz zatwierdź co najmniej dwa przykłady.',
+      'Utwórz zbiór treningowy, wybierz go w sekcji LoRA, ustaw kroki i uruchom trening; obserwuj loss, VRAM i historię.',
+      'Agent i analiza kodu: dodaj wybrane fragmenty kodu, opisz zadanie i oceń proponowane zmiany. Żadne pliki nie są automatycznie zmieniane.',
+      'Wszystkie sekcje są domyślnie zwinięte. Rozwijaj wyłącznie tę, z której aktualnie korzystasz.'
     ],
-    examples: ['Zestaw testowy „ala ma kota” ćwiczy mały model znakowy, nie czat Qwen.', 'Ocena trafnych i nietrafnych źródeł pomaga trenować ranking wyszukiwania.'],
+    examples: [
+      'Wyszukaj instrukcję Angular Signals, zweryfikuj źródło i zatwierdź przykłady do LoRA.',
+      'Dostrój Qwen3-0.6B na zatwierdzonym zbiorze, a potem porównaj odpowiedzi przed i po treningu.',
+      'Dodaj fragment komponentu Angular i poproś agenta o propozycję refaktoryzacji.'
+    ],
     commands: [
-      { label: 'Uruchom osobny Offline Brain — odczytaj token w konsoli', value: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/offline-brain/start.ps1' },
-      { label: 'Testy Java Offline Brain', value: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/offline-brain/test.ps1' }
+      { label: 'Uruchom J.A.R.V.I.S. z treningiem (Git Bash)', value: 'export JARVIS_LORA_TRAINING_ENABLED=true && cd frontend && npm run dev:electron:ai' },
+      { label: 'Sprawdź trening Python', value: 'python -m unittest discover -s training/tests -v' },
+      { label: 'Backend Java', value: 'cd backend && ./mvnw.cmd clean verify' }
     ],
-    caution: 'Token Offline Brain nie jest tokenem Qwen. Nie udostępniaj go publicznie. Nie ma potrzeby uruchamiania Offline Brain, aby rozmawiać z Qwen.'
+    caution: 'Źródła internetowe wymagają weryfikacji; LoRA trenuje adapter modelu 0.6B, nie zastępuje automatycznie modelu 8B w Czacie. Nie dodawaj sekretów do źródeł lub danych treningowych.'
   },
   'lab-training': {
     title: 'AI Lab — trening i historia modeli',

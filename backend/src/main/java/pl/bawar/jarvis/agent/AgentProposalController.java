@@ -40,6 +40,12 @@ public class AgentProposalController {
         return service.revise(id, input == null ? null : input.feedback());
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
     public record GenerateRequest(String task, List<AgentCodeSource> sources) { }
     public record DecisionRequest(String decision) { }
     public record RevisionRequest(String feedback) { }

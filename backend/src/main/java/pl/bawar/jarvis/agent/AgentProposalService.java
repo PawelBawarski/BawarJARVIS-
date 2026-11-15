@@ -50,6 +50,10 @@ public class AgentProposalService {
         return repository.create(task, plan);
     }
 
+    public void delete(UUID id) {
+        repository.delete(Objects.requireNonNull(id));
+    }
+
     public AgentProposal decide(UUID id, String decision) {
         Objects.requireNonNull(id);
         if (!"APPROVED".equals(decision) && !"REJECTED".equals(decision)) {

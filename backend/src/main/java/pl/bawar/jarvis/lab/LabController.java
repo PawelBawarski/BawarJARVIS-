@@ -1,6 +1,7 @@
 package pl.bawar.jarvis.lab;
 
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,6 +16,7 @@ import java.util.List;
 
 /** Private desktop-only API. HTTP security + method security are both required. */
 @RestController
+@ConditionalOnProperty(prefix = "jarvis.ai-lab", name = "legacy-enabled", havingValue = "true")
 @RequestMapping("/api/ai-lab")
 @PreAuthorize("hasAuthority('ROLE_JARVIS')")
 public class LabController {

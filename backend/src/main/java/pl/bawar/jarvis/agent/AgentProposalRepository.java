@@ -44,6 +44,11 @@ public class AgentProposalRepository {
             """, MAPPER);
     }
 
+    public void delete(UUID id) {
+        int deleted = jdbc.update("DELETE FROM jarvis_agent_proposals WHERE id = ?", id);
+        if (deleted != 1) throw new NoSuchElementException("Proposal not found: " + id);
+    }
+
     public AgentProposal find(UUID id) {
         return jdbc.query("""
             SELECT id, task, plan, status, created_at, updated_at

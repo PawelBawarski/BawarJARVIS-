@@ -13,7 +13,7 @@ const sample: AgentProposal = {
 
 describe('AgentPlanner — proposals require explicit review', () => {
   const api = {
-    available: true, list: vi.fn(), generate: vi.fn(), approve: vi.fn(), reject: vi.fn(), revise: vi.fn(),
+    available: true, list: vi.fn(), generate: vi.fn(), approve: vi.fn(), reject: vi.fn(), revise: vi.fn(), delete: vi.fn(),
   };
   const workspace = {
     available: true, status: vi.fn(), choose: vi.fn(), list: vi.fn(), read: vi.fn(),
@@ -38,6 +38,28 @@ describe('AgentPlanner — proposals require explicit review', () => {
         { provide: WorkspaceApiService, useValue: workspace },
       ],
     }).compileComponents();
+  });
+
+  it('renders model markdown as structured HTML without showing Markdown markers', async () => {
+    api.list.mockResolvedValue([{ ...sample, plan: '## Cel\n**Zmieniony tekst**\n\n- Testy' }]);
+    const fixture = TestBed.createComponent(AgentPlanner);
+    await fixture.whenStable(); fixture.detectChanges();
+    const plan = fixture.nativeElement.querySelector('[data-testid="agent-plan"]');
+    expect(plan.querySelector('h2')?.textContent).toBe('Cel');
+    expect(plan.querySelector('strong')?.textContent).toBe('Zmieniony tekst');
+    expect(plan.textContent).not.toContain('**');
+  });
+
+  it('requires confirmation and deletes a proposal through backend before removing it from UI', async () => {
+    api.list.mockResolvedValue([sample]);
+    api.delete = vi.fn().mockResolvedValue(undefined);
+    const fixture = TestBed.createComponent(AgentPlanner);
+    await fixture.whenStable(); fixture.detectChanges();
+    fixture.componentInstance.requestDelete(sample);
+    expect(api.delete).not.toHaveBeenCalled();
+    await fixture.componentInstance.confirmDelete();
+    expect(api.delete).toHaveBeenCalledWith(sample.id);
+    expect(fixture.componentInstance.proposals()).toHaveLength(0);
   });
 
   it('creates plan and does not approve without user interaction', async () => {

@@ -191,13 +191,18 @@
       <h4>{{ 'lab.planner.history' | translate }}</h4>
       <div class="agent-planner__tabs">
         @for (proposal of proposals(); track proposal.id) {
-          <button type="button" [disabled]="busy()"
-            [attr.aria-pressed]="selected()?.id === proposal.id"
-            [class.agent-planner__tab--active]="selected()?.id === proposal.id"
-            (click)="choose(proposal)">
-            <span>{{ proposal.task }}</span>
-            <small>{{ statusKey(proposal.status) | translate }}</small>
-          </button>
+          <div class="agent-planner__history-item">
+            <button type="button" class="agent-planner__history-select" [disabled]="busy()"
+              [attr.aria-pressed]="selected()?.id === proposal.id"
+              [class.agent-planner__tab--active]="selected()?.id === proposal.id"
+              (click)="choose(proposal)">
+              <span [title]="proposal.task">{{ proposal.task }}</span>
+              <small>{{ statusKey(proposal.status) | translate }}</small>
+            </button>
+            <button type="button" class="agent-planner__history-delete" data-testid="agent-delete"
+              [disabled]="busy()" (click)="requestDelete(proposal)"
+              [attr.aria-label]="'lab.planner.delete' | translate" [title]="'lab.planner.delete' | translate">×</button>
+          </div>
         }
       </div>
     </div>
@@ -210,7 +215,7 @@
         <span data-testid="agent-status">{{ statusKey(proposal.status) | translate }}</span>
       </div>
       <h5>{{ proposal.task }}</h5>
-      <pre class="agent-planner__plan" data-testid="agent-plan">{{ proposal.plan }}</pre>
+      <div class="agent-planner__plan" data-testid="agent-plan" [innerHTML]="renderPlan(proposal.plan)"></div>
       @if (proposal.status === 'PENDING') {
         <div class="agent-planner__review">
           <button type="button" data-testid="agent-approve" [disabled]="busy()" (click)="approve()">{{ 'lab.planner.approve' | translate }}</button>
@@ -227,7 +232,21 @@
     </article>
   }
 
-  <p class="agent-planner__privacy-note">{{ 'lab.planner.privacy' | translate }}</p>
+  @if (deleteCandidate(); as candidate) {
+    <div class="agent-planner__dialog-overlay" data-testid="agent-delete-dialog">
+      <section class="agent-planner__dialog" role="alertdialog" aria-modal="true"
+        aria-labelledby="agent-delete-title" aria-describedby="agent-delete-desc">
+        <h4 id="agent-delete-title">{{ 'lab.planner.deleteTitle' | translate }}</h4>
+        <p id="agent-delete-desc">{{ 'lab.planner.deleteBody' | translate }}</p>
+        <p class="agent-planner__dialog-task">{{ candidate.task }}</p>
+        <div class="agent-planner__review">
+          <button type="button" data-testid="agent-delete-cancel" (click)="cancelDelete()">{{ 'lab.planner.cancel' | translate }}</button>
+          <button type="button" class="agent-planner__button--danger" data-testid="agent-delete-confirm"
+            [disabled]="busy()" (click)="confirmDelete()">{{ 'lab.planner.delete' | translate }}</button>
+        </div>
+      </section>
+    </div>
+  }
   <details class="agent-planner__help">
     <summary>{{ 'lab.planner.help' | translate }}</summary>
     <p>{{ 'lab.planner.helpDetails' | translate }}</p>

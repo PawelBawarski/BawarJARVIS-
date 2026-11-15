@@ -14,8 +14,7 @@ test('AI Lab: real LoRA Start/Stop, status and history without real GPU', async 
     return route.fulfill({ json: status });
   });
   await page.goto('/lab');
-  const advanced = page.getByTestId('jarvis-lab-existing');
-  await advanced.locator(':scope > summary').click();
+  await page.getByTestId('ai-lab-training-section').locator(':scope > summary').click();
   const panel = page.getByTestId('lora-training');
   await expect(panel).toBeVisible();
   await expect(page.getByTestId('lora-stop')).toBeDisabled();

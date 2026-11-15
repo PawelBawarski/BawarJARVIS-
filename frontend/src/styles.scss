@@ -196,3 +196,222 @@ summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .chat-header__actions { gap: .35rem !important; }
   .chat-header__actions > button.chat-action { width: 38px; height: 38px; flex-basis: 38px; }
 }
+
+
+/* AI Lab stage 3b: unified controls across nested standalone components. */
+app-ai-lab-view button:not(:disabled):not(.agent-planner__button--danger) {
+  border: 1px solid var(--border);
+  background: var(--accent-soft);
+  color: var(--text);
+  border-radius: 9px;
+  cursor: pointer;
+}
+app-ai-lab-view button:hover:not(:disabled) { border-color: var(--accent); }
+app-ai-lab-view button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+app-ai-lab-view button:disabled { opacity: .48; cursor: not-allowed; }
+app-ai-lab-view :is(button, input, select, textarea) { font-family: inherit; }
+app-ai-lab-view :is(button, input, select, textarea) { box-sizing: border-box; }
+app-ai-lab-view :is(.lora__buttons, .evidence__actions, .evidence__search) { gap: .75rem; }
+
+/* JARVIS AI LAB STAGE 3C SHARED COMPONENT STYLES */
+/* AI Lab only: shared layout, no global button overrides. */
+/* AI LAB STAGE 3 CLEANUP — consistent spacing and compact visual hierarchy. */
+.jarvis-lab-ux { gap: .8rem; padding-bottom: 2rem; }
+.jarvis-lab-ux__header { margin-bottom: .2rem; }
+.jarvis-lab-ux__heading > p:last-child { max-width: 55ch; }
+.jarvis-lab-ux__section-content { display: grid; gap: 1rem; padding: 1rem; }
+.jarvis-lab-ux__section-content--training > * + * { margin-top: .35rem; }
+.jarvis-lab-ux__section > summary { min-height: 3.2rem; }
+.jarvis-lab-ux__section-content button,
+.jarvis-lab-ux__section-content input[type="submit"] {
+  min-height: 2.35rem; border-radius: 9px; font: inherit; font-size: .86rem;
+}
+.jarvis-lab-ux__section-content :is(.research-memory__actions, .research-memory__controls,
+  .agent-planner__context-actions, .lora-evidence__actions, .lora-training__actions) {
+  gap: .65rem; flex-wrap: wrap;
+}
+.jarvis-lab-ux__section-content :is(input, select, textarea) { max-width: 100%; }
+.jarvis-lab-ux__section-content :is(section, article) { min-width: 0; }
+@media (max-width: 680px) {
+  .jarvis-lab-ux__section-content { padding: .7rem; gap: .8rem; }
+  .jarvis-lab-ux__section-content button { white-space: normal; }
+}
+
+/* Agent only: card history, Markdown, safe delete dialog. */
+app-agent-planner {
+/* Stage 3b: calm, unified controls and compact review history. */
+.agent-planner {
+  &__dashboard { gap: .65rem; }
+  &__workflow { padding: .75rem; }
+  &__workflow ol { margin: .45rem 0 0; padding-left: 1.2rem; }
+  &__workflow ol li { padding: .15rem .3rem; }
+  &__workflow ol li span { display: none; }
+  &__metric small { display: none; }
+  &__header p:not(.agent-planner__eyebrow) { max-width: 60ch; }
+  &__help { display: none; }
+  &__tabs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 215px), 1fr)); gap: .65rem; }
+  &__history-item { display: flex; min-width: 0; max-width: 270px; align-items: stretch; gap: .35rem; }
+  &__history-select { flex: 1; min-width: 0; max-width: 235px; }
+  &__history-delete { flex: 0 0 2.35rem; padding: .35rem !important; font-size: 1.25rem !important; }
+  &__plan { padding: 1rem; border-radius: 9px; background: var(--bg); max-height: 32rem; overflow: auto; }
+  &__plan :is(h1,h2,h3,h4) { margin: 1.1em 0 .4em; font-size: 1rem; line-height: 1.4; }
+  &__plan :is(p,ul,ol,pre,blockquote) { margin: .35em 0 .85em; }
+  &__plan :is(ul,ol) { padding-left: 1.45rem; }
+  &__plan pre { padding: .75rem; overflow-x: auto; background: var(--panel); border-radius: 8px; }
+  &__plan code { overflow-wrap: anywhere; }
+  &__plan :is(a) { color: var(--accent); }
+  &__dialog-overlay { position: fixed; inset: 0; z-index: 1500; display: grid; place-items: center; background: #000a; padding: 1rem; }
+  &__dialog { display: grid; gap: .9rem; width: min(100%, 440px); padding: 1.4rem; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 18px 50px #0007; }
+  &__dialog-task { overflow-wrap: anywhere; color: var(--muted); }
+  &__button--danger { color: #fff !important; background: #a12b36 !important; border-color: #d25a68 !important; }
+}
+}
+
+
+/* JARVIS_AI_LAB_VISUAL_CONSISTENCY_20261115 */
+/* All form controls inherit one theme-aware visual language; scoped to AI Lab. */
+app-ai-lab-view :is(input:not([type='checkbox']):not([type='radio']):not([type='file']), textarea, select) {
+  width: auto;
+  min-width: 0;
+  min-height: 2.55rem;
+  padding: .65rem .78rem;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  box-shadow: none;
+}
+app-ai-lab-view textarea { width: 100%; resize: vertical; line-height: 1.5; }
+app-ai-lab-view :is(input:not([type='checkbox']):not([type='radio']):not([type='file']), textarea) { appearance: none; }
+app-ai-lab-view input[type='search'] { appearance: auto; }
+app-ai-lab-view :is(input:not([type='file']), textarea, select):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+app-ai-lab-view :is(input, textarea)::placeholder { color: var(--muted); opacity: .8; }
+/* Keep native file selection behavior, but remove the operating system grey button. */
+app-ai-lab-view input[type='file'] {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-height: 2.7rem;
+  padding: .38rem;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font: inherit;
+}
+app-ai-lab-view input[type='file']::file-selector-button {
+  margin-right: .85rem;
+  min-height: 2rem;
+  padding: .42rem .85rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  background: var(--accent-soft);
+  font: inherit;
+  cursor: pointer;
+}
+app-ai-lab-view input[type='file']::file-selector-button:hover {
+  border-color: var(--accent);
+}
+app-ai-lab-view .document-memory > button[data-testid='memory-documents-import'] {
+  justify-self: start;
+  width: auto;
+  max-width: 100%;
+}
+app-ai-lab-view .research-memory__local textarea,
+app-ai-lab-view .semantic-memory__controls input { background: var(--bg); color: var(--text); }
+
+/* Workflow: the numbered steps must not overlap their copy. */
+app-agent-planner .agent-planner__workflow ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: .75rem;
+  margin: .55rem 0 0;
+  padding: 0;
+}
+app-agent-planner .agent-planner__workflow ol li {
+  display: block;
+  position: relative;
+  min-width: 0;
+  min-height: 2rem;
+  padding: .25rem .25rem .25rem 2.55rem;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+app-agent-planner .agent-planner__workflow ol li::before {
+  left: .2rem;
+  top: .25rem;
+}
+app-agent-planner .agent-planner__workflow ol li strong { display: block; }
+/* The status note is an ordinary note, not a warning callout. */
+app-agent-planner .agent-planner__privacy-note {
+  border-left: 0;
+  padding: .55rem .75rem;
+  color: var(--muted);
+  background: var(--panel);
+}
+
+/* One visual card per proposal, with an in-card independent delete control. */
+app-agent-planner .agent-planner__tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+  gap: .65rem;
+}
+app-agent-planner .agent-planner__history-item {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 270px;
+  min-width: 0;
+}
+app-agent-planner .agent-planner__history-select {
+  display: grid;
+  width: 100%;
+  min-height: 3.4rem;
+  max-width: none;
+  padding: .55rem 2.8rem .55rem .8rem;
+  gap: .25rem;
+  text-align: left;
+}
+app-agent-planner .agent-planner__history-select span,
+app-agent-planner .agent-planner__history-select small {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+app-agent-planner .agent-planner__history-delete {
+  position: absolute;
+  right: .35rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  min-height: 1.9rem;
+  padding: 0 !important;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  font-size: 1.12rem !important;
+  line-height: 1;
+}
+app-agent-planner .agent-planner__history-delete:hover:not(:disabled) {
+  background: var(--panel);
+  color: #ff9292;
+  border-color: var(--border);
+}
+app-agent-planner .agent-planner__history-delete:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+@media(max-width: 650px) {
+  app-agent-planner .agent-planner__tabs { grid-template-columns: minmax(0,1fr); }
+  app-agent-planner .agent-planner__history-item { max-width: 100%; }
+}
+

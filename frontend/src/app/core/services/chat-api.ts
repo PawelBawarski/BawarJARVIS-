@@ -141,6 +141,61 @@ export class ChatApiService {
   send(id: string, content: string): Promise<ApiChatTurn> {
     return this.request<ApiChatTurn>({ operation: 'send', id, content });
   }
+  // JARVIS_CHAT_NATIVE_SSE_4C_V1
+  /** SSE over same-origin proxy. Angular never reads the server session token. */
+  async sendStream(id: string, content: string, requestId: string,
+      onDelta: (text: string) => void, signal: AbortSignal): Promise<ApiChatTurn | null> {
+    const url = `/api/chats/${encodeURIComponent(id)}/messages/stream?requestId=${encodeURIComponent(requestId)}`;
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
+        body: JSON.stringify({ content }), signal,
+      });
+    } catch (error) {
+      if (signal.aborted) throw error;
+      throw new ChatApiError(0, 'BACKEND_UNAVAILABLE');
+    }
+    if (!response.ok || !response.body) throw new ChatApiError(response.status, 'STREAM_UNAVAILABLE');
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let result: ApiChatTurn | null = null;
+    const consume = (frame: string): void => {
+      const lines = frame.split(/\r?\n/);
+      const event = lines.find(line => line.startsWith('event: '))?.slice(7);
+      const payload = lines.filter(line => line.startsWith('data: ')).map(line => line.slice(6)).join('\n');
+      if (!event || !payload) return;
+      if (event === 'delta') onDelta(JSON.parse(payload) as string);
+      if (event === 'done') result = JSON.parse(payload) as ApiChatTurn;
+      if (event === 'error') throw new ChatApiError(502, 'STREAM_FAILED');
+    };
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        buffer += decoder.decode(value ?? new Uint8Array(), { stream: !done });
+        let boundary: number;
+        while ((boundary = buffer.indexOf('\n\n')) >= 0) {
+          const frame = buffer.slice(0, boundary);
+          buffer = buffer.slice(boundary + 2);
+          consume(frame);
+        }
+        if (done) break;
+      }
+      if (buffer.trim()) consume(buffer);
+    } finally { reader.releaseLock(); }
+    if (!signal.aborted && !result) throw new ChatApiError(502, 'STREAM_INTERRUPTED');
+    return result;
+  }
+
+  async cancelStream(id: string, requestId: string): Promise<void> {
+    // A cancellation request never needs to expose private content or a token.
+    const response = await fetch(`/api/chats/${encodeURIComponent(id)}/messages/stream/cancel?requestId=${encodeURIComponent(requestId)}`,
+      { method: 'POST', credentials: 'same-origin' });
+    if (!response.ok) throw new ChatApiError(response.status, 'CANCEL_FAILED');
+  }
+
   rename(id: string, title: string): Promise<ApiConversation> {
     return this.request<ApiConversation>({ operation: 'rename', id, title });
   }

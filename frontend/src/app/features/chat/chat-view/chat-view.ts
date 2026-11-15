@@ -192,7 +192,7 @@ export class ChatView {
     this.pendingText.set(text);
     const previousIds = new Set(this.messages().map(message => message.id));
     try {
-      const success = await this.store.sendMessage(text);
+      const success = await this.store.sendMessageStreaming(text); // JARVIS_CHAT_NATIVE_SSE_4C_V1
       if (success) void this.speakNewReply(previousIds, text, this.store.activeId());
       if (!success && !this.draft()) this.draft.set(text);
     } catch {

@@ -17,7 +17,12 @@
   border-radius: 11px;
   background: var(--panel-soft);
   color: var(--muted);
-  cursor: default;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+  &:hover:not(:disabled) { background: var(--accent-soft); }
+  &:disabled { cursor: progress; opacity: .7; }
+  &:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   user-select: none;
 
   &--online { color: #34d399; border-color: rgba(52, 211, 153, 0.35); }

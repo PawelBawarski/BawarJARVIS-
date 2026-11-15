@@ -1,8 +1,10 @@
 <div class="connectivity-toolbar">
-  <span
+  <button
+    type="button"
     class="connectivity-toolbar__indicator"
+    (click)="refreshConnection()"
     data-testid="network-state"
-    role="status"
+    [disabled]="network.status() === 'checking'"
     [class.connectivity-toolbar__indicator--online]="network.status() === 'online'"
     [class.connectivity-toolbar__indicator--offline]="network.isOffline()"
     [attr.aria-label]="(
@@ -35,5 +37,5 @@
     @if (network.status() === 'checking' || network.status() === 'unverified') {
       <span class="connectivity-toolbar__mark" aria-hidden="true">?</span>
     }
-  </span>
+  </button>
 </div>

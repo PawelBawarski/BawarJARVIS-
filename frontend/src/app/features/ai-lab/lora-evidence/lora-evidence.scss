@@ -7,3 +7,11 @@
 .evidence__list{max-height:550px;overflow:auto;display:grid;gap:.75rem}
 .evidence__entry{border:1px solid #8885;padding:.8rem;border-radius:8px;display:grid;gap:.5rem}
 .evidence__entry label{display:grid;gap:.25rem}.evidence__entry a,.evidence__entry small{overflow-wrap:anywhere}
+
+
+/* Stage 3b: buttons share the same visual language throughout AI Lab. */
+:host button:not(:disabled) { background: var(--accent-soft); color: var(--text); border: 1px solid var(--border); border-radius: 9px; transition: border-color .15s, background .15s; }
+:host button:hover:not(:disabled) { border-color: var(--accent); }
+:host button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:host button:disabled { opacity: .52; cursor: not-allowed; }
+:host button { font: inherit; min-height: 2.35rem; padding: .5rem .85rem; }

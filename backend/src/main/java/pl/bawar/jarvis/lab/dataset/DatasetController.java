@@ -2,6 +2,7 @@ package pl.bawar.jarvis.lab.dataset;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,6 +16,7 @@ import java.util.UUID;
 
 /** Authenticated desktop API. No uploads, URLs, filesystem paths or deletion endpoints. */
 @RestController
+@ConditionalOnProperty(prefix = "jarvis.ai-lab", name = "legacy-enabled", havingValue = "true")
 @RequestMapping("/api/ai-lab/datasets")
 @PreAuthorize("hasAuthority('ROLE_JARVIS')")
 public class DatasetController {

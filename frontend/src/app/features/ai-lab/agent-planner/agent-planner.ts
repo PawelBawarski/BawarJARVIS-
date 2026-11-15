@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, ElementRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { marked } from 'marked';
 import { focusWorkflowTarget } from './agent-planner-workflow';
 import { AgentCodeSource, AgentPatchPreview, AgentProposal, AgentProposalApiService } from '../../../core/services/agent-proposal-api';
 import { WorkspaceApiService, WorkspaceEntry, WorkspaceListing, WorkspacePreview } from '../../../core/services/workspace-api';
@@ -53,6 +54,7 @@ export class AgentPlanner implements OnInit {
   readonly importBusy = signal(false);
   readonly task = signal('');
   readonly feedback = signal('');
+  readonly deleteCandidate = signal<AgentProposal | null>(null);
   readonly proposals = signal<AgentProposal[]>([]);
   readonly selected = signal<AgentProposal | null>(null);
   readonly busy = signal(false);
@@ -337,6 +339,25 @@ export class AgentPlanner implements OnInit {
       this.feedback.set('');
       this.info.set('Qwen poprawił plan. Wymaga on Twojej ponownej oceny.');
     }, 'revise');
+  }
+
+  /** Angular sanitizes the bound HTML; Markdown is formatting, not trusted markup. */
+  renderPlan(plan: string): string {
+    return marked.parse(plan, { async: false, breaks: true, gfm: true }) as string;
+  }
+
+  requestDelete(item: AgentProposal): void { if (!this.busy()) this.deleteCandidate.set(item); }
+  cancelDelete(): void { if (!this.busy()) this.deleteCandidate.set(null); }
+  async confirmDelete(): Promise<void> {
+    const item = this.deleteCandidate();
+    if (!item || this.busy()) return;
+    await this.run(async () => {
+      await this.api.delete(item.id);
+      this.proposals.update(all => all.filter(p => p.id !== item.id));
+      if (this.selected()?.id === item.id) this.selected.set(this.proposals()[0] ?? null);
+      this.deleteCandidate.set(null);
+      this.clearDiff();
+    }, 'review');
   }
 
   choose(item: AgentProposal): void {

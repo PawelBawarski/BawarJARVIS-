@@ -3,53 +3,31 @@
     <div class="jarvis-lab-ux__heading">
       <p class="jarvis-lab-ux__eyebrow">J.A.R.V.I.S. / AI LAB</p>
       <h2>{{ 'lab.dashboard.title' | translate }}</h2>
-      <p>{{ 'lab.dashboard.intro' | translate }}</p>
+      <p>{{ 'lab.cleanup.intro' | translate }}</p>
     </div>
-    <button type="button" class="jarvis-lab-help-button" (click)="help.open('lab')">
-      {{ 'lab.dashboard.help' | translate }}
-    </button>
   </header>
 
-  <details class="jarvis-lab-ux__section" data-testid="ai-lab-research-section" open>
+  <details class="jarvis-lab-ux__section" data-testid="ai-lab-research-section">
     <summary>{{ 'lab.dashboard.researchSection' | translate }}</summary>
-    <div class="jarvis-lab-ux__section-content"><app-research-memory /></div>
+    <div class="jarvis-lab-ux__section-content">
+      <app-research-memory />
+    </div>
   </details>
 
-  <details class="jarvis-lab-ux__section" data-testid="ai-lab-agent-section" open>
+  <details class="jarvis-lab-ux__section" data-testid="ai-lab-training-section" (toggle)="onTrainingToggle($event)">
+    <summary>{{ 'lab.cleanup.trainingSection' | translate }}</summary>
+    @if (trainingOpen()) {
+    <div class="jarvis-lab-ux__section-content jarvis-lab-ux__section-content--training">
+      <app-lora-evidence />
+      <app-lora-training />
+    </div>
+    }
+  </details>
+
+  <details class="jarvis-lab-ux__section" data-testid="ai-lab-agent-section">
     <summary>{{ 'lab.dashboard.agentsSection' | translate }}</summary>
-    <div class="jarvis-lab-ux__section-content"><app-agent-planner /></div>
-  </details>
-
-  <details class="jarvis-lab-ux__section" data-testid="jarvis-lab-existing"
-    (toggle)="onAdvancedToggle($event)">
-    <summary>{{ 'lab.dashboard.advanced' | translate }}</summary>
-    @if (advancedOpen()) {
-      <div class="jarvis-lab-ux__section-content">
-        <button type="button" class="jarvis-lab-help-button" (click)="help.open('lab-training')">
-          {{ 'lab.dashboard.helpTraining' | translate }}
-        </button>
-        <button type="button" class="jarvis-lab-help-button" (click)="help.open('lab-workspace')">
-          {{ 'lab.dashboard.helpWorkspace' | translate }}
-        </button>
-        <p class="jarvis-lab-ux__model-note">{{ 'lab.dashboard.modelLearningNote' | translate }}</p>
-        <app-lora-evidence />
-        <app-lora-training />
-        <app-ai-training-panel />
-        <app-ai-lab-workspace />
-      </div>
-    }
-  </details>
-
-  <details class="jarvis-lab-ux__section" data-testid="jarvis-lab-offline"
-    (toggle)="onOfflineToggle($event)">
-    <summary>{{ 'lab.dashboard.offline' | translate }}</summary>
-    @if (offlineOpen()) {
-      <div class="jarvis-lab-ux__section-content jarvis-lab-ux__section-content--offline">
-        <button type="button" class="jarvis-lab-help-button" (click)="help.open('lab-offline')">
-          {{ 'lab.dashboard.helpOffline' | translate }}
-        </button>
-        <app-learning-lab />
-      </div>
-    }
+    <div class="jarvis-lab-ux__section-content">
+      <app-agent-planner />
+    </div>
   </details>
 </section>

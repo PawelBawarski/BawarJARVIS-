@@ -1,32 +1,21 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { LearningLab } from './learning-lab/learning-lab';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { ResearchMemory } from './research-memory/research-memory';
 import { AgentPlanner } from './agent-planner/agent-planner';
-import { AiLabWorkspacePanel } from './workspace-panel/workspace-panel';
-import { AiTrainingPanel } from './training-panel/training-panel';
 import { LoraTraining } from './lora-training/lora-training';
 import { LoraEvidencePanel } from './lora-evidence/lora-evidence';
-import { ModuleHelpService } from '../../core/services/module-help.service';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 
 @Component({
   selector: 'app-ai-lab-view',
   standalone: true,
-  imports: [AiLabWorkspacePanel, AiTrainingPanel, LoraTraining, LoraEvidencePanel, TranslatePipe, LearningLab, ResearchMemory, AgentPlanner],
+  imports: [ResearchMemory, AgentPlanner, LoraEvidencePanel, LoraTraining, TranslatePipe],
   templateUrl: './ai-lab-view.html',
   styleUrl: './ai-lab-view.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AiLabView {
-  readonly help = inject(ModuleHelpService);
-  readonly advancedOpen = signal(false);
-  readonly offlineOpen = signal(false);
-
-  onAdvancedToggle(event: Event): void {
-    this.advancedOpen.set((event.target as HTMLDetailsElement).open);
-  }
-
-  onOfflineToggle(event: Event): void {
-    this.offlineOpen.set((event.target as HTMLDetailsElement).open);
+  readonly trainingOpen = signal(false);
+  onTrainingToggle(event: Event): void {
+    this.trainingOpen.set((event.target as HTMLDetailsElement).open);
   }
 }

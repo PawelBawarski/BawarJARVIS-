@@ -1,6 +1,7 @@
 package pl.bawar.jarvis.lab.history;
 
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,6 +12,7 @@ import java.util.UUID;
 
 /** Read-only, private desktop API. Never return file paths or raw corpora. */
 @RestController
+@ConditionalOnProperty(prefix = "jarvis.ai-lab", name = "legacy-enabled", havingValue = "true")
 @RequestMapping("/api/ai-lab/history")
 @PreAuthorize("hasAuthority('ROLE_JARVIS')")
 public class LabHistoryController {

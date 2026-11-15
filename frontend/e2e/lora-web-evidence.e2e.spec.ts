@@ -9,7 +9,7 @@ test('AI Lab web search proposals require manual review and have export control'
   if(method==='POST' && url.endsWith('/export'))return route.fulfill({json:{id:'reviewed-test',examples:2,path:'test'}});
   return route.fulfill({json:[{...item,approved}]});
  });
- await page.goto('/lab');await page.getByTestId('jarvis-lab-existing').locator(':scope > summary').click();
+ await page.goto('/lab');await page.getByTestId('ai-lab-training-section').locator(':scope > summary').click();
  const panel=page.getByTestId('lora-web-evidence');await expect(panel).toBeVisible();
  await expect(page.getByTestId('lora-export')).toBeDisabled();
  await page.getByTestId('lora-web-query').fill('Angular');await page.getByTestId('lora-web-search').click();

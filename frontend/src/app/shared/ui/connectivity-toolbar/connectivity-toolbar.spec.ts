@@ -26,14 +26,24 @@ describe('ConnectivityToolbar', () => {
 
   afterEach(() => TestBed.resetTestingModule());
 
-  it('renders a non-interactive offline indicator', () => {
+  it('renders an accessible clickable offline indicator', () => {
     const fixture = TestBed.createComponent(ConnectivityToolbar);
     fixture.detectChanges();
     const element: HTMLElement = fixture.nativeElement;
     const indicator = element.querySelector('[data-testid="network-state"]');
-    expect(indicator?.tagName).toBe('SPAN');
+    expect(indicator?.tagName).toBe('BUTTON');
     expect(indicator?.classList.contains('connectivity-toolbar__indicator--offline')).toBe(true);
-    expect(element.querySelectorAll('button').length).toBe(0);
+    expect(element.querySelectorAll('button').length).toBe(1);
+  });
+
+  it('checks connectivity after clicking the indicator', async () => {
+    fakeService.refresh.mockClear();
+    const fixture = TestBed.createComponent(ConnectivityToolbar);
+    fixture.detectChanges();
+    const button: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="network-state"]');
+    button.click();
+    await fixture.whenStable();
+    expect(fakeService.refresh).toHaveBeenCalled();
   });
 
   it('changes visual state when online', () => {

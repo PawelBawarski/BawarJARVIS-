@@ -60,15 +60,24 @@ public class LoraTrainingService {
         args.add(python().toString()); args.add(controller.toString());
         args.addAll(List.of(parameters));
         try {
-            Process p = new ProcessBuilder(args).directory(root.toFile()).start();
-            // Python controller is short-lived. The actual trainer is spawned separately.
-            boolean finished = p.waitFor(25, TimeUnit.SECONDS);
-            if (!finished) { p.destroyForcibly(); throw new IllegalStateException("LORA_CONTROLLER_TIMEOUT"); }
-            String out = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-            String err = new String(p.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
-            if (p.exitValue() != 0) throw new IllegalStateException("LORA_CONTROLLER_ERROR: " +
-                    (err.isBlank() ? out : err).strip().substring(0, Math.min(300, (err.isBlank() ? out : err).strip().length())));
-            return out;
+            // Redirect before waitFor: no pipe-buffer deadlock, bounded output, no secret log leakage.
+            Path output = Files.createTempFile("jarvis-lora-controller-", ".log");
+            try {
+                Process p = new ProcessBuilder(args).directory(root.toFile())
+                        .redirectErrorStream(true).redirectOutput(output.toFile()).start();
+                // Python controller is short-lived. The actual trainer is spawned separately.
+                boolean finished = p.waitFor(25, TimeUnit.SECONDS);
+                if (!finished) {
+                    p.destroyForcibly();
+                    p.waitFor(5, TimeUnit.SECONDS);
+                    throw new IllegalStateException("LORA_CONTROLLER_TIMEOUT");
+                }
+                if (p.exitValue() != 0) throw new IllegalStateException("LORA_CONTROLLER_ERROR");
+                if (Files.size(output) > 1_048_576) throw new IllegalStateException("LORA_CONTROLLER_OUTPUT_TOO_LARGE");
+                return Files.readString(output, StandardCharsets.UTF_8);
+            } finally {
+                Files.deleteIfExists(output);
+            }
         } catch (IOException e) {
             throw new IllegalStateException("LORA_PROCESS_START_FAILED", e);
         } catch (InterruptedException e) {
@@ -116,6 +125,7 @@ public class LoraTrainingService {
     }
 
     public synchronized Run status() {
+        if (!enabled) return new Run(null,"disabled",0,0,null,null,"LORA_TRAINING_DISABLED",false);
         Run result=decode(command("status"));
         persist(result);
         return result;
@@ -123,11 +133,16 @@ public class LoraTrainingService {
 
     public synchronized Run start(int steps,int seqLen) {
         validate(steps,seqLen);
+        ensureEnabled();
         Run existing=status();
         if (existing.processAlive()) throw new IllegalStateException("LORA_ALREADY_RUNNING");
         Run result=decode(command("start","--steps",String.valueOf(steps),"--seq-len",String.valueOf(seqLen)));
         persist(result);
         return result;
+    }
+
+    private void ensureEnabled() {
+        if (!enabled) throw new IllegalStateException("LORA_TRAINING_DISABLED");
     }
 
     public record DatasetInfo(String id,int examples){}
@@ -138,13 +153,21 @@ public class LoraTrainingService {
             return stream.filter(x->x.getFileName().toString().matches("reviewed-[a-f0-9-]{36}\\.jsonl"))
                 .limit(100).map(x -> {
                     try { return new DatasetInfo(x.getFileName().toString().replace(".jsonl",""),
-                        Files.readAllLines(x,StandardCharsets.UTF_8).size()); }
+                        countLines(x)); }
                     catch (IOException e) { return new DatasetInfo(x.getFileName().toString().replace(".jsonl",""),0); }
                 }).toList();
         } catch (IOException e) { throw new IllegalStateException("DATASETS_LIST_FAILED",e); }
     }
+    private static int countLines(Path file) throws IOException {
+        if (Files.size(file) > 10_485_760) return 0; // malformed/oversize dataset is never advertised
+        try (var lines = Files.lines(file, StandardCharsets.UTF_8)) {
+            return (int) Math.min(lines.limit(501).count(), 501);
+        }
+    }
+
     public synchronized Run startReviewed(int steps,int seqLen,String datasetId) {
         validate(steps,seqLen);
+        ensureEnabled();
         if (datasetId==null || !datasetId.matches("reviewed-[a-f0-9-]{36}"))
             throw new IllegalArgumentException("INVALID_REVIEWED_DATASET_ID");
         Path file=root.resolve("training/data").resolve(datasetId+".jsonl").normalize();
@@ -158,6 +181,7 @@ public class LoraTrainingService {
         return result;
     }
     public synchronized Run stop() {
+        ensureEnabled();
         command("stop");
         return status();
     }

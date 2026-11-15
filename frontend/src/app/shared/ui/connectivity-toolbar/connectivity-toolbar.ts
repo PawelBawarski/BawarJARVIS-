@@ -23,6 +23,10 @@ export class ConnectivityToolbar {
     void this.network.refresh();
   }
 
+  async refreshConnection(): Promise<void> {
+    await this.network.refresh();
+  }
+
   async openInstaller(): Promise<void> {
     if (this.network.isOffline()) return;
 

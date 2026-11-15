@@ -12,3 +12,11 @@
 .lora__history-row { padding:.35rem 0; }
 
 .lora select[data-testid="lora-dataset"] { max-width: 280px; }
+
+
+/* Stage 3b: buttons share the same visual language throughout AI Lab. */
+:host button:not(:disabled) { background: var(--accent-soft); color: var(--text); border: 1px solid var(--border); border-radius: 9px; transition: border-color .15s, background .15s; }
+:host button:hover:not(:disabled) { border-color: var(--accent); }
+:host button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:host button:disabled { opacity: .52; cursor: not-allowed; }
+:host button { font: inherit; min-height: 2.35rem; padding: .5rem .85rem; }

@@ -85,6 +85,16 @@ describe('RadioPanel', () => {
     expect(player.selectedStation()?.name).toBe('BBC Radio 1');
   });
 
+  it('exposes icon-only transport controls with accessible labels', () => {
+    const fixture = TestBed.createComponent(RadioPanel);
+    fixture.componentInstance.toggle();
+    fixture.detectChanges();
+    const buttons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('.radio-panel__controls button'));
+    expect(buttons).toHaveLength(3);
+    expect(buttons.map(button => button.getAttribute('aria-label'))).toEqual(['radio.play', 'radio.pause', 'radio.stop']);
+    expect(buttons.every(button => button.textContent?.trim().length && button.textContent.trim().length <= 2)).toBe(true);
+  });
+
   it('should keep Play disabled without a stream', () => {
     const fixture = TestBed.createComponent(RadioPanel);
 

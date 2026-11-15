@@ -10,52 +10,49 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import jakarta.servlet.DispatcherType;
 
 @Configuration
 // JARVIS_15_RESEARCH_MEMORY
 public class ApiSecurityConfig {
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http,
-            @Value("${JARVIS_SESSION_TOKEN:}") String sessionToken
-    ) throws Exception {
+        @Bean
+        public SecurityFilterChain securityFilterChain(
+                        HttpSecurity http,
+                        @Value("${JARVIS_SESSION_TOKEN:}") String sessionToken) throws Exception {
 
-        http.sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        );
+                http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        http.authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.GET, "/api/security/health").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/security/private-health")
-                    .hasAuthority("ROLE_JARVIS")
-                .requestMatchers("/api/chats", "/api/chats/**").hasAuthority("ROLE_JARVIS")
-                .requestMatchers("/api/ai-lab", "/api/ai-lab/**").hasAuthority("ROLE_JARVIS")
-                .requestMatchers("/api/research", "/api/research/**").hasAuthority("ROLE_JARVIS")
-                .requestMatchers("/api/agent", "/api/agent/**").hasAuthority("ROLE_JARVIS") // JARVIS_STAGE16_PLANNER
-                .anyRequest().denyAll()
-        );
+                http.authorizeHttpRequests(auth -> auth
+                                .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR)
+                                .permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/security/health").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/security/private-health")
+                                .hasAuthority("ROLE_JARVIS")
+                                .requestMatchers("/api/chats", "/api/chats/**").hasAuthority("ROLE_JARVIS")
+                                .requestMatchers("/api/ai-lab", "/api/ai-lab/**").hasAuthority("ROLE_JARVIS")
+                                .requestMatchers("/api/research", "/api/research/**").hasAuthority("ROLE_JARVIS")
+                                .requestMatchers("/api/agent", "/api/agent/**").hasAuthority("ROLE_JARVIS")
+                                .requestMatchers("/api/radio", "/api/radio/**").hasAuthority("ROLE_JARVIS") // JARVIS_STAGE16_PLANNER
+                                .anyRequest().denyAll());
 
-        http.exceptionHandling(errors -> errors.authenticationEntryPoint(
-                (_request, response, _exception) ->
-                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
-        ));
+                http.exceptionHandling(errors -> errors.authenticationEntryPoint(
+                                (_request, response, _exception) -> response
+                                                .sendError(HttpServletResponse.SC_UNAUTHORIZED)));
 
-        http.csrf(csrf -> csrf.ignoringRequestMatchers(
-                        "/api/chats", "/api/chats/**",
-                        "/api/ai-lab", "/api/ai-lab/**",
-                        "/api/research", "/api/research/**",
-                        "/api/agent", "/api/agent/**"
-                ));
-        http.formLogin(AbstractHttpConfigurer::disable);
-        http.httpBasic(AbstractHttpConfigurer::disable);
-        // Keep CSRF protection enabled; do not open arbitrary POST endpoints yet.
+                http.csrf(csrf -> csrf.ignoringRequestMatchers(
+                                "/api/chats", "/api/chats/**",
+                                "/api/ai-lab", "/api/ai-lab/**",
+                                "/api/research", "/api/research/**",
+                                "/api/agent", "/api/agent/**"));
+                http.formLogin(AbstractHttpConfigurer::disable);
+                http.httpBasic(AbstractHttpConfigurer::disable);
+                // Keep CSRF protection enabled; do not open arbitrary POST endpoints yet.
 
-        http.addFilterBefore(
-                new LocalSessionFilter(sessionToken),
-                UsernamePasswordAuthenticationFilter.class
-        );
+                http.addFilterBefore(
+                                new LocalSessionFilter(sessionToken),
+                                UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+                return http.build();
+        }
 }

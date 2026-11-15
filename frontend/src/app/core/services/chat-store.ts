@@ -13,6 +13,12 @@ export class ChatStore {
   private messagesAbort?: AbortController;
   readonly loading = signal(true);
   readonly sending = signal(false);
+  // JARVIS_CHAT_NATIVE_SSE_4C_V1
+  readonly streamedText = signal('');
+  private streamAbort?: AbortController;
+  private streamRequestId = '';
+  private streamConversationId = '';
+
   readonly busy = signal(false);
   readonly connected = signal(false);
   readonly saveError = signal(false);
@@ -110,6 +116,56 @@ export class ChatStore {
     if (!content || content.length > 4000 || this.sending()) return false;
     void this.sendMessage(content);
     return true;
+  }
+
+  /** User-initiated Stop: tells Spring to interrupt llama.cpp and persist the partial reply. */
+  async stopStreaming(): Promise<void> {
+    if (!this.sending() || !this.streamRequestId) return;
+    try { await this.api.cancelStream(this.streamConversationId, this.streamRequestId); }
+    catch { this.streamAbort?.abort(); } // Fallback when backend is unavailable.
+  }
+
+  async sendMessageStreaming(input: string): Promise<boolean> {
+    const text = input.trim();
+    if (!text || text.length > 4000 || this.sending() || this.busy() || this.loading()) return false;
+    // Older isolated Angular tests inject a legacy API stub; production always has sendStream.
+    if (typeof this.api.sendStream !== 'function' || window.jarvisDesktop?.chatApi) return this.sendMessage(input);
+    this.sending.set(true);
+    this.streamedText.set('');
+    const controller = new AbortController();
+    this.streamAbort = controller;
+    this.streamRequestId = crypto.randomUUID();
+    try {
+      let id = this.selectedId();
+      if (!id) {
+        const created = mapConversation(await this.api.create());
+        id = created.id;
+        this.chats.update(chats => [created, ...chats.filter(chat => chat.id !== '')]);
+        this.selectedId.set(id);
+      }
+      this.streamConversationId = id;
+      const turn = await this.api.sendStream(id, text, this.streamRequestId,
+        chunk => this.streamedText.update(value => value + chunk), controller.signal);
+      if (turn) {
+        const messages = [mapMessage(turn.userMessage), mapMessage(turn.assistantMessage)];
+        this.chats.update(chats => chats.map(chat => chat.id === id
+          ? { ...chat, updatedAt: Date.now(), messages: [...chat.messages, ...messages] } : chat));
+      }
+      this.connected.set(true);
+      this.clearError();
+      return !!turn;
+    } catch (error) {
+      this.setError(error);
+      // Server may have saved an interrupted reply even after the connection failed.
+      if (this.streamConversationId) await this.loadMessages(this.streamConversationId);
+      return false;
+    } finally {
+      this.streamedText.set('');
+      this.streamAbort = undefined;
+      this.streamRequestId = '';
+      this.streamConversationId = '';
+        this.sending.set(false);
+    }
   }
 
   async sendMessage(input: string): Promise<boolean> {

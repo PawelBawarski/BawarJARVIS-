@@ -79,6 +79,12 @@ class AgentProposalServiceTest {
         verifyNoInteractions(llm);
     }
 
+    @Test void deleteUsesRepositoryAndDoesNotInvokeModel() {
+        service.delete(id);
+        verify(repository).delete(id);
+        verifyNoInteractions(llm);
+    }
+
     @Test void rejectsUnknownDecisions() {
         assertThrows(IllegalArgumentException.class, () -> service.decide(id, "EXECUTE"));
         verifyNoInteractions(repository, llm);

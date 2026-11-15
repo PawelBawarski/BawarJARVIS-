@@ -42,7 +42,8 @@ export type AgentProposalRequest =
   | { operation: 'generate'; task: string; sources?: readonly AgentCodeSource[] }
   | { operation: 'patch-preview'; task: string; source: AgentCodeSource }
   | { operation: 'decide'; id: string; decision: 'APPROVED' | 'REJECTED' }
-  | { operation: 'revise'; id: string; feedback: string };
+  | { operation: 'revise'; id: string; feedback: string }
+  | { operation: 'delete'; id: string };
 
 type Result = { ok: true; status: number; data: unknown } | { ok: false; status: number; error: string };
 type AgentBridge = { agentProposalApi?: (request: AgentProposalRequest) => Promise<Result> };
@@ -76,6 +77,7 @@ export class AgentProposalApiService {
       case 'decide': return browserApi<T>('POST', `${base}/proposals/${encodeURIComponent(message.id)}/decision`, {
         decision: message.decision,
       });
+      case 'delete': return browserApi<T>('DELETE', `${base}/proposals/${encodeURIComponent(message.id)}`);
       case 'revise': return browserApi<T>('POST', `${base}/proposals/${encodeURIComponent(message.id)}/revise`, {
         feedback: message.feedback,
       });
@@ -83,6 +85,7 @@ export class AgentProposalApiService {
   }
 
   list(): Promise<AgentProposal[]> { return this.request({ operation: 'list' }); }
+  delete(id: string): Promise<void> { return this.request({ operation: 'delete', id }); }
   generate(task: string, sources?: readonly AgentCodeSource[]): Promise<AgentProposal> {
     return this.request({ operation: 'generate', task, ...(sources?.length ? { sources } : {}) });
   }

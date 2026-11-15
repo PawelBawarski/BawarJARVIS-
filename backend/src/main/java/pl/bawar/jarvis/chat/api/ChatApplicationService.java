@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -111,6 +113,32 @@ public class ChatApplicationService {
             if (answer == null || answer.isBlank())
                 throw new LocalLlmUnavailableException("Pusta odpowiedź AI.");
             return exchangeWriter.appendTurn(conversationId, message, answer);
+        } finally {
+            turnLock.unlock();
+        }
+    }
+
+    // JARVIS_CHAT_NATIVE_SSE_4C_V1
+    /** A single DB transaction records one complete (or explicitly interrupted) chat turn. */
+    public ChatExchangeWriter.ChatTurn sendMessageStreaming(UUID conversationId, String input,
+            Consumer<String> onToken, BooleanSupplier cancelled) {
+        if (input == null || input.isBlank() || input.length() > MAX_MESSAGE_LENGTH)
+            throw new IllegalArgumentException("Message must have 1-20000 characters");
+        String question = input.strip();
+        turnLock.lock();
+        try {
+            persistence.getConversation(conversationId);
+            List<ChatMessage> history = persistence.listMessages(conversationId);
+            String prepared = knowledge == null ? question :
+                    (semanticMemory == null ? knowledge.augmentPrompt(question) : semanticMemory.augmentPrompt(question, knowledge));
+            if (webSearch != null && webSearch.isReady() && WebFallbackPolicy.shouldSearch(question, null)) {
+                var evidence = webSearch.search(question);
+                if (evidence.isPresent()) prepared = webPrompt(question, evidence.get());
+            }
+            String answer = llm.replyStreaming(history, prepared, onToken, cancelled);
+            if (answer.isBlank()) return null; // Stopped before any generation: do not save an empty turn.
+            if (cancelled.getAsBoolean()) Thread.interrupted(); // clear interruption before JDBC writes
+            return exchangeWriter.appendTurn(conversationId, question, answer);
         } finally {
             turnLock.unlock();
         }

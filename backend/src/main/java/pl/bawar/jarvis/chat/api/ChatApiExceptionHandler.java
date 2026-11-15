@@ -30,6 +30,15 @@ public class ChatApiExceptionHandler {
 
     @ExceptionHandler(LocalLlmUnavailableException.class)
     public ResponseEntity<ApiError> localModelUnavailable(LocalLlmUnavailableException exception) {
+        Throwable cause = exception;
+        while (cause != null) {
+            if (cause instanceof java.net.http.HttpTimeoutException) {
+                return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT)
+                        .body(new ApiError("LLM_TIMEOUT", "Model Qwen3 generował zbyt długo. "
+                                + "Spróbuj krótszego pytania lub zmniejsz limit tokenów w ustawieniach."));
+            }
+            cause = cause.getCause();
+        }
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(new ApiError("LLM_NOT_READY", "Lokalny model AI jest niedostępny. Sprawdź uruchomienie silnika Qwen3."));
     }

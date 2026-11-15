@@ -36,22 +36,21 @@ describe('AiLabView', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('has independently collapsible research, agent, advanced and offline areas', () => {
+  it('renders only three collapsed AI Lab areas', () => {
     const fixture = TestBed.createComponent(AiLabView);
     fixture.detectChanges();
-    const root = fixture.nativeElement as HTMLElement;
-    const research = root.querySelector<HTMLDetailsElement>('[data-testid="ai-lab-research-section"]');
-    const agent = root.querySelector<HTMLDetailsElement>('[data-testid="ai-lab-agent-section"]');
-    const advanced = root.querySelector<HTMLDetailsElement>('[data-testid="jarvis-lab-existing"]');
-    const offline = root.querySelector<HTMLDetailsElement>('[data-testid="jarvis-lab-offline"]');
-    expect(research?.open).toBe(true);
-    expect(agent?.open).toBe(true);
-    expect(advanced?.open).toBe(false);
-    expect(offline?.open).toBe(false);
-    expect(root.querySelector('.jarvis-lab-ux__overview')).toBeNull();
-    expect(root.querySelector('.ai-lab-view__actions')).toBeNull();
-    agent!.open = false;
-    expect(research?.open).toBe(true);
-    expect(agent?.open).toBe(false);
+    const root: HTMLElement = fixture.nativeElement;
+    const sections = root.querySelectorAll<HTMLDetailsElement>('.jarvis-lab-ux > details');
+    expect(sections.length).toBe(3);
+    expect([...sections].every(section => !section.open)).toBe(true);
+    expect(root.querySelector('[data-testid="jarvis-lab-offline"]')).toBeNull();
+    expect(root.querySelector('app-ai-training-panel')).toBeNull();
+    expect(root.querySelector('app-lora-training')).toBeNull(); // lazy until user opens training
+    const training = root.querySelector<HTMLDetailsElement>('[data-testid="ai-lab-training-section"]')!;
+    training.open = true;
+    training.dispatchEvent(new Event('toggle'));
+    fixture.detectChanges();
+    expect(root.querySelector('app-lora-training')).not.toBeNull();
+    expect(root.querySelector('app-lora-evidence')).not.toBeNull();
   });
 });

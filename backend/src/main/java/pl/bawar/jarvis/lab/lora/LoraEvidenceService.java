@@ -45,7 +45,7 @@ public class LoraEvidenceService {
     }
     public record Evidence(String id,String query,String title,String url,String excerpt,String instruction,String response,boolean approved) {}
     public record Review(String instruction,String response,boolean approved) {}
-    public record Dataset(String id,int examples,String path) {}
+    public record Dataset(String id,int examples) {}
 
     public static void validateReview(Review review) {
         if(review==null || review.instruction()==null || review.response()==null
@@ -109,7 +109,12 @@ public class LoraEvidenceService {
           WHERE id=?::uuid
         """,item.instruction().strip(),item.response().strip(),item.approved(),uuid.toString());
         if(changed!=1) throw new IllegalArgumentException("EVIDENCE_NOT_FOUND");
-        return list().stream().filter(x->x.id().equals(id)).findFirst().orElseThrow();
+        return jdbc.query("""
+          SELECT id::text,query_text,title,source_url,excerpt,instruction,response,approved
+          FROM lora_web_evidence WHERE id=?::uuid
+        """, (rs,n)->new Evidence(rs.getString(1),rs.getString(2),rs.getString(3),rs.getString(4),
+             rs.getString(5),rs.getString(6),rs.getString(7),rs.getBoolean(8)),uuid.toString())
+             .stream().findFirst().orElseThrow(() -> new IllegalArgumentException("EVIDENCE_NOT_FOUND"));
     }
     /** Stable export: only approved, manually written Q/A; source metadata is not trained as an answer. */
     public synchronized Dataset export() {
@@ -131,6 +136,6 @@ public class LoraEvidenceService {
             Files.writeString(tmp,String.join("\n",out)+"\n",StandardCharsets.UTF_8);
             Files.move(tmp,file,StandardCopyOption.ATOMIC_MOVE);
         } catch (java.io.IOException e) { throw new IllegalStateException("DATASET_EXPORT_FAILED",e); }
-        return new Dataset(id,rows.size(),file.toString());
+        return new Dataset(id,rows.size());
     }
 }

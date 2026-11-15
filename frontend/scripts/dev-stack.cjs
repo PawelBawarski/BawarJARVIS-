@@ -6,6 +6,7 @@ const crypto = require('node:crypto');
 const { spawn, spawnSync } = require('node:child_process');
 const { modelConfig, llamaArgs, ensurePortFree, waitForModelReady } = require('./model-runtime.cjs');
 const { frontendChildEnv } = require('./web-secret-env.cjs');
+const { backendLoraEnv } = require('./dev-lora-env.cjs');
 const { waitForReady } = require('./dev-readiness.cjs');
 const frontend = path.resolve(__dirname, '..');
 const backend = path.resolve(frontend, '..', 'backend');
@@ -42,6 +43,7 @@ const env = {
   ...process.env,
   ...settings,
   // One ephemeral session per developer launch, shared only with backend and dev proxy.
+  ...backendLoraEnv(process.env, { useElectron, useAi }),
   JARVIS_SESSION_TOKEN: crypto.randomBytes(32).toString('hex'),
 };
 const children = [];
