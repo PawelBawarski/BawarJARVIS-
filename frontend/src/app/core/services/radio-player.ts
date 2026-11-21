@@ -61,6 +61,25 @@ export class RadioPlayerService {
   private readonly attemptedIds = new Set<string>();
   private readonly maxStationAttempts = 3; // Initial station + up to two fallbacks.
 
+  // JARVIS RADIO 4C.4 — stalled-stream watchdog
+  // Streaming servers can hang without firing `error`. Limit retries to the 4C.3 chain.
+  private readonly stallTimeoutMs = 12_000;
+  private stallTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private clearStallTimer(): void {
+    if (this.stallTimer !== null) clearTimeout(this.stallTimer);
+    this.stallTimer = null;
+  }
+
+  private armStallTimer(audio: HTMLAudioElement): void {
+    if (this.audio !== audio || this.isPaused()) return;
+    this.clearStallTimer();
+    this.stallTimer = setTimeout(() => {
+      this.stallTimer = null;
+      if (this.audio === audio && !this.isPaused()) void this.failedStream(audio);
+    }, this.stallTimeoutMs);
+  }
+
   private playableStream(station: RadioStation | null): string | null {
     if (!station?.streamUrl) return null;
     try {
@@ -70,6 +89,7 @@ export class RadioPlayerService {
   }
 
   private releaseAudio(): void {
+    this.clearStallTimer();
     const previous = this.audio;
     this.audio = null; // Invalidate old pending play() and event handlers before cleanup.
     if (previous) {
@@ -83,7 +103,7 @@ export class RadioPlayerService {
   }
 
   private async failedStream(audio: HTMLAudioElement): Promise<boolean> {
-    if (this.audio !== audio) return false;
+    if (this.audio !== audio || this.isPaused()) return false;
     const previousId = this.stationIdState();
     if (previousId) this.attemptedIds.add(previousId);
     this.releaseAudio();
@@ -123,11 +143,20 @@ export class RadioPlayerService {
     audio.addEventListener('ended', () => {
       if (this.audio === audio && !this.isPaused()) void this.failedStream(audio);
     });
+    audio.addEventListener('waiting', () => this.armStallTimer(audio));
+    audio.addEventListener('stalled', () => this.armStallTimer(audio));
+    audio.addEventListener('playing', () => { if (this.audio === audio) this.clearStallTimer(); });
+    audio.addEventListener('timeupdate', () => {
+      if (this.audio === audio && !this.isLoading()) this.clearStallTimer();
+    });
+    // Start-up can hang without rejecting play().
+    this.armStallTimer(audio);
     try {
       await audio.play();
       if (this.audio !== audio) { audio.pause(); return false; }
       this.isPlaying.set(true);
       this.isPaused.set(false);
+      this.clearStallTimer();
       this.errorKey.set(null);
       return true;
     } catch {
@@ -140,12 +169,15 @@ export class RadioPlayerService {
   async play(): Promise<boolean> {
     if (this.audio && this.isPaused()) {
       const existing = this.audio;
+      this.isPaused.set(false);
       this.isLoading.set(true);
+      this.armStallTimer(existing);
       try {
         await existing.play();
         if (this.audio !== existing) return false;
         this.isPaused.set(false);
         this.isPlaying.set(true);
+        this.clearStallTimer();
         this.errorKey.set(null);
         return true;
       } catch { return this.failedStream(existing); }
@@ -159,6 +191,7 @@ export class RadioPlayerService {
 
   pause(): void {
     if (!this.audio || !this.isPlaying()) return;
+    this.clearStallTimer();
     this.audio.pause();
     this.isPlaying.set(false);
     this.isPaused.set(true);
